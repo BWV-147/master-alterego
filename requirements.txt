@@ -1,0 +1,8 @@
+goto-statement
+numpy
+scipy
+Pillow
+pypiwin32==223
+pywin32==224
+scikit-image
+opencv-python
