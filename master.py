@@ -3,6 +3,12 @@ from image_process import *
 
 # noinspection PyMethodMayBeStatic
 class Master:
+    """
+    1. crop screen to match card's svt&color
+    2. weights to decide the suit to play
+    3.
+    card: (svt_no, color)
+    """
 
     def __init__(self):
         self.templates = {}
@@ -143,13 +149,23 @@ class Master:
             pass
         wait_regions(before, LOC.master_skill)
 
-    def attack(self):
-        pass
+    def attack(self, cards):
+        for card in cards:
+            click(LOC.cards[card - 1])
+            time.sleep(0.2)
 
-    def choose_cards(self, cards):
-        pass
+    def choose_cards(self, cards: List[int], nps: List[int] = None):
+        if isinstance(nps, int):
+            nps = [nps + 4]
+        elif nps is None:
+            nps = []
+        else:
+            nps = [np + 4 for np in nps]
+        cards2 = sorted(cards, key=lambda o: self.weight[o[0] * 10 + o[1]])
+        nps.extend(cards2)
+        return nps[0:3]
 
-    def parse_templates(self, locs: list):
+    def load_card_templates(self, locs: list):
         """
         parse card templates from cards_templ[1~3].png file. regions using inner boundary `LOC.cards[0~7]`
         :param locs: locations(tmpl:1~3, card:1~5 6~8) of  [svt1:[np, quick, arts, buster], svt2:..., ...]
@@ -202,10 +218,9 @@ class Master:
             else:
                 continue
 
-    def set_card_weight(self, weights: list):
+    def set_card_weight(self, weights: list, color_weight: str = 'QAB'):
         """
-
-        :param weights: M*3, M-servants, 3-quick/art/buster
+        :param weights: M*3, M-servants, 3-quick/art/buster; or M*1, then apply buster>arts>quick
         :return:
         """
         if isinstance(weights[0], int):
