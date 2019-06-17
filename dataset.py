@@ -1,71 +1,13 @@
+"""Data definition, constants
+
+Coordination: using PIL coordination, (x,y), (left,top,right,bottom),
+"""
 # Coordination: (x,y), (0,0,1920,1080)
 import os
-import random
-import time
-import ctypes
-import win32api
-import win32con
 from PIL import Image
-from typing import List, Tuple, Union, Dict
-import logging
-from PIL.PngImagePlugin import PngImageFile
+from util import *
 
 THR = 0.9  # default threshold
-
-
-# logger
-def get_logger(name='log', level=logging.INFO):
-    _logger = logging.getLogger(name)
-    fh = logging.FileHandler('log/%s.log' % name)
-    fh.setFormatter(logging.Formatter('%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s'))
-    fh.setLevel(level)
-    _logger.addHandler(fh)
-    return _logger
-
-
-# win32: mouse & screen pixel
-def move_mouse(x=None, y=None):
-    x = int(x)
-    y = int(y)
-    # logger.debug('mouse move:',x,'-',y)
-    ctypes.windll.user32.SetCursorPos(x, y)
-    time.sleep(0.1)
-
-
-def click(xy: tuple = None, lapse=0.5, r=2):
-    """
-    click at point (x,y) or region center (x1,y1,x2,y2) within a random offset between 0~r
-    :param xy:
-    :param lapse:
-    :param r:
-    :return:
-    """
-    if xy is not None:
-        if 2 == len(xy):
-            x, y = xy[:]
-        elif 4 == len(xy):
-            x, y = ((xy[0] + xy[2]) / 2, (xy[1] + xy[3]) / 2)
-        else:
-            raise ValueError('len(xy) should be 2 or 4.')
-        x += random.randint(-r, r)
-        y += random.randint(-r, r)
-        move_mouse(x, y)
-        # m.click(x, y)
-        # logger.debug('click (%d, %d)' % (x, y))
-    win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0)
-    win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP, 0, 0, 0, 0)
-    time.sleep(lapse)
-
-
-def get_pixel(xy):
-    # RGB
-    color = ctypes.windll.gdi32.GetPixel(ctypes.windll.user32.GetDC(None), xy[0], xy[1])
-    logger.debug(hex(color))
-    logger.debug((color & ((1 << 8) - 1)))
-    logger.debug((color >> 8 & ((1 << 8) - 1)))
-    logger.debug((color >> 16 & ((1 << 8) - 1)))
-
-    return color
 
 
 # database: regions & saved screenshot
@@ -92,7 +34,8 @@ class _Regions:
     reset_action = (1546, 337, 1863, 394)
     drawer = (600, 622)
     # drawer
-    apply_friend = (464, 913)
+    apply_friend = (1692, 521, 1826, 588)
+    apply_friend_deny = (464, 913)
     quest = (937, 240, 1848, 360)
     quest_c = (1277, 351)
     rewards = (1680, 33, 1868, 91)
@@ -117,8 +60,8 @@ class _Regions:
     support_refresh = (1238, 160, 1318, 230)
     support_scroll = ((1860, 520), (1860, 640), (760, 880))
 
-    start_quest = (1655, 973, 1902, 1052)
-
+    team = (1655, 973, 1902, 1052)
+    wave = (1261, 78, 1281, 106)
     enemies_all = (0, 0, 1080, 128)
     enemies = ((0, 0, 360, 130), (360, 0, 720, 130), (720, 0, 1080, 130))  # skill_to_enemies
 
@@ -132,12 +75,12 @@ class _Regions:
     master_skill = (1736, 440, 1841, 507)
     master_skills = ((1319, 427, 1404, 512), (1450, 427, 1535, 512), (1581, 427, 1666, 512))
 
-    attack = (1615, 954, 1665, 1005)  # attack 字样以下部分，与大小变化的attack独立
+    attack = (1554, 950, 1624, 1000)  # attack 字样以下部分，与大小变化的attack独立
     cards_back = (1725, 1007, 1878, 1043)
     cards = (
         (84, 655, 303, 903), (466, 655, 685, 903), (848, 655, 1067, 903), (1235, 655, 1454, 903),
         (1624, 655, 1843, 903),
-        (515, 210, 750, 442), (871, 210, 1106, 442), (1227, 210, 1462, 442))
+        (529, 204, 707, 441), (848, 204, 1026, 441), (1167, 204, 1345, 441))
     cards_outer = ((0, 500, 386, 1000), (386, 500, 784, 1000), (784, 500, 1170, 1000), (1170, 500, 1552, 1000),
                    (1552, 500, 1920, 1000),
                    (428, 100, 812, 510), (812, 100, 1170, 510), (1170, 100, 1554, 510))
@@ -153,7 +96,10 @@ class _Regions:
     finish_next = (1444, 980, 1862, 1061)
     finish_graft = (454, 216, 623, 386)
 
-    size = (1920, 1080)
+    friend_point = (0, 0, 10, 10)
+    friend_point_close = (0, 0, 10, 10)
+
+    size = (0, 0, 1920, 1080)
 
     def relocate(self, region=(0, 0, 1920, 1080)):
         """
@@ -166,27 +112,30 @@ class _Regions:
             # at most 3 layers
             if not key.startswith('__') and isinstance(value, (int, list, tuple)):
                 # print(key, value)
-                self.__dict__[key] = _Regions.loop(value, region)
+                self.__dict__[key] = _Regions.loop(value, region, _Regions.size)
 
     @staticmethod
-    def loop(o, region):
-        if isinstance(o, (tuple, list)):
-            if isinstance(o[0], int):
-                assert len(o) % 2 == 0, o
+    def loop(pt, new, old):
+        if isinstance(pt, (tuple, list)):
+            if isinstance(pt[0], int):
+                assert len(pt) % 2 == 0, pt
                 oo = []
-                for i, v in enumerate(o):
+                for i, v in enumerate(pt):
                     ii = i % 2
-                    oo.append(int(region[ii] + (region[ii + 2] - region[ii]) / _Regions.size[ii] * o[i]))
+                    oo.append(int(
+                        (v - old[ii]) / (old[2 + ii] - old[ii]) * (new[2 + ii] - new[ii]) + new[ii]
+                    ))
+                    # oo.append(int(region[ii] + (region[ii + 2] - region[ii]) / origin[ii] * o[i]))
                 return oo
             else:
-                return [_Regions.loop(k, region) for k in o]
+                return [_Regions.loop(k, new, old) for k in pt]
         else:
-            print(f'skip key(type:{type(o)}) for resize')
+            print(f'skip key(type:{type(pt)}) for resize')
 
 
 class _ImageTemplates:
     directory: str
-    templates: Dict[str, PngImageFile]
+    templates: Dict[str, Image.Image]
 
     def __init__(self, directory=None):
         self.directory = directory
@@ -194,18 +143,18 @@ class _ImageTemplates:
         if directory is not None:
             self.read_templates(directory)
 
-    def read_templates(self, directory, force=False):
-        old_tmpls = self.templates
+    def read_templates(self, directory: str, force=False):
+        old_templs = self.templates
         self.templates = {}
         for filename in os.listdir(directory):
             if not filename.endswith('.png'):
                 continue
             filepath = os.path.join(directory, filename)
             key = filename[0:len(filename) - 4]
-            if (filepath not in old_tmpls or force is True) and directory == self.directory:
-                self.templates[key] = Image.open(filepath)
+            if directory == self.directory and force is False and key in old_templs:
+                self.templates[key] = old_templs[key]
             else:
-                self.templates[key] = old_tmpls[key]
+                self.templates[key] = Image.open(filepath)
         self.directory = directory
 
     def get(self, attr):
@@ -230,39 +179,43 @@ class _ImageTemplates:
         return self.get('apple_page')
 
     @property
-    def cards(self):
-        return self.get('cards')
+    def apply_friend(self):
+        return self.get('apply_friend')
 
     @property
-    def cards_tmpls(self):
-        tmpls = []
+    def cards(self):
+        templs = []
         for i in range(4):
-            key = f'cards_tmpl{i + 1}'
+            key = f'cards{i + 1}'
             if key in self.templates:
-                tmpls.append(self.templates[key])
+                templs.append(self.templates[key])
             else:
                 break
-        return tmpls
+        return templs
 
     @property
-    def cards_tmpl1(self):
-        return self.get('cards_tmpl1')
+    def cards1(self):
+        return self.get('cards1')
 
     @property
-    def cards_tmpl2(self):
-        return self.get('cards_tmpl2')
+    def cards2(self):
+        return self.get('cards2')
 
     @property
-    def cards_tmpl3(self):
-        return self.get('cards_tmpl3')
+    def cards3(self):
+        return self.get('cards3')
 
     @property
-    def cards_tmpl4(self):
-        return self.get('cards_tmpl0')
+    def cards4(self):
+        return self.get('cards4')
 
     @property
-    def finish_rewards(self):
-        return self.get('finish_rewards')
+    def friend_point(self):
+        return self.get('friend_point')
+
+    @property
+    def rewards(self):
+        return self.get('rewards')
 
     @property
     def kizuna(self):
@@ -277,8 +230,8 @@ class _ImageTemplates:
         return self.get('quest')
 
     @property
-    def start_quest(self):
-        return self.get('start_quest')
+    def team(self):
+        return self.get('team')
 
     @property
     def support(self):
@@ -305,37 +258,12 @@ class _ImageTemplates:
         return self.get('wave2b')
 
     @property
-    def wave2c(self):
-        return self.get('wave2c')
-
-    @property
-    def wave2d(self):
-        return self.get('wave2d')
-
-    @property
     def wave3a(self):
         return self.get('wave3a')
 
     @property
     def wave3b(self):
         return self.get('wave3b')
-
-
-class Timer:
-    t1 = 0
-    t2 = 0
-    dt = 0
-
-    def start(self):
-        self.t1 = time.time()
-        return self
-
-    def stop(self):
-        self.t2 = time.time()
-        self.dt = self.t2 - self.t1
-        print('Time lapse: %f sec' % (self.t2 - self.t1))
-        # logger.debug('Time lapse: %f sec' % (self.t2 - self.t1))
-        return self
 
 
 # export constants
@@ -346,7 +274,11 @@ LOC = _Regions()
 T = _ImageTemplates()
 
 
+# %% local test functions
 def __gen_getter(path='./'):
+    """
+    generate getters for _ImageTemplates
+    """
     methods = []
 
     for filename in os.listdir(path):
@@ -364,9 +296,4 @@ def __gen_getter(path='./'):
 
 
 def _test():
-    pass
-
-
-if __name__ == "__main__":
-    _test()
     pass
