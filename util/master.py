@@ -2,7 +2,7 @@
 
 additional, Card class included.
 """
-from image_process import *
+from util.image_process import *
 
 
 class Card:
@@ -30,10 +30,11 @@ class Master:
     card: (svt_no, color)
     """
 
-    def __init__(self):
+    def __init__(self, quest='', names=None):
+        self.quest_name = quest
+        self.svt_names = names if names is not None else ['A', 'B', 'C', 'D', 'E', 'F']
         self.templates = {}
         self.weights: dict = {}
-        self.svt_names = ['A', 'B', 'C', 'D', 'E', 'F']
 
     def set_battle_data(self, coord=None, names=None, weights=None, cards_loc=None):
         if coord:
@@ -45,8 +46,8 @@ class Master:
         if cards_loc:
             self.set_card_templates(cards_loc)
 
-    def start_battle(self, battle_func, templ_dir, num=10, apple=-1):
-        # type:(Callable[[Master,int],None],str,int,int)->None
+    def start_battle(self, battle_func, num=10, apple=-1):
+        # type:(Callable[[Master,int],None],int,int)->None
         """
         set_battle_data first.
         :param battle_func: start at quest banner screen, end at kizuna screen
@@ -58,40 +59,42 @@ class Master:
         G['finished'] = False
         # battle part
         timer = Timer()
-        T.read_templates(templ_dir)
         finished = 0
         while finished < num:
             timer.start()
             finished += 1
-            logger.info(f'>>>>> Battle No.{finished}/{num} <<<<<')
+            logger.info(f'>>>>> Battle "{self.quest_name}" No.{finished}/{num} <<<<<')
             battle_func(self, apple)
-            wait_regions(T.rewards, LOC.finish_qp, clicking=LOC.finish_qp)
+            wait_which_target(T.rewards, LOC.finish_qp, clicking=LOC.finish_qp, lapse=0.5)
             # check reward_page has CE dropped or not
             ce = screenshot()
             ce.save(f"img/craft/craft-{time.strftime('%m%d-%H-%M-%S')}.png")
             click(LOC.finish_next)
+            logger.info('battle finished, checking rewards.')
             while True:
-                page_no = wait_regions([T.quest, T.apply_friend, T.friend_point],
-                                       [LOC.quest, LOC.apply_friend, LOC.friend_point])
+                page_no = wait_which_target([T.quest, T.apply_friend, T.friend_point],
+                                            [LOC.quest, LOC.apply_friend, LOC.friend_point])
                 if page_no == 1:
                     click(LOC.apply_friend_deny)
                 elif page_no == 2:
-                    click(LOC.friend_point_close)
+                    click(LOC.friend_point)
                 elif page_no == 0:
                     break
             dt = timer.stop().dt
             logger.info(f'--- Battle {finished} finished, time = {int(dt // 60)} min {int(dt % 60)} sec.')
-        logger.info(f'>>>>> All {finished} battles finished. <<<<<')
+        logger.info(f'>>>>> All {finished} battles "{self.quest_name}" finished. <<<<<')
         G['finished'] = True
+        G['shutdown'] = True
 
     # procedures
     def eat_apple(self, apple=-1, check_time=False):
-        logger.debug(f"eating {['Colorful', 'Gold', 'Silver', 'Cropper'][apple]} apple...")
         if apple not in (0, 1, 2, 3):
+            logger.debug('invalid apple')
             return
         if apple == 0:  # 不舍得吃彩苹果
             apple = 3
-        wait_regions(T.apple_page, LOC.apple_page)
+        logger.debug(f"eating {['Colorful', 'Gold', 'Silver', 'Cropper'][apple]} apple...")
+        wait_which_target(T.apple_page, LOC.apple_page)
         if apple == 1 and check_time:
             click(LOC.apple_close)
             click(LOC.safe_area)  # why?
@@ -106,12 +109,12 @@ class Master:
                 time.sleep(2)
         # eating apple page
         shot = screenshot()
-        if compare_regions(shot, T.apple_page, LOC.apples[apple]) >= 0:
+        if match_which_target(shot, T.apple_page, LOC.apples[apple]) >= 0:
             click(LOC.apples[apple])
-            wait_regions(T.apple_confirm, LOC.apple_confirm, at=True)
-            wait_regions(T.support, LOC.support_team_icon)
+            wait_which_target(T.apple_confirm, LOC.apple_confirm, at=True)
+            wait_which_target(T.support, LOC.support_team_icon)
             return
-        elif compare_regions(shot, T.support, LOC.support_refresh) >= 0:
+        elif match_which_target(shot, T.support, LOC.support_refresh) >= 0:
             return
         else:
             logger.debug('apple?? where??')
@@ -125,31 +128,30 @@ class Master:
         :param match_skills: skills to match, a list of int value (1,2,3)
         """
         logger.debug('choosing support...')
-        # time.sleep(2)  # it should match support list somewhere(助战编队确认) since support list loads after other UI
-        wait_regions(T.support, LOC.support_team_icon)
+        wait_which_target(T.support, LOC.support_team_icon)
         while True:
             shot = screenshot()
             for svt in range(2):  # 2 support one time, no scroll
-                if compare_regions(shot, T.support, LOC.support_skill[svt]) >= 0:
+                if match_which_target(shot, T.support, LOC.support_skill[svt]) >= 0:
                     if match_skills is not None:
-                        rs = [compare_regions(shot, T.support, LOC.support_skills[svt][skill_loc - 1]) >= 0 for
+                        rs = [match_which_target(shot, T.support, LOC.support_skills[svt][skill_loc - 1]) >= 0 for
                               skill_loc in match_skills]
                         if rs.count(True) != len(match_skills):
                             continue
                     if match_ce:
-                        if compare_regions(shot, T.support, LOC.support_ce[svt]) < 0:
+                        if match_which_target(shot, T.support, LOC.support_ce[svt]) < 0:
                             continue
                     if match_ce_max:
-                        if compare_regions(shot, T.support, LOC.support_ce_max[svt]) < 0:
+                        if match_which_target(shot, T.support, LOC.support_ce_max[svt]) < 0:
                             continue
                     click(LOC.support_ce[svt])
-                    wait_regions(T.team, LOC.team, at=True)
+                    wait_which_target(T.team, LOC.team, at=True)
                     return
             # refresh support
-            wait_regions(T.support, LOC.support_refresh)
+            wait_which_target(T.support, LOC.support_refresh)
             time.sleep(2)
             click(LOC.support_refresh)
-            wait_regions(T.support_confirm, LOC.support_confirm_title)
+            wait_which_target(T.support_confirm, LOC.support_confirm_title)
             click(LOC.support_refresh_confirm)
             logger.debug('refresh support')
 
@@ -176,12 +178,13 @@ class Master:
         if enemy is not None:
             click(LOC.enemies[enemy - 1])
         region = LOC.skills[who - 1][skill - 1]
-        wait_regions(before, region, at=True)
+        wait_which_target(before, region, at=True)
         if friend is not None:
             # it should also match the saved screenshot, but...
+            # TODO: match select target shot, same as master_skill
             time.sleep(0.3)
             click(LOC.skill_to_target[friend - 1])
-        wait_regions(after, region)
+        wait_which_target(after, region)
 
     def master_skill(self, before, skill, friend=None, enemy=None, order_change=None, order_change_img=None):
         # type:(Image.Image,int,int,int,Tuple[int,int],Image.Image)->None
@@ -205,67 +208,80 @@ class Master:
             if flag % 3 == 0:
                 click(LOC.master_skill)
             time.sleep(0.6)
-            if compare_one_region(screenshot(), before, region, at=True):
+            if compare_regions(screenshot(), before, region, at=True):
                 break
 
-        # no = 3  # max times to click master skill icon, sometime click is invalid
-        # while no > 0:
-        #     no -= 1
-        #     time.sleep(0.6)
-        #     click(LOC.master_skill)
-        # wait_regions(before, region, at=True)
         if friend is not None:
             # it should also match the saved screenshot, but...
             time.sleep(0.3)
             click(LOC.skill_to_target[friend - 1])
         elif order_change is not None:
-            wait_regions(order_change_img, LOC.order_change[0])
+            wait_which_target(order_change_img, LOC.order_change[0])
             click(LOC.order_change[order_change[0] - 1])
             click(LOC.order_change[order_change[1] - 1])
             click(LOC.order_change_confirm)
-            wait_regions(before, LOC.master_skill)
+            wait_which_target(before, LOC.master_skill)
             pass
-        wait_regions(before, LOC.master_skill)
+        wait_which_target(before, LOC.master_skill)
 
-    def auto_attack(self, nps: Union[List[int], int] = None, mode='dmg'):
+    def auto_attack(self, nps: Union[List[int], int] = None, mode='dmg', allow_unknown=False):
+        t0 = time.time()
         while True:
-            click(LOC.attack, lapse=0.5)  # LOC.attack not covered by LOC.cards_back
+            click(LOC.attack, lapse=0.5)  # LOC.attack should be not covered by LOC.cards_back
             cards, np_cards = self.parse_cards(screenshot(), nps=nps)
             if cards == {}:
-                continue
+                if time.time() - t0 > 5 and allow_unknown:
+                    # if lapse>3s, maybe someone has been died
+                    chosen_cards = convert_list(nps)
+                    chosen_cards.extend([1, 2, 3])
+                    self.play_cards(chosen_cards[0:3])
+                else:
+                    continue
             else:
                 chosen_cards = self.choose_cards(cards, np_cards, nps, mode=mode)
-                self.attack(chosen_cards)
+                self.play_cards(chosen_cards)
                 break
 
     def attack(self, locs_or_cards: Union[List[Card], List[int]]):
+        assert len(locs_or_cards) >= 3, locs_or_cards
+        while True:
+            click(LOC.attack, lapse=0.2)
+            if compare_regions(screenshot(), T.cards1, LOC.cards_back):
+                time.sleep(1)
+                self.play_cards(locs_or_cards)
+                break
+
+    def play_cards(self, locs_or_cards: Union[List[Card], List[int]]):
         """
         :param locs_or_cards: list of locs or cards
         :return:
         """
         assert len(locs_or_cards) >= 3, locs_or_cards
-        logger.debug(f'Attack: {self.str_cards(locs_or_cards)}')
-        if isinstance(locs_or_cards[0], Card):
-            locs = [c.loc for c in locs_or_cards]
-        else:
-            locs: List[int] = locs_or_cards
+        logger.debug(f'Attack cards: {self.str_cards(locs_or_cards)}')
+        # if isinstance(locs_or_cards[0], Card):
+        locs: List[int] = [c.loc if isinstance(c, Card) else c for c in locs_or_cards]
+        # else:
+        #     locs: List[int] = locs_or_cards
         for loc in locs:
             click(LOC.cards[loc - 1])
             time.sleep(0.2)
 
-    def xjbd(self, img_final, region, mode='alter', turns=100):
+    def xjbd(self, target, regions, mode='alter', turns=100):
+        # type:(Union[Image.Image,List[Image.Image]],Union[tuple,list],str,int)->int
+        if isinstance(regions[0], (int, float)):
+            regions = [regions]
         cur_turn = 0
         while cur_turn < turns:
-            page_no = compare_regions(screenshot(), [img_final, T.wave1a], [region, LOC.master_skill])
-            # print(f'compare_no={page_no}', end='')
-            if page_no < 0:
-                continue
-            elif page_no == 0:
-                return turns
-            elif page_no == 1:
+            shot = screenshot()
+            if compare_regions(shot, target, regions):
+                # this part must before elif part
+                return cur_turn
+            elif compare_regions(shot, T.wave1a, LOC.master_skill):
+                cur_turn += 1
                 logger.debug(f'xjbd: turn {cur_turn}/{turns}.')
                 self.auto_attack(mode=mode)
-                cur_turn += 1
+            else:
+                continue
 
     # assistant functions
     def parse_cards(self, img: Image.Image, nps: List[int] = None) -> Tuple[Dict[int, Card], Dict[int, Card]]:
@@ -275,11 +291,14 @@ class Master:
         :param nps: which servants' np must be found. nps=(1~6,)
         :return: location-card(svt*10+color) pair dictionary
         """
+        # TODO: if xjbd, someone is dead, should allow unrecognized cards(card code could be -1).
         assert self.templates != {}, 'Please set cards templates first!!!'
-        if nps is None:
-            nps = []
-        elif isinstance(nps, int):
-            nps = [nps]
+        nps = convert_list(nps)
+
+        # if nps is None:
+        #     nps = []
+        # elif isinstance(nps, int):
+        #     nps = [nps]
 
         # else:
         #     np_svts = [np_loc for np_loc in np_svts]
@@ -295,7 +314,7 @@ class Master:
                     continue
                 elif mode == 2 and _color != 0:
                     continue
-                th = match_target(outer, templ)
+                th = search_target(outer, templ)
                 if th > threshold and th > max_th:
                     max_th = th
                     _matched = key
@@ -328,13 +347,14 @@ class Master:
         :param mode: dmg,np
         :return: locations of chosen cards
         """
-
-        if isinstance(nps, int):
-            chosen_nps: List[cards] = [np_cards[nps]]
-        elif nps is None:
-            chosen_nps = []
-        else:
-            chosen_nps = [np_cards[_np] for _np in nps]
+        nps = convert_list(nps)
+        chosen_nps = [np_cards[_np] for _np in nps]
+        # if isinstance(nps, int):
+        #     chosen_nps: List[cards] = [np_cards[nps]]
+        # elif nps is None:
+        #     chosen_nps = []
+        # else:
+        #     chosen_nps = [np_cards[_np] for _np in nps]
         s_cards = sorted(cards.values(), key=lambda o: self.weights.get(o.code, 0))
 
         if mode == 'dmg':

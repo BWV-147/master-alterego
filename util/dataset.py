@@ -5,7 +5,7 @@ Coordination: using PIL coordination, (x,y), (left,top,right,bottom),
 # Coordination: (x,y), (0,0,1920,1080)
 import os
 from PIL import Image
-from util import *
+from util.util import *
 
 THR = 0.9  # default threshold
 
@@ -63,7 +63,7 @@ class _Regions:
     team = (1655, 973, 1902, 1052)
     wave = (1261, 78, 1281, 106)
     enemies_all = (0, 0, 1080, 128)
-    enemies = ((0, 0, 360, 130), (360, 0, 720, 130), (720, 0, 1080, 130))  # skill_to_enemies
+    enemies = ((0, 0, 120, 130), (360, 0, 480, 130), (720, 0, 840, 130))  # skill_to_enemies
 
     skills = [
         [(61, 823, 121, 908), (202, 823, 262, 908), (343, 823, 403, 908)],
@@ -96,8 +96,7 @@ class _Regions:
     finish_next = (1444, 980, 1862, 1061)
     finish_graft = (454, 216, 623, 386)
 
-    friend_point = (0, 0, 10, 10)
-    friend_point_close = (0, 0, 10, 10)
+    friend_point = (460, 810, 580, 880)
 
     size = (0, 0, 1920, 1080)
 
@@ -158,6 +157,7 @@ class _ImageTemplates:
         self.directory = directory
 
     def get(self, attr):
+        # type:(Union[str, List[str], Tuple[str]])-> Union[Image.Image, List[Image.Image], Dict[str, Image.Image]]
         if attr is None:
             return self.templates.copy()
         elif isinstance(attr, (list, tuple)):

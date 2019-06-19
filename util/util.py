@@ -48,9 +48,12 @@ def check_log_time(secs: float):
         last2 = G.get('last_log_time', now)
         lapse = now - last2
         if lapse > secs:
-            print(f'lapse={lapse:.2f}, maybe something went wrong.\r', end='')
-            # send mail
-        time.sleep(30)
+            s = f'lapse={lapse:.2f}, maybe something went wrong.'
+            print(s)
+            if G.get('mail', False):
+                send_mail(s, subject='python went wrong!')
+            G['shutdown'] = True
+        time.sleep(10)
 
 
 # logger
@@ -115,6 +118,7 @@ def click(xy: tuple = None, lapse=0.5, r=2):
         # logger.debug('click (%d, %d)' % (x, y))
     win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0)
     win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP, 0, 0, 0, 0)
+    print(f'{time.asctime()} - click at {xy}')
     time.sleep(lapse)
 
 
@@ -135,6 +139,15 @@ def check_admin():
         ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, __file__, None, 1)
     else:
         print('already admin')
+
+
+def convert_list(items):
+    if items is None:
+        return []
+    elif isinstance(items, (list, tuple)):
+        return list(items)
+    else:
+        return [items]
 
 
 class Timer:

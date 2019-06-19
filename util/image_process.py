@@ -4,7 +4,7 @@ from PIL import ImageGrab
 import cv2
 from skimage.measure import compare_ssim as sk_compare_ssim
 from skimage.feature import match_template as sk_match_template
-from dataset import *
+from util.dataset import *
 
 
 def screenshot(region=None, filepath: str = None):
@@ -53,50 +53,49 @@ def cal_sim(img1: Image.Image, img2: Image.Image, region=None, method='ssim') ->
     return sim
 
 
-def match_target(img: Image.Image, target: Image.Image, mode='sk2'):
-    """
-    return the maximum of matched
-    Attention: cv2 use (h,w), but PIL/numpy use (w,h).
-    """
-    if mode == 'sk':
-        # noinspection PyTypeChecker
-        matches: np.ndarray = sk_match_template(np.array(img.convert('RGB')), np.array(target.convert('RGB')))
-        return np.max(matches)
-
-    else:
-        # noinspection PyTypeChecker
-        cv_img, cv_target = (cv2.cvtColor(np.array(img.convert('RGB')), cv2.COLOR_RGB2BGR),
-                             cv2.cvtColor(np.array(target.convert('RGB')), cv2.COLOR_RGB2BGR))
-        # h, w = cv_target.shape[0:2]
-        matches = cv2.matchTemplate(cv_img, cv_target, cv2.TM_CCOEFF_NORMED)
-        return np.max(matches)
-
-
-def compare_one_region(img, target, region=None, threshold=THR, at=None):
+# 是否匹配一个或多个regions
+def compare_regions(img, target, regions=None, threshold=THR, at=None):
     # type:(Image.Image,Image.Image,Union[tuple,list],float,Union[bool,tuple,list])->bool
     """
     compare two image at `region`, click `at` if matches. use `screenshot()` as img if img is None
     :return: bool: match or not
     """
-    sim = cal_sim(target.crop(region), img.crop(region))
-    if sim > threshold:
+    if regions is None:
+        res = cal_sim(img, target) > threshold
+    else:
+        if isinstance(regions[0], (list, tuple)):
+            matches = [cal_sim(img.crop(region), target.crop(region)) > threshold for region in regions]
+            res = False not in matches
+        else:
+            res = cal_sim(img.crop(regions), target.crop(regions)) > threshold
+    # if isinstance(regions, (list, tuple)):
+    #     if isinstance(regions[0], (list, tuple)):
+    #         matches = [cal_sim(img.crop(region), target.crop(region)) > threshold for region in regions]
+    #         res = matches.count(True) == len(regions)
+    #     else:
+    #         res = cal_sim(img.crop(regions), target.crop(regions)) > threshold
+    # else:
+    #     res = cal_sim(img.crop(regions), target.crop(regions)) > threshold
+    if res:
         if at is True:
-            click(region)
+            click(regions)
         elif isinstance(at, (tuple, list)):
             click(at)
-        return True
-    return False
+    return res
 
 
-def compare_regions(img, targets, regions, threshold=THR, at=None):
+# 匹配第几个target
+def match_which_target(img, targets, regions, threshold=THR, at=None):
     # type:(Image.Image,Union[Image.Image,tuple,list],Union[list,tuple],float,Union[bool,tuple,list])->int
     """
-    compare which `target` matches `img` at `region`, click `at` if matches.
+    compare img with multi targets, click `at` if matches.
     :return: matched index, -1 if not matched.
     """
     if isinstance(targets, Image.Image):
         targets = [targets]
+    if isinstance(regions[0], (int, float)):
         regions = [regions]
+    assert len(targets) == len(regions), (targets, regions)
     res = -1
     for i in range(len(targets)):
         sim = cal_sim(img, targets[i], regions[i])
@@ -111,7 +110,8 @@ def compare_regions(img, targets, regions, threshold=THR, at=None):
     return res
 
 
-def wait_regions(targets, regions, threshold=THR, lapse=0.1, at=None, clicking=None):
+# 直到匹配某一个target
+def wait_which_target(targets, regions, threshold=THR, lapse=0.1, at=None, clicking=None):
     # type:(Union[Image.Image,tuple,list],Union[list,tuple],float,float,Union[bool,tuple,list],Union[list,tuple])->int
     """
     Waiting for screenshot matching the region of some target.
@@ -132,7 +132,7 @@ def wait_regions(targets, regions, threshold=THR, lapse=0.1, at=None, clicking=N
 
     while True:
         shot = screenshot()
-        res = compare_regions(shot, targets, regions, threshold, at)
+        res = match_which_target(shot, targets, regions, threshold, at)
         if res >= 0:
             return res
         if clicking is not None:
@@ -140,11 +140,32 @@ def wait_regions(targets, regions, threshold=THR, lapse=0.1, at=None, clicking=N
         time.sleep(lapse)
 
 
-def wait_match(target: Image.Image, threshold=THR, lapse=0.1):
+# 直到匹配模板
+def wait_search_template(target: Image.Image, threshold=THR, lapse=0.1):
     while True:
-        if match_target(screenshot(), target) > threshold:
+        if search_target(screenshot(), target) > threshold:
             return
         time.sleep(lapse)
+
+
+# 搜索目标模板存在匹配的最大值
+# noinspection PyTypeChecker
+def search_target(img: Image.Image, target: Image.Image, mode='cv2') -> float:
+    """
+    return the maximum of matched
+    mode ='cv2'(default) to use open-cv(quick), 'sk' to use skimage package(VERY slow)
+    Attention: cv2 use (h,w), but PIL/numpy use (w,h).
+    """
+    m1: np.ndarray = np.array(img.convert('RGB'))
+    m2: np.ndarray = np.array(target.convert('RGB'))
+    if mode == 'sk':
+        matches: np.ndarray = sk_match_template(m1, m2)
+        return np.max(matches)
+    else:
+        cv_img, cv_target = (cv2.cvtColor(m1, cv2.COLOR_RGB2BGR), cv2.cvtColor(m2, cv2.COLOR_RGB2BGR))
+        # h, w = cv_target.shape[0:2]
+        matches = cv2.matchTemplate(cv_img, cv_target, cv2.TM_CCOEFF_NORMED)
+        return np.max(matches)
 
 
 def _test():
@@ -154,12 +175,12 @@ def _test():
     reg = (100, 200, 300, 600)
     for i in range(10):
         t0 = time.time()
-        wait_regions(m2, reg)
+        wait_which_target(m2, reg)
         t1.append(time.time() - t0)
     print('avg time=%.6f sec' % (np.mean(t1)))
     for i in range(10):
         t0 = time.time()
-        wait_regions(m2, reg)
+        wait_which_target(m2, reg)
         t2.append(time.time() - t0)
     print('avg time=%.6f sec' % (np.mean(t2)))
 
