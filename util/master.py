@@ -33,12 +33,14 @@ class Master:
     def __init__(self, quest='', names=None):
         self.quest_name = quest
         self.svt_names = names if names is not None else ['A', 'B', 'C', 'D', 'E', 'F']
+        self.T = ImageTemplates()
+        self.LOC = Regions()
         self.templates = {}
         self.weights: dict = {}
 
     def set_battle_data(self, coord=None, names=None, weights=None, cards_loc=None):
         if coord:
-            LOC.relocate(coord)
+            self.LOC.relocate(coord)
         if names:
             self.svt_names = names
         if weights:
@@ -51,13 +53,10 @@ class Master:
         """
         set_battle_data first.
         :param battle_func: start at quest banner screen, end at kizuna screen
-        :param templ_dir:
         :param num:
         :param apple:
         :return:
         """
-        G['finished'] = False
-        # battle part
         timer = Timer()
         finished = 0
         while finished < num:
@@ -65,26 +64,25 @@ class Master:
             finished += 1
             logger.info(f'>>>>> Battle "{self.quest_name}" No.{finished}/{num} <<<<<')
             battle_func(self, apple)
-            wait_which_target(T.rewards, LOC.finish_qp, clicking=LOC.finish_qp, lapse=0.5)
+            wait_which_target(self.T.rewards, self.LOC.finish_qp, clicking=self.LOC.finish_qp, lapse=0.5)
             # check reward_page has CE dropped or not
             ce = screenshot()
             ce.save(f"img/craft/craft-{time.strftime('%m%d-%H-%M-%S')}.png")
-            click(LOC.finish_next)
+            click(self.LOC.finish_next)
             logger.info('battle finished, checking rewards.')
             while True:
-                page_no = wait_which_target([T.quest, T.apply_friend, T.friend_point],
-                                            [LOC.quest, LOC.apply_friend, LOC.friend_point])
+                page_no = wait_which_target([self.T.quest, self.T.apply_friend, self.T.friend_point],
+                                            [self.LOC.quest, self.LOC.apply_friend, self.LOC.friend_point])
                 if page_no == 1:
-                    click(LOC.apply_friend_deny)
+                    click(self.LOC.apply_friend_deny)
                 elif page_no == 2:
-                    click(LOC.friend_point)
+                    click(self.LOC.friend_point)
                 elif page_no == 0:
                     break
             dt = timer.stop().dt
             logger.info(f'--- Battle {finished} finished, time = {int(dt // 60)} min {int(dt % 60)} sec.')
         logger.info(f'>>>>> All {finished} battles "{self.quest_name}" finished. <<<<<')
-        G['finished'] = True
-        G['shutdown'] = True
+        time.sleep(100)
 
     # procedures
     def eat_apple(self, apple=-1, check_time=False):
@@ -94,27 +92,27 @@ class Master:
         if apple == 0:  # 不舍得吃彩苹果
             apple = 3
         logger.debug(f"eating {['Colorful', 'Gold', 'Silver', 'Cropper'][apple]} apple...")
-        wait_which_target(T.apple_page, LOC.apple_page)
+        wait_which_target(self.T.apple_page, self.LOC.apple_page)
         if apple == 1 and check_time:
-            click(LOC.apple_close)
-            click(LOC.safe_area)  # why?
-            ap_time = T.quest.crop(LOC.ap_time)
+            click(self.LOC.apple_close)
+            click(self.LOC.safe_area)  # why?
+            ap_time = self.T.quest.crop(self.LOC.ap_time)
             while True:
-                sim = cal_sim(screenshot().crop(LOC.ap_time), ap_time)
+                sim = cal_sim(screenshot().crop(self.LOC.ap_time), ap_time)
                 if sim > THR:
-                    click(LOC.quest_c, lapse=0.1)
-                    click(LOC.safe_area, lapse=0.1)  # why: sometimes click once to select, twice to enter
-                    click(LOC.quest_c, lapse=0.1)
+                    click(self.LOC.quest_c, lapse=0.1)
+                    click(self.LOC.safe_area, lapse=0.1)  # why: sometimes click once to select, twice to enter
+                    click(self.LOC.quest_c, lapse=0.1)
                     break
                 time.sleep(2)
         # eating apple page
         shot = screenshot()
-        if match_which_target(shot, T.apple_page, LOC.apples[apple]) >= 0:
-            click(LOC.apples[apple])
-            wait_which_target(T.apple_confirm, LOC.apple_confirm, at=True)
-            wait_which_target(T.support, LOC.support_team_icon)
+        if match_which_target(shot, self.T.apple_page, self.LOC.apples[apple]) >= 0:
+            click(self.LOC.apples[apple])
+            wait_which_target(self.T.apple_confirm, self.LOC.apple_confirm, at=True)
+            wait_which_target(self.T.support, self.LOC.support_team_icon)
             return
-        elif match_which_target(shot, T.support, LOC.support_refresh) >= 0:
+        elif match_which_target(shot, self.T.support, self.LOC.support_refresh) >= 0:
             return
         else:
             logger.debug('apple?? where??')
@@ -128,31 +126,31 @@ class Master:
         :param match_skills: skills to match, a list of int value (1,2,3)
         """
         logger.debug('choosing support...')
-        wait_which_target(T.support, LOC.support_team_icon)
+        wait_which_target(self.T.support, self.LOC.support_team_icon)
         while True:
             shot = screenshot()
             for svt in range(2):  # 2 support one time, no scroll
-                if match_which_target(shot, T.support, LOC.support_skill[svt]) >= 0:
+                if match_which_target(shot, self.T.support, self.LOC.support_skill[svt]) >= 0:
                     if match_skills is not None:
-                        rs = [match_which_target(shot, T.support, LOC.support_skills[svt][skill_loc - 1]) >= 0 for
-                              skill_loc in match_skills]
+                        rs = [match_which_target(shot, self.T.support, self.LOC.support_skills[svt][skill_loc - 1]) >= 0
+                              for skill_loc in match_skills]
                         if rs.count(True) != len(match_skills):
                             continue
                     if match_ce:
-                        if match_which_target(shot, T.support, LOC.support_ce[svt]) < 0:
+                        if match_which_target(shot, self.T.support, self.LOC.support_ce[svt]) < 0:
                             continue
                     if match_ce_max:
-                        if match_which_target(shot, T.support, LOC.support_ce_max[svt]) < 0:
+                        if match_which_target(shot, self.T.support, self.LOC.support_ce_max[svt]) < 0:
                             continue
-                    click(LOC.support_ce[svt])
-                    wait_which_target(T.team, LOC.team, at=True)
+                    click(self.LOC.support_ce[svt])
+                    wait_which_target(self.T.team, self.LOC.team, at=True)
                     return
             # refresh support
-            wait_which_target(T.support, LOC.support_refresh)
+            wait_which_target(self.T.support, self.LOC.support_refresh)
             time.sleep(2)
-            click(LOC.support_refresh)
-            wait_which_target(T.support_confirm, LOC.support_confirm_title)
-            click(LOC.support_refresh_confirm)
+            click(self.LOC.support_refresh)
+            wait_which_target(self.T.support_confirm, self.LOC.support_confirm_title)
+            click(self.LOC.support_refresh_confirm)
             logger.debug('refresh support')
 
     def svt_skill(self, before, after, who, skill, friend=None, enemy=None):
@@ -176,14 +174,14 @@ class Master:
 
         # start
         if enemy is not None:
-            click(LOC.enemies[enemy - 1])
-        region = LOC.skills[who - 1][skill - 1]
+            click(self.LOC.enemies[enemy - 1])
+        region = self.LOC.skills[who - 1][skill - 1]
         wait_which_target(before, region, at=True)
         if friend is not None:
             # it should also match the saved screenshot, but...
             # TODO: match select target shot, same as master_skill
             time.sleep(0.3)
-            click(LOC.skill_to_target[friend - 1])
+            click(self.LOC.skill_to_target[friend - 1])
         wait_which_target(after, region)
 
     def master_skill(self, before, skill, friend=None, enemy=None, order_change=None, order_change_img=None):
@@ -200,13 +198,13 @@ class Master:
         s = f'to friend {friend}' if friend else f'to enemy {enemy}' if enemy else ''
         logger.debug(f'Master skill {skill} {s}.')
 
-        region = LOC.master_skills[skill - 1]
+        region = self.LOC.master_skills[skill - 1]
         if enemy is not None:
-            click(LOC.enemies[enemy - 1])
+            click(self.LOC.enemies[enemy - 1])
         flag = 0
         while True:
             if flag % 3 == 0:
-                click(LOC.master_skill)
+                click(self.LOC.master_skill)
             time.sleep(0.6)
             if compare_regions(screenshot(), before, region, at=True):
                 break
@@ -214,20 +212,20 @@ class Master:
         if friend is not None:
             # it should also match the saved screenshot, but...
             time.sleep(0.3)
-            click(LOC.skill_to_target[friend - 1])
+            click(self.LOC.skill_to_target[friend - 1])
         elif order_change is not None:
-            wait_which_target(order_change_img, LOC.order_change[0])
-            click(LOC.order_change[order_change[0] - 1])
-            click(LOC.order_change[order_change[1] - 1])
-            click(LOC.order_change_confirm)
-            wait_which_target(before, LOC.master_skill)
+            wait_which_target(order_change_img, self.LOC.order_change[0])
+            click(self.LOC.order_change[order_change[0] - 1])
+            click(self.LOC.order_change[order_change[1] - 1])
+            click(self.LOC.order_change_confirm)
+            wait_which_target(before, self.LOC.master_skill)
             pass
-        wait_which_target(before, LOC.master_skill)
+        wait_which_target(before, self.LOC.master_skill)
 
     def auto_attack(self, nps: Union[List[int], int] = None, mode='dmg', allow_unknown=False):
         t0 = time.time()
         while True:
-            click(LOC.attack, lapse=0.5)  # LOC.attack should be not covered by LOC.cards_back
+            click(self.LOC.attack, lapse=0.5)  # self.LOC.attack should be not covered by self.LOC.cards_back
             cards, np_cards = self.parse_cards(screenshot(), nps=nps)
             if cards == {}:
                 if time.time() - t0 > 5 and allow_unknown:
@@ -245,8 +243,8 @@ class Master:
     def attack(self, locs_or_cards: Union[List[Card], List[int]]):
         assert len(locs_or_cards) >= 3, locs_or_cards
         while True:
-            click(LOC.attack, lapse=0.2)
-            if compare_regions(screenshot(), T.cards1, LOC.cards_back):
+            click(self.LOC.attack, lapse=0.2)
+            if compare_regions(screenshot(), self.T.cards1, self.LOC.cards_back):
                 time.sleep(1)
                 self.play_cards(locs_or_cards)
                 break
@@ -263,7 +261,7 @@ class Master:
         # else:
         #     locs: List[int] = locs_or_cards
         for loc in locs:
-            click(LOC.cards[loc - 1])
+            click(self.LOC.cards[loc - 1])
             time.sleep(0.2)
 
     def xjbd(self, target, regions, mode='alter', turns=100):
@@ -276,7 +274,7 @@ class Master:
             if compare_regions(shot, target, regions):
                 # this part must before elif part
                 return cur_turn
-            elif compare_regions(shot, T.wave1a, LOC.master_skill):
+            elif compare_regions(shot, self.T.wave1a, self.LOC.master_skill):
                 cur_turn += 1
                 logger.debug(f'xjbd: turn {cur_turn}/{turns}.')
                 self.auto_attack(mode=mode)
@@ -323,13 +321,13 @@ class Master:
 
         cards, np_cards = {}, {}
         for loc in range(1, 6):  # 5 common card
-            matched = traverse(img.crop(LOC.cards_outer[loc - 1]), 1)
+            matched = traverse(img.crop(self.LOC.cards_outer[loc - 1]), 1)
             if matched == -1:
                 return {}, {}  # 5 command card must be matched
             else:
                 cards[loc] = Card(loc, matched)
         for loc in range(6, 9):
-            matched = traverse(img.crop(LOC.cards_outer[loc - 1]), 2)
+            matched = traverse(img.crop(self.LOC.cards_outer[loc - 1]), 2)
             if matched != -1:
                 np_cards[loc] = Card(loc, matched)
         if not set(nps).issubset(set(np_cards.keys())):
@@ -411,15 +409,15 @@ class Master:
     # set battle data in self.set_battle_data()
     def set_card_templates(self, locs: list):
         """
-        parse card templates from cards[1~3].png file. regions using inner boundary `LOC.cards`
+        parse card templates from cards[1~3].png file. regions using inner boundary `self.LOC.cards`
         :param locs: locations(tmpl:1~3, card:1~5 6~8) of  [svt1:[np, Q, A, B], svt2:...], loc=-1 if no card
         """
-        templs: List[Image.Image] = T.cards
+        templs: List[Image.Image] = self.T.cards
         for svt, svt_loc in enumerate(locs):
             for color, loc in enumerate(svt_loc):
                 if loc[1] < 1 or loc[1] > 8:
                     continue
-                self.templates[(svt + 1) * 10 + color] = templs[loc[0] - 1].crop(LOC.cards[loc[1] - 1])
+                self.templates[(svt + 1) * 10 + color] = templs[loc[0] - 1].crop(self.LOC.cards[loc[1] - 1])
 
     def set_card_weights(self, weights: list, color_weight: str = 'QAB'):
         """

@@ -14,16 +14,18 @@ def __battle_func_example(master: Master, apple=-1):
 # %% serials of battle_func
 @with_goto
 def battle_charlotte_android(master: Master, apple=-1):
-    # LOC.relocate((106, 60, 1813, 1020))
     if not master.quest_name:
         master.quest_name = 'charlotte-android'
     master.svt_names = ['尼托', '旧剑', '孔明']
-    T.read_templates('img/charlotte')
-    master.set_card_weights([2, 3, 1])
+    master.T.read_templates('img/charlotte')
+    # master.LOC.relocate((106, 60, 1813, 1020))
+    master.set_card_weights([2, 3, 2])
     # ---------------------------  NP    Quick    Arts    Buster ----
     master.set_card_templates([[(1, 6), (3, 4), (2, 3), (1, 1)],
                                [(3, 7), (2, 1), (1, 2), (1, 3)],
                                [(2, -1), (3, 5), (2, 5), (1, 4)]])
+    T = master.T
+    LOC = master.LOC
     if G.setdefault('goto', False):
         G['goto'] = False
         logger.warning('goto label.h')
@@ -72,15 +74,17 @@ def battle_charlotte_android(master: Master, apple=-1):
 @with_goto
 def battle_charlotte_ios(master: Master, apple=-1):
     # LOC.relocate((133, 75, 1785, 1004))
-    LOC.relocate((142, 60, 1777, 980))  # maximize with task bar
     master.quest_name = 'charlotte-ios'
     master.svt_names = ['豆爸', 'lily', '孔明']
-    T.read_templates('img/charlotte-ios')
+    master.LOC.relocate((142, 60, 1777, 980))  # maximize with task bar
+    master.T.read_templates('img/charlotte-ios')
     master.set_card_weights([1, 3, 2])
     # ---------------------------  NP    Quick    Arts    Buster ----
     master.set_card_templates([[(1, 6), (3, 5), (1, 5), (2, 1)],
                                [(2, 7), (2, 4), (1, 2), (1, 1)],
                                [(2, -1), (1, 4), (1, 3), (3, 2)]])
+    T = master.T
+    LOC = master.LOC
     if G.setdefault('goto', False):
         G['goto'] = False
         logger.warning('goto label.h')

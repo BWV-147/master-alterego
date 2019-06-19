@@ -11,7 +11,7 @@ THR = 0.9  # default threshold
 
 
 # database: regions & saved screenshot
-class _Regions:
+class Regions:
     """
     Store region(length 4) or point(length 2) data at default screensize 1920*1080.
     Properties could be a region/point or a list(1 or multi dimension) of regions/points
@@ -107,11 +107,11 @@ class _Regions:
         :return: None.
         """
         assert len(region) == 4, region
-        for key, value in _Regions.__dict__.items():
+        for key, value in Regions.__dict__.items():
             # at most 3 layers
             if not key.startswith('__') and isinstance(value, (int, list, tuple)):
                 # print(key, value)
-                self.__dict__[key] = _Regions.loop(value, region, _Regions.size)
+                self.__dict__[key] = Regions.loop(value, region, Regions.size)
 
     @staticmethod
     def loop(pt, new, old):
@@ -127,12 +127,12 @@ class _Regions:
                     # oo.append(int(region[ii] + (region[ii + 2] - region[ii]) / origin[ii] * o[i]))
                 return oo
             else:
-                return [_Regions.loop(k, new, old) for k in pt]
+                return [Regions.loop(k, new, old) for k in pt]
         else:
             print(f'skip key(type:{type(pt)}) for resize')
 
 
-class _ImageTemplates:
+class ImageTemplates:
     directory: str
     templates: Dict[str, Image.Image]
 
@@ -270,8 +270,8 @@ class _ImageTemplates:
 logger = get_logger()
 logger2 = get_logger('craft', logging.WARNING)
 
-LOC = _Regions()
-T = _ImageTemplates()
+# LOC = Regions()
+# T = ImageTemplates()
 
 
 # %% local test functions
