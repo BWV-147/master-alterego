@@ -1,13 +1,6 @@
 from battle import *
 
 
-def loop_test():
-    while True:
-        t = threading.current_thread()
-        print(f'this msg is from thread-{t.ident}({t.name}).')
-        time.sleep(2)
-
-
 def start_battle(battle_func, num=10, apple=-1):
     # type:(Callable[[Master,int],None],int,int)->None
     """
@@ -44,33 +37,28 @@ def start_battle(battle_func, num=10, apple=-1):
                 break
         dt = timer.stop().dt
         logger.info(f'--- Battle {finished} finished, time = {int(dt // 60)} min {int(dt % 60)} sec.')
+        with open('log/time.log', 'a') as fd:
+            fd.write(str(dt) + '\n')
     logger.info(f'>>>>> All {finished} battles "{master.quest_name}" finished. <<<<<')
 
 
 # main entrance
-def battle_with_check(battle_func, num=10, apple=-1, quest='default-quest', check=True):
-    # type:(Callable[[Master,int],None],int,int,str,bool)->None
+def battle_with_check(check=True):
     check_admin()
+    battle = Battle()
     if check:
-        t_ios = threading.Thread(target=start_battle, name='right-ios',
-                                 args=[battle_charlotte_ios, 3, -1], daemon=True)
-        t_adr = threading.Thread(target=start_battle, name='right-andr',
-                                 args=[battle_charlotte_android, 2, -1], daemon=True)
-        supervise_log_time([t_ios], 90, mail=False, interval=10)
-        # t1 = threading.Thread(target=loop_test, name='thread A')
-        # t2 = threading.Thread(target=loop_test, name='thread B')
-        # supervise_log_time([t1, t2], 10, mail=False, interval=0.2)
+        t_ios = threading.Thread(target=battle.start, name='left-ios',
+                                 args=[battle.chaos_ios, 400, 2], daemon=True)
+        t_adr = threading.Thread(target=battle.start, name='android',
+                                 args=[battle.chaos_android, 400, 2], daemon=True)
+        supervise_log_time([t_adr], 50, mail=False, interval=10)
     else:
-        # master.start_battle(battle_func, num, apple)
-        threading.current_thread().setName('right-case')
-        start_battle(battle_charlotte_ios, 2, -1)
+        battle.start(battle.chaos_android, 2, -1)
 
 
-# %%
 if __name__ == '__main__':
     G['goto'] = False
     time.sleep(1)
-    # battle_with_check(battle_charlotte_android, num=1, apple=-1, quest='charlotte-android', check=True)
-    battle_with_check(battle_charlotte_ios, num=2, apple=-1, quest='charlotte-ios', check=False)
+    battle_with_check(True)
 
 # end file

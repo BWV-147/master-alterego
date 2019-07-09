@@ -11,6 +11,7 @@ import logging
 import ctypes
 import threading
 import smtplib
+import winsound
 from email.mime.text import MIMEText
 # noinspection PyUnresolvedReferences
 from typing import List, Tuple, Union, Dict, Callable
@@ -118,7 +119,14 @@ def supervise_log_time(threads: Union[List[threading.Thread], threading.Thread],
                 err_msg = f'Thread-{thread.ident}({thread.name}): Time run out! lapse={lapse:.2f}(>{secs}) secs.'
                 print(err_msg)
                 if mail:
-                    send_mail(err_msg, subject=f'{time.strftime("[%m-%d %H:%M:%S]")} python went wrong!')
+                    # import winsound
+                    # while True:
+                    #     winsound.Beep(500, 1000)
+                    #     time.sleep(1000)
+                    send_mail(err_msg, subject=f'{time.strftime("[%m-%d %H:%M:%S]")} Dell-iOS went wrong!')
+                # while True:
+                #     winsound.Beep(600, 1000)
+                #     time.sleep(0.4)
                 kill_thread(thread)
         time.sleep(interval)
         if alive is False:
@@ -183,7 +191,8 @@ def get_pixel(xy):
 def check_admin():
     import sys
     if ctypes.windll.shell32.IsUserAnAdmin() == 0:
-        print('require admin')
+        print('e.g. click somewhere inside a program(Blupapa) with admin, the python thread also need admin.')
+        print('require admin, take no effect when in console. ')
         ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, __file__, None, 1)
     else:
         print('already admin')

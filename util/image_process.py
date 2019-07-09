@@ -8,38 +8,27 @@ from skimage.feature import match_template as sk_match_template
 from util.dataset import *
 
 
-def screenshot(region=None, filepath: str = None, right=False):
+def screenshot(region: Union[tuple, list] = None, filepath: str = None, monitor=1) -> Image.Image:
+    """
+    take screenshot of multi-monitors. set python.exe and pythonw.exe high dpi first!(see README.md)
+    :param region: region inside monitor
+    :param filepath:
+    :param monitor: 0-all monitor, 1-first, 2-second monitor
+    :return: PIL.Image.Image
+    """
     try:
-        if is_second_screen() or right:
-            with mss() as sct:
-                shot = sct.grab({'left': 1920, 'top': 0, 'width': 1920, 'height': 1080})
-                _image = Image.frombytes('RGB', (1920, 1080), shot.rgb)
-        else:
-            _image = ImageGrab.grab(region)
+        with mss() as sct:
+            if is_second_screen():
+                monitor = 2
+            mon = sct.monitors[monitor]
+            shot = sct.grab(mon)
+            _image = Image.frombytes('RGB', (mon['width'], mon['height']), shot.rgb).crop(region)
     except Exception as e:
         logger.error('grab screenshot failed, return default single color image.\n%s' % e)
-        _image = Image.new('RGB', (1920, 1080), (0, 255, 255))
+        _image = Image.new('RGB', (1920, 1080), (0, 255, 255)).crop(region)
     if filepath is not None:
         _image.save(filepath)
     return _image
-    # noinspection PyBroadException
-    # if 'right' in threading.current_thread().name:
-    #     try:
-    #         _image = ImageGrab.grab(region)
-    #     except Exception as e:
-    #         logger.error('grab screenshot failed, return default single color image.\n%s' % e)
-    #         _image = Image.new('RGB', (1920, 1080), (0, 255, 255))
-    #         # _image = Image.open('./img/loading.png')
-    #     if filepath is not None:
-    #         _image.save(filepath)
-    #     return _image
-    # else:
-    #     with mss() as sct:
-    #         try:
-    #             shot = sct.grab({'left': 1920, 'top': 0, 'width': 1920, 'height': 1080})
-    #             _image = Image.frombytes('RGB', (1920, 1080), shot.rgb)
-    #         except:
-    #             pass
 
 
 def cal_sim(img1: Image.Image, img2: Image.Image, region=None, method='ssim') -> float:

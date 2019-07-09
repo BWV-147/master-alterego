@@ -48,7 +48,7 @@ class Master:
         if cards_loc:
             self.set_card_templates(cards_loc)
 
-    def start_battle(self, battle_func, num=10, apple=-1):
+    def __start_battle(self, battle_func, num=10, apple=-1):
         # type:(Callable[[Master,int],None],int,int)->None
         """
         set_battle_data first.
@@ -117,16 +117,21 @@ class Master:
         else:
             logger.debug('apple?? where??')
 
-    def choose_support(self, match_ce=False, match_ce_max=False, match_skills=None):
-        # type:(bool,bool,List[int])->None
+    def choose_support(self, match_svt=True, match_ce=False, match_ce_max=False, match_skills=None):
+        # type:(bool,bool,bool,List[int])->None
         """
         choose support servant. default match the region of 3 svt_skills, additional craft-essences
+        :param match_svt:
         :param match_ce: whether match CE, please set to False if jp server since CE could be filtered in jp server
         :param match_ce_max: whether match CE max star
         :param match_skills: skills to match, a list of int value (1,2,3)
         """
         logger.debug('choosing support...')
         wait_which_target(self.T.support, self.LOC.support_team_icon)
+        if match_svt is False:
+            click(self.LOC.support_ce[0])
+            wait_which_target(self.T.team, self.LOC.team, at=True)
+            return
         while True:
             shot = screenshot()
             for svt in range(2):  # 2 support one time, no scroll
@@ -223,7 +228,18 @@ class Master:
         wait_which_target(before, self.LOC.master_skill)
 
     def auto_attack(self, nps: Union[List[int], int] = None, mode='dmg', allow_unknown=False):
+        """
+
+        :param nps:
+        :param mode: dmg/xjbd/alter
+        :param allow_unknown:
+        :return:
+        """
         t0 = time.time()
+        if mode == 'xjbd':
+            # xjbd without nps
+            self.attack([1, 2, 3])
+            return
         while True:
             click(self.LOC.attack, lapse=0.5)  # self.LOC.attack should be not covered by self.LOC.cards_back
             cards, np_cards = self.parse_cards(screenshot(), nps=nps)
@@ -264,7 +280,7 @@ class Master:
             click(self.LOC.cards[loc - 1])
             time.sleep(0.2)
 
-    def xjbd(self, target, regions, mode='alter', turns=100):
+    def xjbd(self, target, regions, mode='dmg', turns=100):
         # type:(Union[Image.Image,List[Image.Image]],Union[tuple,list],str,int)->int
         if isinstance(regions[0], (int, float)):
             regions = [regions]
@@ -278,6 +294,7 @@ class Master:
                 cur_turn += 1
                 logger.debug(f'xjbd: turn {cur_turn}/{turns}.')
                 self.auto_attack(mode=mode)
+                # self.attack([1, 2, 3])
             else:
                 continue
 
@@ -415,9 +432,10 @@ class Master:
         templs: List[Image.Image] = self.T.cards
         for svt, svt_loc in enumerate(locs):
             for color, loc in enumerate(svt_loc):
-                if loc[1] < 1 or loc[1] > 8:
-                    continue
-                self.templates[(svt + 1) * 10 + color] = templs[loc[0] - 1].crop(self.LOC.cards[loc[1] - 1])
+                if 0 < loc[1] <= 8:
+                    # if loc[1] < 1 or loc[1] > 8:
+                    #     continue
+                    self.templates[(svt + 1) * 10 + color] = templs[loc[0] - 1].crop(self.LOC.cards[loc[1] - 1])
 
     def set_card_weights(self, weights: list, color_weight: str = 'QAB'):
         """
