@@ -1,12 +1,296 @@
 """Place battle_func for different battles"""
-from util.master import *
+# noinspection PyPackageRequirements
 from goto import with_goto
 from concurrent.futures import ThreadPoolExecutor
-import signal
+from util.master import *
 
 
-# noinspection PyPep8Naming
+# noinspection PyPep8Naming,DuplicatedCode
 class Battle:
+    def __init__(self):
+        self.master = Master()
+        pass
+
+    @with_goto
+    def start(self, battle_func, num=10, apple=-1, support=True):
+        T = self.master.T
+        T.read_templates('img/zaxiu-caster-full')
+        LOC = self.master.LOC
+        timer = Timer()
+        finished = 0
+        info = StatInfo()
+        while finished < num:
+            timer.start()
+            finished += 1
+            logger.info(f'>>>>> Battle "{self.master.quest_name}" No.{finished}/{num} <<<<<')
+            if G.setdefault('goto_outer', False):
+                G['goto_outer'] = False
+                logger.warning('outer: goto label.g')
+                # noinspection PyStatementEffect
+                goto.g
+            battle_func(support)
+            wait_which_target(T.rewards, LOC.finish_qp, clicking=LOC.finish_qp, lapse=0.5)
+            click(LOC.rewards_show_num, lapse=1)
+            # check reward_page has CE dropped or not
+            # noinspection PyStatementEffect
+            label.g
+            rewards = screenshot()
+            logger.info('battle finished, checking rewards.')
+            craft_dropped = match_which_target(rewards, T.rewards, LOC.finish_craft) >= 0
+            if craft_dropped:
+                logger.warning(f'{info.craft_num}th craft dropped!!!')
+                rewards.save(f'img/craft/craft-{self.master.quest_name}-{time.strftime("%m%d-%H-%M-%S")}'
+                             + f'-drop{info.craft_num}.png')
+                if info.craft_num in (5, 8, 9, 12, 13, 16, 17, 20, 21, 25):
+                    send_mail(f'NEED Enhancement! {info.craft_num}th craft dropped!!!')
+                    logger.warning('need to change party or enhance crafts. Exit.')
+                    exit()
+                else:
+                    send_mail(f'{info.craft_num}th craft dropped!!!')
+            else:
+                rewards.save(f"img/craft/craft-{self.master.quest_name}-{time.strftime('%m%d-%H-%M-%S')}.png")
+            dt = timer.stop().dt
+            info.add_battle(craft_dropped, int(dt))
+            info.save()
+            logger.info(f'--- Battle {finished}/{num} finished, time = {int(dt // 60)} min {int(dt % 60)} sec.'
+                        + f' (total {info.battle_no})')
+            # ready to restart a battle
+            click(LOC.finish_next)
+            while True:
+                page_no = wait_which_target([T.restart_quest, T.apply_friend],
+                                            [LOC.restart_quest_yes, LOC.apply_friend])
+                if page_no == 1:
+                    click(LOC.apply_friend_deny)
+                elif page_no == 0:
+                    click(LOC.restart_quest_yes)
+                    break
+
+            page_no = wait_which_target([T.apple_page, T.support], [LOC.apple_page, LOC.support_refresh])
+            if page_no == 0:
+                self.master.eat_apple(apple)
+        logger.info(f'>>>>> All {finished} battles "{self.master.quest_name}" finished. <<<<<')
+
+    @with_goto
+    def zaxiu_caster(self, support=True):
+        """
+        阵容: 豆爸-R莫(醉贞)-孔明-X-X-X
+        """
+        master = self.master
+        T = self.master.T
+        LOC = self.master.LOC
+        if not master.quest_name:
+            master.quest_name = 'zaxiu-caster'
+        master.svt_names = ['豆爸', 'R莫', '孔明']
+        T.read_templates('img/zaxiu-caster')
+        # T.read_templates('img/test')
+        # LOC.relocate((88, 45, 1830, 1024))
+        # LOC.relocate((106, 60, 1813, 1020))
+        master.set_card_weights([1, 3, 2])
+        # ---------------------------  NP    Quick    Arts    Buster ----
+        master.set_card_templates([[(1, 6), (3, 4), (2, 3), (1, 1)],
+                                   [(2, 7), (1, 2), (1, 3), (3, 2)],
+                                   [(2, 0), [(1, 5), (5, 4), (9, 2)], [(1, 4), (5, 3), (7, 3)],
+                                    [(3, 1), (4, 2), (9, 5)]]])
+        G.setdefault('img_net', T.net_error)
+        G.setdefault('loc_net', LOC.net_error)
+        if G.setdefault('goto', False):
+            G['goto'] = False
+            logger.warning('goto label.h')
+            # noinspection PyStatementEffect
+            goto.h
+
+        if support:
+            master.choose_support(match_svt=False, match_ce=False, match_ce_max=False)
+        else:
+            logger.debug('please choose support manually!')
+        logger.debug('Quest zaxiu-caster start...')
+        # wave 1
+        wait_which_target(T.wave1a, LOC.enemies[1])
+        wait_which_target(T.wave1a, LOC.master_skill)
+        logger.debug('wave 1...')
+        # noinspection PyStatementEffect
+        label.h
+        master.svt_skill(T.wave1a, T.wave1b, 1, 1)
+        master.svt_skill(T.wave1a, T.wave1b, 1, 2)
+        master.svt_skill(T.wave1a, T.wave1b, 3, 2)
+        master.svt_skill(T.wave1a, T.wave1b, 3, 3)
+        master.attack([1, 6, 2])
+
+        # wave 2
+        wait_which_target(T.wave2a, LOC.master_skill)
+        logger.debug('wave 2...')
+        master.svt_skill(T.wave2a, T.wave2b, 1, 3, 2)
+        master.svt_skill(T.wave2a, T.wave2b, 2, 1)
+        master.svt_skill(T.wave2a, T.wave2b, 2, 2)
+        master.svt_skill(T.wave2a, T.wave2b, 3, 1, 2)
+        master.auto_attack(nps=7)
+
+        # wave 3
+        wait_which_target(T.wave3a, LOC.enemies[1])
+        wait_which_target(T.wave3a, LOC.master_skill, lapse=1)
+        logger.debug('wave 3...')
+        master.master_skill(T.wave3a, 2, 2)
+
+        master.auto_attack(nps=7)
+        master.xjbd(T.kizuna, LOC.kizuna, mode='dmg', allow_unknown=True)
+
+        return
+
+    @with_goto
+    def zaxiu_caster_full(self, support=True):
+        """
+        阵容: 豆爸-R莫(醉贞)-孔明-X-X-X
+        """
+        master = self.master
+        T = self.master.T
+        LOC = self.master.LOC
+        if not master.quest_name:
+            master.quest_name = 'zaxiu-caster-full'
+        master.svt_names = ['R莫', '蛇夫', '孔明', '小玉']
+        T.read_templates('img/zaxiu-caster-full')
+        # T.read_templates('img/test')
+        # LOC.relocate((88, 45, 1830, 1024))
+        # LOC.relocate((106, 60, 1813, 1020))
+        master.set_card_weights([3, 1, 2, 2])
+        # ---------------------------  NP    Quick    Arts    Buster ----
+        master.set_card_templates([[(1, 6), (1, 3), (2, 3), (2, 4)],
+                                   [(2, 0), (1, 0), (1, 0), (3, 0)],
+                                   [(2, 0), [(3, 3), (5, 4), (7, 5)], [(1, 1), (5, 1), (7, 4)],
+                                    [(1, 2), (4, 2), (9, 1)]],
+                                   [(2, 0), (3, 4), (2, 2), (2, 5)]])
+        wave1c = T.get('wave1c')
+        wave1d = T.get('wave1d')
+
+        G.setdefault('img_net', T.net_error)
+        G.setdefault('loc_net', LOC.net_error)
+        if G.setdefault('goto', False):
+            G['goto'] = False
+            logger.warning('goto label.h')
+            # noinspection PyStatementEffect
+            goto.h
+
+        if support:
+            master.choose_support(match_svt=True, match_ce=False, match_ce_max=False)
+        else:
+            logger.debug('please choose support manually!')
+
+        logger.debug('Quest zaxiu-caster-full start...')
+
+        # wave 1
+        wait_which_target(T.wave1a, LOC.enemies[1])
+        wait_which_target(T.wave1a, LOC.master_skill)
+        logger.debug('wave 1...')
+        master.svt_skill(T.wave1a, T.wave1b, 2, 2)
+        master.svt_skill(T.wave1a, T.wave1b, 2, 3)
+        master.master_skill(T.wave1b, 3, order_change=(2, 4), order_change_img=T.order_change)
+        master.svt_skill(wave1c, wave1d, 1, 1)
+
+        master.svt_skill(wave1c, wave1d, 1, 3)
+        master.svt_skill(wave1c, wave1d, 2, 1)
+        master.svt_skill(wave1c, wave1d, 2, 3, 1)
+        master.svt_skill(wave1c, wave1d, 3, 1, 1)
+        master.svt_skill(wave1c, wave1d, 3, 2)
+        master.svt_skill(wave1c, wave1d, 3, 3)
+        master.attack([6, 1, 2])
+
+        # wave 2
+        wait_which_target(T.wave2a, LOC.master_skill)
+        logger.debug('wave 2...')
+        master.svt_skill(T.wave2a, T.wave2b, 1, 2)
+        # master.svt_skill(T.wave2a, T.wave2b, 2, 1)
+        # master.svt_skill(T.wave2a, T.wave2b, 2, 2)
+        # master.svt_skill(T.wave2a, T.wave2b, 3, 1, 2)
+        master.attack([6, 1, 2])
+        # master.auto_attack(nps=7)
+        # noinspection PyStatementEffect
+        label.h
+
+        # wave 3
+        wait_which_target(T.wave3a, LOC.enemies[1])
+        wait_which_target(T.wave3a, LOC.master_skill, lapse=1)
+        logger.debug('wave 3...')
+        # master.svt_skill(T.wave3a, T.wave3b, 2, 3)
+        # master.svt_skill(T.wave3a, T.wave3b, 3, 1, 1)
+        master.master_skill(T.wave3a, 1)
+
+        # master.attack([6, 1, 2])
+        master.auto_attack(nps=6)
+        master.xjbd(T.kizuna, LOC.kizuna, mode='dmg')
+        return
+
+    @with_goto
+    def zaxiu_cba(self, support=True):
+        """
+        阵容: 豆爸-R莫(醉贞)-孔明-X-X-X
+        """
+        master = self.master
+        T = self.master.T
+        LOC = self.master.LOC
+        if not master.quest_name:
+            master.quest_name = 'zaxiu-cba'
+        master.svt_names = ['R莫', '小玉', 'CBA']
+        T.read_templates('img/zaxiu-cba')
+        master.set_card_weights([3, 2, 2.01])
+        # ---------------------------  NP    Quick    Arts    Buster ----
+        master.set_card_templates([[(1, 6), (1, 4), (1, 1), (3, 3)],
+                                   [(2, 0), (2, 4), (1, 2), (3, 1)],
+                                   [(2, 0), [(1, 3), (4, 4), (8, 5)], [(1, 5), (5, 2), (7, 5)],
+                                    [(3, 4), (6, 4), (9, 3)]]])
+        wave1c = T.get('wave1c')
+        wave1d = T.get('wave1d')
+
+        G.setdefault('img_net', T.net_error)
+        G.setdefault('loc_net', LOC.net_error)
+        if G.setdefault('goto', False):
+            G['goto'] = False
+            logger.warning('goto label.h')
+            # noinspection PyStatementEffect
+            goto.h
+
+        if support:
+            master.choose_support(match_svt=True, match_ce=False, match_ce_max=False, match_skills=[2, 3])
+        else:
+            logger.debug('please choose support manually!')
+        logger.debug('Quest zaxiu-cba start...')
+
+        # wave 1
+        wait_which_target(T.wave1a, LOC.enemies[1])
+        wait_which_target(T.wave1a, LOC.master_skill)
+        logger.debug('wave 3...')
+        master.svt_skill(T.wave1a, T.wave1b, 2, 2)
+        master.svt_skill(T.wave1a, T.wave1b, 2, 3)
+
+        master.master_skill(T.wave1a, 3, order_change=(2, 4), order_change_img=T.order_change)
+        # noinspection PyStatementEffect
+        label.h
+        master.svt_skill(wave1c, wave1d, 1, 1)
+        master.svt_skill(wave1c, wave1d, 1, 3)
+        master.svt_skill(wave1c, wave1d, 2, 1)
+        master.svt_skill(wave1c, wave1d, 2, 3, 1)
+        master.svt_skill(wave1c, wave1d, 3, 3, 1)
+        master.attack([6, 1, 2])
+
+        # wave 2
+        wait_which_target(T.wave2a, LOC.master_skill)
+        logger.debug('wave 3...')
+        master.svt_skill(T.wave2a, T.wave2b, 1, 2)
+        master.auto_attack(nps=6, parse_np=False)
+
+        # wave 3
+        wait_which_target(T.wave3a, LOC.enemies[1])
+        wait_which_target(T.wave3a, LOC.master_skill, lapse=1)
+        logger.debug('wave 3...')
+        master.svt_skill(T.wave3a, T.wave3b, 3, 2)
+        master.svt_skill(T.wave3a, T.wave3b, 3, 1, 1)
+        master.master_skill(T.wave3a, 1)
+        master.master_skill(T.wave3a, 2)
+        master.auto_attack(nps=6, parse_np=False)
+        master.xjbd(T.kizuna, LOC.kizuna, mode='dmg')
+        return
+
+
+# %% backup, old version
+class BattleBackup:
     def __init__(self):
         self.master = Master()
         pass
@@ -24,7 +308,7 @@ class Battle:
             wait_which_target(T.rewards, LOC.finish_qp, clicking=LOC.finish_qp, lapse=0.5)
             # check reward_page has CE dropped or not
             ce = screenshot()
-            ce.save(f"img/craft/craft-{time.strftime('%m%d-%H-%M-%S')}.png")
+            ce.save(f"img/craft/craft-{self.master.quest_name}-{time.strftime('%m%d-%H-%M-%S')}.png")
             click(LOC.finish_next)
             logger.info('battle finished, checking rewards.')
             wait_which_target(T.quest, LOC.quest)
@@ -44,6 +328,201 @@ class Battle:
         logger.info(f'>>>>> All {finished} battles "{self.master.quest_name}" finished. <<<<<')
 
     @with_goto
+    def steel_android(self, apple=-1):
+        """
+        阵容：杀师匠（醉贞）-茶茶（满破虚数）-孔明-X-X-X
+        """
+        master = self.master
+        T = self.master.T
+        LOC = self.master.LOC
+        if not master.quest_name:
+            master.quest_name = 'charlotte-android'
+        master.svt_names = ['bba', '茶茶', '孔明']
+        T.read_templates('img/steel-android')
+        master.LOC.relocate((88, 44, 88 + 1742, 44 + 982))
+        master.set_card_weights([3, 2, 1])
+        # ---------------------------  NP    Quick    Arts    Buster ----
+        master.set_card_templates([[(4, 6), (2, 1), (3, 5), (1, 4)],
+                                   [(4, 7), (3, 2), (2, 4), (2, 3)],
+                                   [(0, 0), (1, 3), (1, 2), (1, 1)]])
+        if G.setdefault('goto', False):
+            G['goto'] = False
+            logger.warning('goto label.h')
+            # noinspection PyStatementEffect
+            goto.h
+
+        wait_which_target(T.quest, LOC.quest, at=True)
+        page_no = wait_which_target([T.support, T.apple_page], [LOC.support_team_icon, LOC.apple_page])
+        if page_no == 1:
+            master.eat_apple(-1, False)
+        master.choose_support(match_ce=True, match_ce_max=True)
+        # wait_which_target(T.team, LOC.team, at=True, clicking=(1387, 114), interval=5)
+        logger.debug('start battle!')
+        # logger.info('Quest Charlotte-android start...')
+        # wave 1
+        # noinspection PyStatementEffect
+        label.h
+        wait_which_target(T.wave1a, LOC.enemies[2])
+        wait_which_target(T.wave1a, LOC.master_skill)
+        master.svt_skill(T.wave1a, T.wave1b, 3, 2)
+        master.svt_skill(T.wave1a, T.wave1b, 2, 1)
+        # master.svt_skill(T.wave1a, T.wave1b, 3, 1, 1)
+        # master.svt_skill(T.wave1a, T.wave1b, 1, 2)
+        # master.auto_attack(6)
+        # master.attack([6, 1, 2])
+
+        master.xjbd(T.wave2a, ([274, 103, 391, 132], [634, 103, 751, 132], [994, 103, 1111, 132]))
+
+        # wave 2
+        wait_which_target(T.wave2a, LOC.master_skill)
+        master.svt_skill(T.wave2a, T.wave2b, 3, 3)
+        # master.master_skill(T.wave2a, 2, 1)
+
+        master.auto_attack(nps=7)
+        # master.attack([6, 1, 2])
+        # master.xjbd(T.wave3a, LOC.enemies)
+
+        # wave 3
+        wait_which_target(T.wave3a, LOC.master_skill)
+        click(LOC.enemies[0])
+        master.svt_skill(T.wave3a, T.wave3b, 3, 1, 1)
+        master.svt_skill(T.wave3a, T.wave3b, 2, 3)
+        master.svt_skill(T.wave3a, T.wave3b, 1, 1)
+        master.svt_skill(T.wave3a, T.wave3b, 1, 3)
+
+        master.master_skill(T.wave3a, 2, 1)
+        master.auto_attack(6)
+
+        master.xjbd(T.kizuna, LOC.kizuna, mode='dmg', allow_unknown=True)
+
+        return
+
+    # Free
+    @with_goto
+    def charlotte_android(self, apple=-1):
+        """
+        阵容：豆爸（醉贞）-旧剑（虚数）-孔明-X-X-X
+        """
+        master = self.master
+        T = self.master.T
+        LOC = self.master.LOC
+        if not master.quest_name:
+            master.quest_name = 'charlotte-android'
+        master.svt_names = ['豆爸', '旧剑', '孔明']
+        T.read_templates('img/charlotte')
+        # master.LOC.relocate((106, 60, 1813, 1020))
+        master.set_card_weights([2, 3, 2])
+        # ---------------------------  NP    Quick    Arts    Buster ----
+        master.set_card_templates([[(1, 6), (3, 4), (2, 2), (1, 4)],
+                                   [(3, 7), (3, 5), (3, 2), (1, 1)],
+                                   [(0, 0), (1, 3), (2, 3), (1, 5)]])
+        if G.setdefault('goto', False):
+            G['goto'] = False
+            logger.warning('goto label.h')
+            # noinspection PyStatementEffect
+            goto.h
+
+        wait_which_target(T.quest, LOC.quest, at=True)
+        page_no = wait_which_target([T.support, T.apple_page], [LOC.support_team_icon, LOC.apple_page])
+        if page_no == 1:
+            master.eat_apple(-1, False)
+        # master.choose_support(match_ce=True, match_ce_max=True)
+        wait_which_target(T.team, LOC.team, at=True, clicking=(1387, 114), interval=5)
+        # logger.info('Quest Charlotte-android start...')
+        # wave 1
+        # wait_which_target(T.wave1a, LOC.enemies[2])
+        wait_which_target(T.wave1a, LOC.master_skill)
+        master.svt_skill(T.wave1a, T.wave1b, 3, 2)
+        master.svt_skill(T.wave1a, T.wave1b, 3, 3)
+        master.svt_skill(T.wave1a, T.wave1b, 3, 1, 1)
+        master.svt_skill(T.wave1a, T.wave1b, 1, 2)
+        # master.auto_attack(6)
+        master.attack([6, 1, 2])
+        # master.xjbd(T.wave2a, LOC.enemies)
+
+        # wave 2
+        wait_which_target(T.wave2a, LOC.master_skill)
+        master.svt_skill(T.wave2a, T.wave2b, 1, 1)
+        master.master_skill(T.wave2a, 2, 1)
+        # noinspection PyStatementEffect
+        label.h
+        master.auto_attack(nps=6)
+        # master.attack([6, 1, 2])
+        # master.xjbd(T.wave3a, LOC.enemies)
+
+        # wave 3
+        wait_which_target(T.wave3a, LOC.master_skill)
+        master.svt_skill(T.wave3a, T.wave3b, 1, 3, 1)
+        master.svt_skill(T.wave3a, T.wave3b, 2, 1)
+        master.svt_skill(T.wave3a, T.wave3b, 2, 2)
+        master.svt_skill(T.wave3a, T.wave3b, 2, 3)
+        # click(LOC.enemies[1])
+
+        master.auto_attack(7)
+        master.xjbd(T.kizuna, LOC.kizuna, mode='dmg')
+
+        return
+
+    @with_goto
+    def charlotte_ios(self, apple=-1):
+        """
+        阵容：豆爸（醉贞）-lily（宝石）-孔明-X-X-X
+        """
+        master = self.master
+        T = self.master.T
+        LOC = self.master.LOC
+        master.quest_name = 'charlotte-ios'
+        master.svt_names = ['豆爸', 'lily', '孔明']
+        LOC.relocate((177, 74, 1741, 954))  # maximize with task bar
+        T.read_templates('img/charlotte-ios')
+        master.set_card_weights([2, 3, 2])
+        # ---------------------------  NP    Quick    Arts    Buster ----
+        master.set_card_templates([[(1, 0), (3, 1), (1, 1), (2, 2)],
+                                   [(1, 0), (1, 4), (1, 5), (1, 4)],
+                                   [(0, 0), (3, 2), (3, 4), (3, 3)]])
+        if G.setdefault('goto', False):
+            G['goto'] = False
+            logger.warning('goto label.h')
+            # noinspection PyStatementEffect
+            goto.h
+
+        wait_which_target(T.quest, LOC.quest, at=True)
+        page_no = wait_which_target([T.support, T.apple_page], [LOC.support_team_icon, LOC.apple_page])
+        if page_no == 1:
+            master.eat_apple(-1, False)
+        master.choose_support(match_ce=True, match_ce_max=True)
+        # logger.info('Quest Charlotte-iOS start...')
+        # wave 1
+        wait_which_target(T.wave1a, LOC.enemies[2])
+        wait_which_target(T.wave1a, LOC.master_skill)
+        master.svt_skill(T.wave1a, T.wave1b, 3, 2)
+        master.svt_skill(T.wave1a, T.wave1b, 3, 3)
+        master.svt_skill(T.wave1a, T.wave1b, 3, 1, 1)
+        master.svt_skill(T.wave1a, T.wave1b, 1, 2)
+        master.attack([6, 1, 2])
+        # master.xjbd(T.wave2a, LOC.enemies)
+
+        # wave 2
+        wait_which_target(T.wave2a, LOC.master_skill)
+        master.svt_skill(T.wave2a, T.wave2b, 1, 1)
+        # master.svt_skill(T.wave2a, T.wave2b, 1, 2)
+        master.master_skill(T.wave2a, 2, 1)
+        master.attack([6, 1, 2])
+        # master.xjbd(T.wave3a, LOC.enemies)
+
+        # noinspection PyStatementEffect
+        label.h
+        # wave 3
+        wait_which_target(T.wave3a, LOC.master_skill)
+        # master.svt_skill(T.wave3a, T.wave3b, 2, 1)
+        master.svt_skill(T.wave3a, T.wave3b, 2, 2)
+        # master.svt_skill(T.wave3a, T.wave3b, 2, 3)
+        # click(LOC.enemies[1])
+
+        master.attack([7, 1, 2])
+        master.xjbd(T.kizuna, LOC.kizuna, 'xjbd')
+
+    @with_goto
     def chaos_android(self, apple):
         """
         阵容: 大英雄70(虚数1)-弓凛(空骑80)-孔明-旧狗(虚数20)-X-X
@@ -60,10 +539,10 @@ class Battle:
         # LOC.relocate((106, 60, 1813, 1020))
         master.set_card_weights([1, 3, 2, 3])
         # ---------------------------  NP    Quick    Arts    Buster ----
-        master.set_card_templates([[(1, 0), (0, 0), (0, 0), (0, 0)],
-                                   [(2, 7), (3, 1), (3, 2), (1, 2)],
-                                   [(2, 0), (2, 3), (2, 5), (2, 4)],
-                                   [(1, 6), (1, 1), (1, 5), (3, 3)]])
+        # master.set_card_templates([[(1, 0), (0, 0), (0, 0), (0, 0)],
+        #                            [(2, 7), (3, 1), (3, 2), (1, 2)],
+        #                            [(2, 0), (2, 3), (2, 5), (2, 4)],
+        #                            [(1, 6), (1, 1), (1, 5), (3, 3)]])
         if G.setdefault('goto', False):
             G['goto'] = False
             logger.warning('goto label.h')
@@ -74,7 +553,7 @@ class Battle:
         page_no = wait_which_target([T.support, T.apple_page], [LOC.support_team_icon, LOC.apple_page])
         if page_no == 1:
             master.eat_apple(apple, True)
-        master.choose_support(match_ce=True, match_ce_max=False)
+        master.choose_support(match_svt=True, match_ce=True, match_ce_max=False)
         logger.debug('Quest Chaos-android start...')
         # wave 1
         wait_which_target(T.wave1a, LOC.enemies[2])
@@ -116,13 +595,13 @@ class Battle:
             master.quest_name = 'chaos-ios'
         master.svt_names = ['大英雄', '阿周那', '孔明', '旧狗']
         T.read_templates('img/chaos-ios')
-        # LOC.relocate((5, 44, 1830, 1024))
+        LOC.relocate((178, 75, 1742, 955))
         master.set_card_weights([1, 3, 2, 3])
         # ---------------------------  NP    Quick    Arts    Buster ----
-        master.set_card_templates([[(1, 0), (3, 0), (2, 0), (1, 0)],
-                                   [(2, 7), (3, 1), (3, 2), (1, 2)],
-                                   [(2, 0), (2, 3), (2, 5), (2, 4)],
-                                   [(1, 6), (1, 1), (1, 5), (3, 3)]])
+        # master.set_card_templates([[(1, 0), (3, 0), (2, 0), (1, 0)],
+        #                            [(2, 7), (3, 1), (3, 2), (1, 2)],
+        #                            [(2, 0), (2, 3), (2, 5), (2, 4)],
+        #                            [(1, 6), (1, 1), (1, 5), (3, 3)]])
         if G.setdefault('goto', False):
             G['goto'] = False
             logger.warning('goto label.h')
@@ -132,7 +611,7 @@ class Battle:
         wait_which_target(T.quest, LOC.quest, at=True)
         page_no = wait_which_target([T.support, T.apple_page], [LOC.support_team_icon, LOC.apple_page])
         if page_no == 1:
-            master.eat_apple(apple, True)
+            master.eat_apple(apple, False)
         master.choose_support(match_svt=True, match_ce=True, match_ce_max=False)
         logger.debug('Quest Chaos-iOS start...')
 
@@ -159,249 +638,3 @@ class Battle:
         master.attack([7, 1, 2])
         master.xjbd(T.kizuna, LOC.kizuna, mode='xjbd')
         return
-
-
-# noinspection PyUnusedLocal
-@with_goto
-def __battle_func_example(master: Master, apple=-1):
-    pass
-
-
-# %% bone!
-@with_goto
-def battle_bone_android(master: Master, apple=-1):
-    if not master.quest_name:
-        master.quest_name = 'bone-android'
-    master.svt_names = ['大英雄', '弓凛', '梅林', '尼托']
-    master.T.read_templates('img/saber')
-    # master.LOC.relocate((106, 60, 1813, 1020))
-    master.set_card_weights([1, 3, 2, 2])
-    # ---------------------------  NP    Quick    Arts    Buster ----
-    master.set_card_templates([[(1, -1), (3, -1), (2, -1), (1, -1)],
-                               [(2, 7), (3, 1), (3, 2), (1, 2)],
-                               [(2, -1), (2, 3), (2, 5), (2, 4)],
-                               [(1, 6), (1, 1), (1, 5), (3, 3)]])
-    T = master.T
-    LOC = master.LOC
-    if G.setdefault('goto', False):
-        G['goto'] = False
-        logger.warning('goto label.h')
-        # noinspection PyStatementEffect
-        goto.h
-
-    wait_which_target(T.quest, LOC.quest, at=True)
-    page_no = wait_which_target([T.support, T.apple_page], [LOC.support_team_icon, LOC.apple_page])
-    if page_no == 1:
-        master.eat_apple(apple, True)
-    master.choose_support(match_ce=False, match_ce_max=False)
-    # logger.info('Quest Charlotte-android start...')
-    # wave 1
-    wait_which_target(T.wave1a, LOC.enemies[2])
-    wait_which_target(T.wave1a, LOC.master_skill)
-    master.svt_skill(T.wave1a, T.wave1b, 1, 3)
-    master.svt_skill(T.wave1a, T.wave1b, 3, 1)
-    # master.svt_skill(T.wave1a, T.wave1b, 3, 1, 1)
-    # master.auto_attack(6)
-    master.attack([6, 1, 2])
-    # master.xjbd(T.wave2a, LOC.enemies)
-
-    # wave 2
-    wait_which_target(T.wave2a, LOC.master_skill, lapse=1, clicking=LOC.safe_area)
-    master.svt_skill(T.wave2a, T.wave2b, 1, 1)
-    master.svt_skill(T.wave2a, T.wave2b, 1, 2)
-    master.svt_skill(T.wave2a, T.wave2b, 2, 3)
-    # master.master_skill(T.wave2a, 2, 1)
-    # master.auto_attack(nps=6)
-    master.attack([6, 1, 2])
-    # master.xjbd(T.wave3a, LOC.enemies)
-
-    # wave 3
-    wait_which_target(T.wave3a, LOC.master_skill, lapse=1)
-    master.svt_skill(T.wave3a, T.wave3b, 2, 1)
-    master.svt_skill(T.wave3a, T.wave3b, 2, 2)
-    master.svt_skill(T.wave3a, T.wave3b, 3, 3, 2)
-    master.master_skill(T.wave3a, 2, 2)
-    # click(LOC.enemies[1])
-    # noinspection PyStatementEffect
-    label.h
-    master.auto_attack(7)
-    master.xjbd(T.kizuna, LOC.kizuna, mode='dmg')
-    return
-
-
-@with_goto
-def battle_bone_ios(master: Master, apple=-1):
-    if not master.quest_name:
-        master.quest_name = 'bone-ios'
-    master.svt_names = ['大英雄', '闪闪', '梅林', '红A']
-    master.T.read_templates('img/bone-ios')
-    master.LOC.relocate((142, 60, 1777, 979))
-    master.set_card_weights([1, 3, 1, 2])
-    # ---------------------------  NP    Quick    Arts    Buster ----
-    master.set_card_templates([[(1, 6), (3, -1), (2, -1), (1, -1)],
-                               [(3, 7), (2, 1), (1, 2), (1, 3)],
-                               [(2, -1), (3, 5), (2, 5), (1, 4)]])
-    T = master.T
-    LOC = master.LOC
-    if G.setdefault('goto', False):
-        G['goto'] = False
-        logger.warning('goto label.h')
-        # noinspection PyStatementEffect
-        goto.h
-
-    wait_which_target(T.quest, LOC.quest, at=True)
-    page_no = wait_which_target([T.support, T.apple_page], [LOC.support_team_icon, LOC.apple_page])
-    if page_no == 1:
-        master.eat_apple(apple, False)
-    master.choose_support(match_ce=False, match_ce_max=False)
-    # logger.info('Quest Charlotte-android start...')
-    # wave 1
-    wait_which_target(T.wave1a, LOC.enemies[2])
-    wait_which_target(T.wave1a, LOC.master_skill)
-    master.svt_skill(T.wave1a, T.wave1b, 1, 3)
-    # master.svt_skill(T.wave1a, T.wave1b, 3, 3)
-    # master.svt_skill(T.wave1a, T.wave1b, 3, 1, 1)
-    # master.auto_attack(6)
-    master.attack([6, 1, 2])
-    # master.xjbd(T.wave2a, LOC.enemies)
-
-    # wave 2
-    wait_which_target(T.wave2a, LOC.master_skill, lapse=1, clicking=LOC.safe_area)
-    master.svt_skill(T.wave2a, T.wave2b, 1, 2)
-    master.svt_skill(T.wave2a, T.wave2b, 1, 3)
-    master.svt_skill(T.wave2a, T.wave2b, 2, 1)
-    master.svt_skill(T.wave2a, T.wave2b, 3, 1)
-    # master.master_skill(T.wave2a, 2, 1)
-    # master.auto_attack(nps=6)
-    master.attack([6, 1, 2])
-    # master.xjbd(T.wave3a, LOC.enemies)
-
-    # wave 3
-    wait_which_target(T.wave3a, LOC.master_skill, lapse=1)
-    master.svt_skill(T.wave3a, T.wave3b, 2, 3)
-    master.svt_skill(T.wave3a, T.wave3b, 3, 3, 2)
-    master.master_skill(T.wave3a, 2, 2)
-    # master.svt_skill(T.wave3a, T.wave3b, 2, 3)
-    # click(LOC.enemies[1])
-    # noinspection PyStatementEffect
-    label.h
-    master.attack([7, 1, 2])
-    master.xjbd(T.kizuna, LOC.kizuna)
-
-    return
-
-
-# %% serials of battle_func
-@with_goto
-def battle_charlotte_android(master: Master, apple=-1):
-    if not master.quest_name:
-        master.quest_name = 'charlotte-android'
-    master.svt_names = ['尼托', '旧剑', '孔明']
-    master.T.read_templates('img/charlotte')
-    # master.LOC.relocate((106, 60, 1813, 1020))
-    master.set_card_weights([2, 3, 2])
-    # ---------------------------  NP    Quick    Arts    Buster ----
-    master.set_card_templates([[(1, 6), (3, 4), (2, 3), (1, 1)],
-                               [(3, 7), (2, 1), (1, 2), (1, 3)],
-                               [(2, -1), (3, 5), (2, 5), (1, 4)]])
-    T = master.T
-    LOC = master.LOC
-    if G.setdefault('goto', False):
-        G['goto'] = False
-        logger.warning('goto label.h')
-        # noinspection PyStatementEffect
-        goto.h
-
-    wait_which_target(T.quest, LOC.quest, at=True)
-    page_no = wait_which_target([T.support, T.apple_page], [LOC.support_team_icon, LOC.apple_page])
-    if page_no == 1:
-        master.eat_apple(apple, True)
-    master.choose_support(match_ce=True, match_ce_max=True)
-    # logger.info('Quest Charlotte-android start...')
-    # wave 1
-    wait_which_target(T.wave1a, LOC.enemies[2])
-    wait_which_target(T.wave1a, LOC.master_skill)
-    master.svt_skill(T.wave1a, T.wave1b, 3, 2)
-    master.svt_skill(T.wave1a, T.wave1b, 3, 3)
-    master.svt_skill(T.wave1a, T.wave1b, 3, 1, 1)
-    # master.auto_attack(6)
-    master.attack([6, 1, 2])
-    master.xjbd(T.wave2a, LOC.enemies)
-
-    # wave 2
-    wait_which_target(T.wave2a, LOC.master_skill)
-    master.svt_skill(T.wave2a, T.wave2b, 1, 1)
-    master.svt_skill(T.wave2a, T.wave2b, 1, 2)
-    master.master_skill(T.wave2a, 2, 1)
-    # master.auto_attack(nps=6)
-    master.attack([6, 1, 2])
-    master.xjbd(T.wave3a, LOC.enemies)
-
-    # wave 3
-    wait_which_target(T.wave3a, LOC.master_skill)
-    master.svt_skill(T.wave3a, T.wave3b, 2, 1)
-    master.svt_skill(T.wave3a, T.wave3b, 2, 2)
-    master.svt_skill(T.wave3a, T.wave3b, 2, 3)
-    # click(LOC.enemies[1])
-    # noinspection PyStatementEffect
-    label.h
-    master.auto_attack(7)
-    master.xjbd(T.kizuna, LOC.kizuna)
-
-    return
-
-
-@with_goto
-def battle_charlotte_ios(master: Master, apple=-1):
-    # LOC.relocate((133, 75, 1785, 1004))
-    master.quest_name = 'charlotte-ios'
-    master.svt_names = ['豆爸', 'lily', '孔明']
-    master.LOC.relocate((142, 60, 1777, 980))  # maximize with task bar
-    master.T.read_templates('img/charlotte-ios')
-    master.set_card_weights([1, 3, 2])
-    # ---------------------------  NP    Quick    Arts    Buster ----
-    master.set_card_templates([[(1, 6), (3, 5), (1, 5), (2, 1)],
-                               [(2, 7), (2, 4), (1, 2), (1, 1)],
-                               [(2, -1), (1, 4), (1, 3), (3, 2)]])
-    T = master.T
-    LOC = master.LOC
-    if G.setdefault('goto', False):
-        G['goto'] = False
-        logger.warning('goto label.h')
-        # noinspection PyStatementEffect
-        goto.h
-
-    wait_which_target(T.quest, LOC.quest, at=True)
-    page_no = wait_which_target([T.support, T.apple_page], [LOC.support_team_icon, LOC.apple_page])
-    if page_no == 1:
-        master.eat_apple(apple, True)
-    master.choose_support(match_ce=True, match_ce_max=True)
-    # logger.info('Quest Charlotte-iOS start...')
-    # wave 1
-    wait_which_target(T.wave1a, LOC.enemies[2])
-    wait_which_target(T.wave1a, LOC.master_skill)
-    master.svt_skill(T.wave1a, T.wave1b, 3, 2)
-    master.svt_skill(T.wave1a, T.wave1b, 3, 3)
-    master.svt_skill(T.wave1a, T.wave1b, 3, 1, 1)
-    master.svt_skill(T.wave1a, T.wave1b, 1, 2)
-    master.auto_attack(6)
-    master.xjbd(T.wave2a, LOC.enemies)
-
-    # wave 2
-    wait_which_target(T.wave2a, LOC.master_skill)
-    master.svt_skill(T.wave2a, T.wave2b, 1, 1)
-    # master.svt_skill(T.wave2a, T.wave2b, 1, 2)
-    master.master_skill(T.wave2a, 2, 1)
-    master.auto_attack(6)
-    master.xjbd(T.wave3a, LOC.enemies)
-
-    # wave 3
-    wait_which_target(T.wave3a, LOC.master_skill)
-    master.svt_skill(T.wave3a, T.wave3b, 2, 1)
-    master.svt_skill(T.wave3a, T.wave3b, 2, 2)
-    # master.svt_skill(T.wave3a, T.wave3b, 2, 3)
-    # click(LOC.enemies[1])
-    # noinspection PyStatementEffect
-    label.h
-    master.auto_attack(7)
-    master.xjbd(T.kizuna, LOC.kizuna)

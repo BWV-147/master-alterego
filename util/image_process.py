@@ -18,8 +18,6 @@ def screenshot(region: Union[tuple, list] = None, filepath: str = None, monitor=
     """
     try:
         with mss() as sct:
-            if is_second_screen():
-                monitor = 2
             mon = sct.monitors[monitor]
             shot = sct.grab(mon)
             _image = Image.frombytes('RGB', (mon['width'], mon['height']), shot.rgb).crop(region)
@@ -122,8 +120,8 @@ def match_which_target(img, targets, regions, threshold=THR, at=None):
 
 
 # 直到匹配某一个target
-def wait_which_target(targets, regions, threshold=THR, lapse=0.1, at=None, clicking=None):
-    # type:(Union[Image.Image,tuple,list],Union[list,tuple],float,float,Union[bool,tuple,list],Union[list,tuple])->int
+def wait_which_target(targets, regions, threshold=THR, lapse=0.1, at=None, clicking=None, interval=0.5):
+    # type:(Union[Image.Image,tuple,list],Union[list,tuple],float,float,Union[bool,tuple,list],Union[list,tuple],int)->int
     """
     Waiting for screenshot matching the region of some target.
     :param targets: an Image or list of Image.
@@ -133,6 +131,7 @@ def wait_which_target(targets, regions, threshold=THR, lapse=0.1, at=None, click
     :param at:  if True, click the region which screenshot matches,
                 if a region, click the region `at`.
     :param clicking: a region to click at until screenshot matches some target
+    :param interval: interval of clicking loop
     :return: the index which target matches.
     """
     if isinstance(targets, Image.Image):
@@ -147,14 +146,14 @@ def wait_which_target(targets, regions, threshold=THR, lapse=0.1, at=None, click
         if res >= 0:
             return res
         if clicking is not None:
-            click(clicking, lapse=0.5)
+            click(clicking, lapse=interval)
         time.sleep(lapse)
 
 
 # 直到匹配模板
 def wait_search_template(target: Image.Image, threshold=THR, lapse=0.1):
     while True:
-        if search_target(screenshot(), target) > threshold:
+        if search_target(screenshot(), target)[0] > threshold:
             return
         time.sleep(lapse)
 
@@ -171,12 +170,17 @@ def search_target(img: Image.Image, target: Image.Image, mode='cv2') -> float:
     m2: np.ndarray = np.array(target.convert('RGB'))
     if mode == 'sk':
         matches: np.ndarray = sk_match_template(m1, m2)
-        return np.max(matches)
+        max_match = np.max(matches)
+        pos = np.where(matches == max_match)
+        return np.max(matches), (pos[1][0], pos[0][0])
     else:
         cv_img, cv_target = (cv2.cvtColor(m1, cv2.COLOR_RGB2BGR), cv2.cvtColor(m2, cv2.COLOR_RGB2BGR))
         # h, w = cv_target.shape[0:2]
         matches = cv2.matchTemplate(cv_img, cv_target, cv2.TM_CCOEFF_NORMED)
-        return np.max(matches)
+        max_match = np.max(matches)
+        pos = np.where(matches == max_match)
+        # in PIL system, (x~w,y~h)
+        return np.max(matches), (pos[1][0], pos[0][0])
 
 
 def _test():

@@ -1,3 +1,5 @@
+flask
+pyautogui
 mss
 goto-statement
 numpy

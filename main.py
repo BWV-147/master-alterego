@@ -1,64 +1,51 @@
 from battle import *
 
 
-def start_battle(battle_func, num=10, apple=-1):
-    # type:(Callable[[Master,int],None],int,int)->None
-    """
-    set_battle_data first.
-    :param battle_func: start at quest banner screen, end at kizuna screen
-    :param num:
-    :param apple:
-    :return:
-    """
-    master = Master()
-    T = master.T
-    LOC = master.LOC
-    timer = Timer()
-    finished = 0
-    while finished < num:
-        timer.start()
-        finished += 1
-        logger.info(f'>>>>> Battle "{master.quest_name}" No.{finished}/{num} <<<<<')
-        battle_func(master, apple)
-        wait_which_target(T.rewards, LOC.finish_qp, clicking=LOC.finish_qp, lapse=0.5)
-        # check reward_page has CE dropped or not
-        ce = screenshot()
-        ce.save(f"img/craft/craft-{time.strftime('%m%d-%H-%M-%S')}.png")
-        click(LOC.finish_next)
-        logger.info('battle finished, checking rewards.')
-        while True:
-            page_no = wait_which_target([T.quest, T.apply_friend, T.friend_point],
-                                        [LOC.quest, LOC.apply_friend, LOC.friend_point])
-            if page_no == 1:
-                click(LOC.apply_friend_deny)
-            elif page_no == 2:
-                click(LOC.friend_point)
-            elif page_no == 0:
-                break
-        dt = timer.stop().dt
-        logger.info(f'--- Battle {finished} finished, time = {int(dt // 60)} min {int(dt % 60)} sec.')
-        with open('log/time.log', 'a') as fd:
-            fd.write(str(dt) + '\n')
-    logger.info(f'>>>>> All {finished} battles "{master.quest_name}" finished. <<<<<')
+def check_sys_settings(admin=True):
+    # set dpi awareness & check admin permission
+    # useless in Python Console of Pycharm
+    ctypes.windll.shcore.SetProcessDpiAwareness(1)
+    if admin:
+        if ctypes.windll.shell32.IsUserAnAdmin() == 0:
+            print('e.g. click somewhere inside admin programs(Blupapa), the python process also need admin permission.')
+            print('applying admin permission in a new process, take no effect when in console mode.')
+            ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, __file__, None, 1)
+            exit(0)
+        else:
+            print('already admin')
 
 
 # main entrance
 def battle_with_check(check=True):
-    check_admin()
-    battle = Battle()
+    check_sys_settings()
+    my_battle = Battle()
     if check:
-        t_ios = threading.Thread(target=battle.start, name='left-ios',
-                                 args=[battle.chaos_ios, 400, 2], daemon=True)
-        t_adr = threading.Thread(target=battle.start, name='android',
-                                 args=[battle.chaos_android, 400, 2], daemon=True)
-        supervise_log_time([t_adr], 50, mail=False, interval=10)
+        apple = -1
+        t1 = threading.Thread(target=my_battle.start, name='C-cba',
+                              args=[my_battle.zaxiu_cba, 200, apple, True], daemon=True)
+        t2 = threading.Thread(target=my_battle.start, name='C-5bonus',
+                              args=[my_battle.zaxiu_caster, 200, apple, True], daemon=True)
+        supervise_log_time(t1, 60, mail=False, interval=3)
     else:
-        battle.start(battle.chaos_android, 2, -1)
+        my_battle.start(my_battle.zaxiu_caster_full, 2, -1, False)
 
 
+# %%
 if __name__ == '__main__':
+    # when two monitors, and emulator not run at main? monitor,
+    # make sure two monitors have the same scale (DPI) in windows settings,
+    # otherwise, click will happen at wrong position
     G['goto'] = False
+    G['goto_outer'] = False
+    G['offset_x'] = -1920
     time.sleep(1)
     battle_with_check(True)
+
+# %%
+for i in range(10):
+    time.sleep(2)
+    pos = (300 + i * 100, 150)
+    # click(pos)
+    print(f'pos={pos},curPos=', win32api.GetCursorPos())
 
 # end file

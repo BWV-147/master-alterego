@@ -10,6 +10,10 @@ BB の AI です。
     - Tick "Override high DPI scaling behaviour" and select "Application" in the drop-down menu
     - Repeat for pythonw.exe if necessary
  - pypiwin32: need to restart Pycharm to resolve it.
- - PyUserInput, puautogui
+ - PyUserInput, pyautogui
  - pyhook: [download](https://www.lfd.uci.edu/~gohlke/pythonlibs/#pyhook)<br/>
 
+> TODO
+ - support selection slide
+ - finish page: battle again
+ 

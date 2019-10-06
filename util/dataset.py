@@ -7,7 +7,7 @@ import os
 from PIL import Image
 from util.util import *
 
-THR = 0.9  # default threshold
+THR = 0.85  # default threshold
 
 
 # database: regions & saved screenshot
@@ -16,29 +16,37 @@ class Regions:
     Store region(length 4) or point(length 2) data at default screensize 1920*1080.
     Properties could be a region/point or a list(1 or multi dimension) of regions/points
     """
+    net_error = ((599, 814, 720, 872), (1138, 813, 1378, 876))
     safe_area = (1400, 40)
     rewards_action = (1681, 29, 1872, 97)
     bag_back = (49, 34, 242, 100)
     bag_finish = (870, 849, 1044, 908)
     bag_confirm = (1170, 845, 1340, 907)
     bag_select = (1600, 975, 1870, 1047)
-    bag_full = (485, 660, 583, 718)
+    bag_full_sell = (485, 660, 583, 718)
+    bag_full_enhance = (887, 660, 1029, 718)
+
     box_back = (49, 34, 242, 100)
     box_get_action = (1509, 535, 1810, 582)
     box_get_all = (1524, 302, 1805, 354)
     box_items = [(1272, 400), (1272, 600), (1272, 800), (1272, 980)]
     box_history = (365, 30, 522, 102)
     box_full_confirm = (1112, 822, 1463, 873)
-    reset_finish = (800, 811, 1113, 878)
-    reset_confirm = (1097, 813, 1416, 879)
-    reset_action = (1546, 337, 1863, 394)
+
     drawer = (600, 622)
+    drawer_10_initial = (483, 630, 800, 774)
+    drawer_empty = (285, 631, 524, 780)
+    reset_action = (1546, 337, 1863, 394)
+    reset_confirm = (1097, 813, 1416, 879)
+    reset_finish = (800, 811, 1113, 878)
+
     # drawer
     apply_friend = (1692, 521, 1826, 588)
     apply_friend_deny = (464, 913)
     quest = (937, 240, 1848, 360)
     quest_c = (1277, 351)
-    rewards = (1680, 33, 1868, 91)
+    # rewards = (1680, 33, 1868, 91)
+
     ap_time = (346, 1041, 366, 1072)
     apple_page = (471, 177, 645, 359)
     apple_close = (1000, 925)
@@ -61,6 +69,7 @@ class Regions:
     support_scroll = ((1860, 520), (1860, 640), (760, 880))
 
     team = (1655, 973, 1902, 1052)
+    team_cloth = (20, 980, 263, 1054)
     wave = (1261, 78, 1281, 106)
     enemies_all = (0, 0, 1080, 128)
     enemies = ((0, 0, 120, 130), (360, 0, 480, 130), (720, 0, 840, 130))  # skill_to_enemies
@@ -81,9 +90,12 @@ class Regions:
         (84, 655, 303, 903), (466, 655, 685, 903), (848, 655, 1067, 903), (1235, 655, 1454, 903),
         (1624, 655, 1843, 903),
         (529, 204, 707, 441), (848, 204, 1026, 441), (1167, 204, 1345, 441))
-    cards_outer = ((0, 500, 386, 1000), (386, 500, 784, 1000), (784, 500, 1170, 1000), (1170, 500, 1552, 1000),
-                   (1552, 500, 1920, 1000),
-                   (428, 100, 812, 510), (812, 100, 1170, 510), (1170, 100, 1554, 510))
+    cards_outer = ((84, 500, 303, 1000), (466, 500, 685, 1000), (848, 500, 1067, 1000), (1235, 500, 1454, 1000),
+                   (1624, 500, 1843, 1000),
+                   (529, 100, 707, 510), (848, 100, 1026, 510), (1167, 100, 1345, 510))
+    # cards_outer = ((0, 500, 386, 1000), (386, 500, 784, 1000), (784, 500, 1170, 1000), (1170, 500, 1552, 1000),
+    #                (1552, 500, 1920, 1000),
+    #                (428, 100, 812, 510), (812, 100, 1170, 510), (1170, 100, 1554, 510))
 
     order_change = (
         (87, 403, 322, 643), (387, 403, 622, 643), (687, 403, 922, 643), (987, 403, 1222, 643), (1287, 403, 1522, 643),
@@ -92,10 +104,10 @@ class Regions:
 
     kizuna = (115, 251, 580, 305)
     finish_qp = (418, 884, 487, 955)
-
+    rewards_show_num = (1593, 115, 1718, 149)
     finish_next = (1444, 980, 1862, 1061)
-    finish_graft = (454, 216, 623, 386)
-
+    finish_craft = (454, 216, 623, 386)
+    restart_quest_yes = (1122, 812, 1386, 829)
     friend_point = (460, 810, 580, 880)
 
     size = (0, 0, 1920, 1080)
@@ -175,6 +187,10 @@ class ImageTemplates:
         return self.get('apple_confirm')
 
     @property
+    def net_error(self):
+        return self.get('net_error')
+
+    @property
     def apple_page(self):
         return self.get('apple_page')
 
@@ -185,7 +201,7 @@ class ImageTemplates:
     @property
     def cards(self):
         templs = []
-        for i in range(4):
+        for i in range(20):
             key = f'cards{i + 1}'
             if key in self.templates:
                 templs.append(self.templates[key])
@@ -234,6 +250,10 @@ class ImageTemplates:
         return self.get('team')
 
     @property
+    def restart_quest(self):
+        return self.get('restart_quest')
+
+    @property
     def support(self):
         return self.get('support')
 
@@ -266,12 +286,44 @@ class ImageTemplates:
         return self.get('wave3b')
 
 
-# export constants
-logger = get_logger()
-logger2 = get_logger('craft', logging.WARNING)
+class StatInfo:
 
-# LOC = Regions()
-# T = ImageTemplates()
+    def __init__(self, fp=None):
+        self.fp = fp if fp is not None else 'record.json'
+        self.craft_num = 0
+        self.battle_no = 0
+        self.history = []
+        self.durations = []
+        self.load()
+
+    def add_battle(self, craft_dropped: bool = False, duration: int = 0):
+        self.battle_no += 1
+        self.durations.append((self.battle_no, duration))
+        if craft_dropped:
+            self.craft_num += 1
+            self.history.append((self.craft_num, self.battle_no))
+
+    def save(self):
+        directory, filename = os.path.split(self.fp)
+        if filename == '':
+            print(f'invalid filename{self.fp}')
+        if directory != '' and not os.path.exists(directory):
+            os.makedirs(directory)
+        json.dump(self, open(self.fp, 'w'), indent=2, default=lambda x: x.__dict__)
+
+    def load(self):
+        if os.path.exists(self.fp):
+            data = json.load(open(self.fp, 'r'))
+            self.craft_num = data.get('craft_num', 0)
+            self.battle_no = data.get('battle_no', 0)
+            self.history = data.get('history', [])
+            self.durations = data.get('durations', [])
+        else:
+            print('file not exist, skip loading')
+
+    def __repr__(self):
+        data = json.dumps(self, ensure_ascii=False, default=lambda x: x.__dict__)
+        return f'{self.__class__.__name__}() {data}'
 
 
 # %% local test functions
@@ -293,7 +345,3 @@ def __gen_getter(path='./'):
     print('-------generate _ImageTemplates getters------')
     print('\n'.join(methods))
     print('-------end generation------')
-
-
-def _test():
-    pass
