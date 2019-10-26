@@ -20,7 +20,7 @@ def generate(base):
 
 
 # %%
-base_path = 'img/a-zaxiu-1'
+base_path = 'img/a-zaxiu-ass'
 
 
 def capture(fn: str):

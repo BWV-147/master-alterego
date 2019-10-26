@@ -37,6 +37,8 @@ class Master:
         self.LOC = Regions()
         self.templates = {}
         self.weights: dict = {}
+        self.wave_a = None
+        self.wave_b = None
 
     def set_battle_data(self, coord=None, names=None, weights=None, cards_loc=None):
         if coord:
@@ -187,7 +189,7 @@ class Master:
             else:
                 time.sleep(0.2)
 
-    def svt_skill(self, before, after, who, skill, friend=None, enemy=None):
+    def svt_skill_full(self, before, after, who, skill, friend=None, enemy=None):
         # type: (Image.Image,Image.Image,int,int,int,int)->None
         """
         Release servant skill to <self/all friends/all enemies>.
@@ -200,8 +202,8 @@ class Master:
         :return: None
         """
         # validation
-        valid, valid2 = (1, 2, 3), (1, 2, 3, None)
-        assert who in valid and skill in valid and friend in valid2 and enemy in valid2, (who, skill, friend, enemy)
+        valid1, valid2 = (1, 2, 3), (1, 2, 3, None)
+        assert who in valid1 and skill in valid1 and friend in valid2 and enemy in valid2, (who, skill, friend, enemy)
         s = f'to friend {self.svt_names[friend - 1]}' if friend \
             else f'to enemy {self.svt_names[enemy - 1]}' if enemy else ''
         logger.debug('Servant skill %s-%d %s.' % (who, skill, s))
@@ -218,8 +220,17 @@ class Master:
             click(self.LOC.skill_to_target[friend - 1])
         wait_which_target(after, region)
 
+    def set_waves(self, before: Image.Image, after: Image.Image) -> Master:
+        self.wave_a = before
+        self.wave_b = after
+        return self
+
+    def svt_skill(self, who: int, skill: int, friend: int = None, enemy: int = None) -> Master:
+        self.svt_skill_full(self.wave_a, self.wave_b, who, skill, friend, enemy)
+        return self
+
     def master_skill(self, before, skill, friend=None, enemy=None, order_change=None, order_change_img=None):
-        # type:(Image.Image,int,int,int,Tuple[int,int],Image.Image)->None
+        # type:(Image.Image,int,int,int,Tuple[int,int],Image.Image)->Master
         """
         Master skill, especially order_change = (svt1:1~3,svt2:4~6) if not None
         """
@@ -258,6 +269,7 @@ class Master:
             wait_which_target(before, self.LOC.master_skill)
             pass
         wait_which_target(before, self.LOC.master_skill)
+        return self
 
     def auto_attack(self, nps: Union[List[int], int] = None, mode='dmg', parse_np=True, allow_unknown=False):
         """

@@ -1,4 +1,4 @@
-"""Place battle_func for different battles"""
+"""Store battle_func for different battles"""
 # noinspection PyPackageRequirements
 from goto import with_goto
 from concurrent.futures import ThreadPoolExecutor
@@ -14,7 +14,6 @@ class Battle:
     @with_goto
     def start(self, battle_func, num=10, apple=-1, support=True):
         T = self.master.T
-        # T.read_templates('img/zaxiu-caster-full')
         LOC = self.master.LOC
         timer = Timer()
         finished = 0
@@ -112,10 +111,11 @@ class Battle:
         logger.debug('Quest zaxiu-caster start...')
         wait_which_target(T.wave1a, LOC.master_skill)
         logger.debug('wave 1...')
-        master.svt_skill(T.wave1a, T.wave1b, 3, 1, 2)
-        master.svt_skill(T.wave1a, T.wave1b, 3, 3, 2)
-        master.svt_skill(T.wave1a, T.wave1b, 1, 1, 2)
-        master.svt_skill(T.wave1a, T.wave1b, 2, 3)
+        master.set_waves(T.wave1a, T.wave1b) \
+            .svt_skill(3, 1, 2) \
+            .svt_skill(3, 3, 2) \
+            .svt_skill(1, 1, 2) \
+            .svt_skill(2, 3)
         # master.attack([7, 1, 2])
         master.auto_attack(nps=7)
 
@@ -124,27 +124,103 @@ class Battle:
         logger.debug('wave 2...')
         master.svt_skill(T.wave2a, T.wave2b, 3, 2)
         master.master_skill(T.wave2a, 3, order_change=(3, 4), order_change_img=T.order_change)
-        master.svt_skill(T.get('wave2c'), T.get('wave2d'), 3, 1, 2)
+        master.svt_skill_full(T.get('wave2c'), T.get('wave2d'), 3, 1, 2)
         master.auto_attack(nps=7)
 
         # wave 3
         wait_which_target(T.wave3a, LOC.enemies[1])
         wait_which_target(T.wave3a, LOC.master_skill, lapse=1)
         logger.debug('wave 3...')
-        master.svt_skill(T.wave3a, T.wave3b, 1, 3, 2)
-        master.svt_skill(T.wave3a, T.wave3b, 1, 2)
-        master.svt_skill(T.wave3a, T.wave3b, 3, 2)
-        master.svt_skill(T.wave3a, T.wave3b, 3, 3)
-        master.master_skill(T.wave3a, 1)
+        master.set_waves(T.wave3a, T.wave3b) \
+            .svt_skill(1, 3, 2) \
+            .svt_skill(1, 2) \
+            .svt_skill(3, 2) \
+            .svt_sll(3, 3) \
+            .master_skill(T.wave3a, 1)
         # noinspection PyStatementEffect
         label.h
-        print('here?')
+        master.auto_attack(nps=7)
+        master.xjbd(T.kizuna, LOC.kizuna, mode='dmg', allow_unknown=True)
+        return
+
+    @with_goto
+    def a_zaxiu_ass(self, support=True):
+        """
+        阵容: 豆爸-齐格(倍卡)-孔明(T1换下去)-CBA-X-X
+        """
+        master = self.master
+        T = self.master.T
+        LOC = self.master.LOC
+        if not master.quest_name:
+            master.quest_name = 'a-zaxiu-ass'
+        master.svt_names = ['豆爸', '齐格', 'CBA']
+        T.read_templates('img/a-zaxiu-ass')
+        master.set_card_weights([1, 3, 1.2])
+        # ----  NP     Quick    Arts   Buster ----
+        master.set_card_templates(
+            [[(1, 0), [(3, 1), (4, 4), (7, 5)], [(1, 5), (5, 4), (7, 1)], [(2, 4), (5, 3), (8, 4)]],
+             [(1, 7), (2, 3), (3, 2), (1, 1)],
+             [(1, 0), (6, 1), (2, 5), (7, 4)]
+             ])
+        G.setdefault('img_net', T.net_error)
+        G.setdefault('loc_net', LOC.net_error)
+        if G.setdefault('goto', False):
+            G['goto'] = False
+            logger.warning('goto label.h')
+            # noinspection PyStatementEffect
+            goto.h
+
+        # noinspection PyStatementEffect
+        label.h
+        wait_which_target(T.support, LOC.support_refresh)
+        print('at support choosing page.')
+        if support:
+            master.choose_support(match_svt=True, match_ce=True, match_ce_max=True)
+        else:
+            logger.debug('please choose support manually!')
+        # wave 1
+        wait_which_target(T.wave1a, LOC.enemies[0])
+        logger.debug(f'Quest {master.quest_name} start...')
+        wait_which_target(T.wave1a, LOC.master_skill)
+        logger.debug('wave 1...')
+        master.set_waves(T.wave1a, T.wave1b) \
+            .svt_skill(3, 1, 2) \
+            .svt_skill(3, 2) \
+            .svt_skill(3, 3)
+        master.master_skill(T.wave1a, 3, order_change=(3, 4), order_change_img=T.order_change)
+        master.svt_skill(1, 1) \
+            .svt_skill(1, 2)
+        # master.attack([6, 1, 2])
+        master.auto_attack(nps=6)
+
+        # wave 2
+        wait_which_target(T.wave3a, LOC.enemies[0])
+        wait_which_target(T.wave2a, LOC.master_skill)
+        logger.debug('wave 2...')
+        master.set_waves(T.wave2a, T.wave2b) \
+            .svt_skill(3, 3, 2) \
+            .svt_skill(1, 3, 2) \
+            .svt_skill(2, 1) \
+            .svt_skill(2, 2)
+        # master.attack([7, 1, 2])
+        master.auto_attack(nps=7)
+
+        # wave 3
+        wait_which_target(T.wave3a, LOC.enemies[1])
+        wait_which_target(T.wave3a, LOC.master_skill, lapse=1)
+        logger.debug('wave 3...')
+        master.set_waves(T.wave3a, T.wave3b) \
+            .svt_skill(2, 3) \
+            .svt_skill(3, 2)
+        master.master_skill(T.wave3a, 1)
+        # master.attack([7, 1, 2])
         master.auto_attack(nps=7)
         master.xjbd(T.kizuna, LOC.kizuna, mode='dmg', allow_unknown=True)
         return
 
 
 # %% backup, old version
+# noinspection DuplicatedCode
 class BattleBackup:
     def __init__(self):
         self.master = Master()
@@ -219,10 +295,10 @@ class BattleBackup:
         label.h
         wait_which_target(T.wave1a, LOC.enemies[2])
         wait_which_target(T.wave1a, LOC.master_skill)
-        master.svt_skill(T.wave1a, T.wave1b, 3, 2)
-        master.svt_skill(T.wave1a, T.wave1b, 2, 1)
-        # master.svt_skill(T.wave1a, T.wave1b, 3, 1, 1)
-        # master.svt_skill(T.wave1a, T.wave1b, 1, 2)
+        master.svt_skill_full(T.wave1a, T.wave1b, 3, 2)
+        master.svt_skill_full(T.wave1a, T.wave1b, 2, 1)
+        # master.svt_skill2(T.wave1a, T.wave1b, 3, 1, 1)
+        # master.svt_skill2(T.wave1a, T.wave1b, 1, 2)
         # master.auto_attack(6)
         # master.attack([6, 1, 2])
 
@@ -230,7 +306,7 @@ class BattleBackup:
 
         # wave 2
         wait_which_target(T.wave2a, LOC.master_skill)
-        master.svt_skill(T.wave2a, T.wave2b, 3, 3)
+        master.svt_skill_full(T.wave2a, T.wave2b, 3, 3)
         # master.master_skill(T.wave2a, 2, 1)
 
         master.auto_attack(nps=7)
@@ -240,10 +316,10 @@ class BattleBackup:
         # wave 3
         wait_which_target(T.wave3a, LOC.master_skill)
         click(LOC.enemies[0])
-        master.svt_skill(T.wave3a, T.wave3b, 3, 1, 1)
-        master.svt_skill(T.wave3a, T.wave3b, 2, 3)
-        master.svt_skill(T.wave3a, T.wave3b, 1, 1)
-        master.svt_skill(T.wave3a, T.wave3b, 1, 3)
+        master.svt_skill_full(T.wave3a, T.wave3b, 3, 1, 1)
+        master.svt_skill_full(T.wave3a, T.wave3b, 2, 3)
+        master.svt_skill_full(T.wave3a, T.wave3b, 1, 1)
+        master.svt_skill_full(T.wave3a, T.wave3b, 1, 3)
 
         master.master_skill(T.wave3a, 2, 1)
         master.auto_attack(6)
@@ -287,17 +363,17 @@ class BattleBackup:
         # wave 1
         # wait_which_target(T.wave1a, LOC.enemies[2])
         wait_which_target(T.wave1a, LOC.master_skill)
-        master.svt_skill(T.wave1a, T.wave1b, 3, 2)
-        master.svt_skill(T.wave1a, T.wave1b, 3, 3)
-        master.svt_skill(T.wave1a, T.wave1b, 3, 1, 1)
-        master.svt_skill(T.wave1a, T.wave1b, 1, 2)
+        master.svt_skill_full(T.wave1a, T.wave1b, 3, 2)
+        master.svt_skill_full(T.wave1a, T.wave1b, 3, 3)
+        master.svt_skill_full(T.wave1a, T.wave1b, 3, 1, 1)
+        master.svt_skill_full(T.wave1a, T.wave1b, 1, 2)
         # master.auto_attack(6)
         master.attack([6, 1, 2])
         # master.xjbd(T.wave2a, LOC.enemies)
 
         # wave 2
         wait_which_target(T.wave2a, LOC.master_skill)
-        master.svt_skill(T.wave2a, T.wave2b, 1, 1)
+        master.svt_skill_full(T.wave2a, T.wave2b, 1, 1)
         master.master_skill(T.wave2a, 2, 1)
         # noinspection PyStatementEffect
         label.h
@@ -307,10 +383,10 @@ class BattleBackup:
 
         # wave 3
         wait_which_target(T.wave3a, LOC.master_skill)
-        master.svt_skill(T.wave3a, T.wave3b, 1, 3, 1)
-        master.svt_skill(T.wave3a, T.wave3b, 2, 1)
-        master.svt_skill(T.wave3a, T.wave3b, 2, 2)
-        master.svt_skill(T.wave3a, T.wave3b, 2, 3)
+        master.svt_skill_full(T.wave3a, T.wave3b, 1, 3, 1)
+        master.svt_skill_full(T.wave3a, T.wave3b, 2, 1)
+        master.svt_skill_full(T.wave3a, T.wave3b, 2, 2)
+        master.svt_skill_full(T.wave3a, T.wave3b, 2, 3)
         # click(LOC.enemies[1])
 
         master.auto_attack(7)
@@ -350,17 +426,17 @@ class BattleBackup:
         # wave 1
         wait_which_target(T.wave1a, LOC.enemies[2])
         wait_which_target(T.wave1a, LOC.master_skill)
-        master.svt_skill(T.wave1a, T.wave1b, 3, 2)
-        master.svt_skill(T.wave1a, T.wave1b, 3, 3)
-        master.svt_skill(T.wave1a, T.wave1b, 3, 1, 1)
-        master.svt_skill(T.wave1a, T.wave1b, 1, 2)
+        master.svt_skill_full(T.wave1a, T.wave1b, 3, 2)
+        master.svt_skill_full(T.wave1a, T.wave1b, 3, 3)
+        master.svt_skill_full(T.wave1a, T.wave1b, 3, 1, 1)
+        master.svt_skill_full(T.wave1a, T.wave1b, 1, 2)
         master.attack([6, 1, 2])
         # master.xjbd(T.wave2a, LOC.enemies)
 
         # wave 2
         wait_which_target(T.wave2a, LOC.master_skill)
-        master.svt_skill(T.wave2a, T.wave2b, 1, 1)
-        # master.svt_skill(T.wave2a, T.wave2b, 1, 2)
+        master.svt_skill_full(T.wave2a, T.wave2b, 1, 1)
+        # master.svt_skill2(T.wave2a, T.wave2b, 1, 2)
         master.master_skill(T.wave2a, 2, 1)
         master.attack([6, 1, 2])
         # master.xjbd(T.wave3a, LOC.enemies)
@@ -369,9 +445,9 @@ class BattleBackup:
         label.h
         # wave 3
         wait_which_target(T.wave3a, LOC.master_skill)
-        # master.svt_skill(T.wave3a, T.wave3b, 2, 1)
-        master.svt_skill(T.wave3a, T.wave3b, 2, 2)
-        # master.svt_skill(T.wave3a, T.wave3b, 2, 3)
+        # master.svt_skill2(T.wave3a, T.wave3b, 2, 1)
+        master.svt_skill_full(T.wave3a, T.wave3b, 2, 2)
+        # master.svt_skill2(T.wave3a, T.wave3b, 2, 3)
         # click(LOC.enemies[1])
 
         master.attack([7, 1, 2])
@@ -413,9 +489,9 @@ class BattleBackup:
         # wave 1
         wait_which_target(T.wave1a, LOC.enemies[2])
         wait_which_target(T.wave1a, LOC.master_skill)
-        master.svt_skill(T.wave1a, T.wave1b, 1, 3)
-        master.svt_skill(T.wave1a, T.wave1b, 2, 3)
-        master.svt_skill(T.wave1a, T.wave1b, 3, 2)
+        master.svt_skill_full(T.wave1a, T.wave1b, 1, 3)
+        master.svt_skill_full(T.wave1a, T.wave1b, 2, 3)
+        master.svt_skill_full(T.wave1a, T.wave1b, 3, 2)
 
         # noinspection PyStatementEffect
         label.h
@@ -423,15 +499,15 @@ class BattleBackup:
 
         # wave 2
         wait_which_target(T.wave2a, LOC.master_skill, lapse=1, clicking=LOC.safe_area)
-        master.svt_skill(T.wave2a, T.wave2b, 2, 1)
-        master.svt_skill(T.wave2a, T.wave2b, 2, 2)
-        master.svt_skill(T.wave2a, T.wave2b, 3, 3)
+        master.svt_skill_full(T.wave2a, T.wave2b, 2, 1)
+        master.svt_skill_full(T.wave2a, T.wave2b, 2, 2)
+        master.svt_skill_full(T.wave2a, T.wave2b, 3, 3)
         master.attack([7, 1, 2])
 
         # wave 3
         wait_which_target(T.wave3a, LOC.master_skill, lapse=1)
-        master.svt_skill(T.wave3a, T.wave3b, 1, 3)
-        master.svt_skill(T.wave3a, T.wave3b, 3, 1, 1)
+        master.svt_skill_full(T.wave3a, T.wave3b, 1, 3)
+        master.svt_skill_full(T.wave3a, T.wave3b, 3, 1, 1)
         master.master_skill(T.wave3a, 2, 1)
 
         master.attack([6, 1, 2])
@@ -473,20 +549,20 @@ class BattleBackup:
         # wave 1
         wait_which_target(T.wave1a, LOC.enemies[2])
         wait_which_target(T.wave1a, LOC.master_skill)
-        master.svt_skill(T.wave1a, T.wave1b, 1, 3)
+        master.svt_skill_full(T.wave1a, T.wave1b, 1, 3)
         master.attack([6, 1, 2])
 
         # wave 2
         wait_which_target(T.wave2a, LOC.master_skill, lapse=1, clicking=LOC.safe_area)
-        master.svt_skill(T.wave2a, T.wave2b, 3, 2)
-        master.svt_skill(T.wave2a, T.wave2b, 3, 3)
-        master.svt_skill(T.wave2a, T.wave2b, 1, 3)
+        master.svt_skill_full(T.wave2a, T.wave2b, 3, 2)
+        master.svt_skill_full(T.wave2a, T.wave2b, 3, 3)
+        master.svt_skill_full(T.wave2a, T.wave2b, 1, 3)
         master.attack([6, 1, 2])
 
         # wave 3
         wait_which_target(T.wave3a, LOC.master_skill, lapse=1)
-        master.svt_skill(T.wave3a, T.wave3b, 2, 3)
-        master.svt_skill(T.wave3a, T.wave3b, 3, 1, 2)
+        master.svt_skill_full(T.wave3a, T.wave3b, 2, 3)
+        master.svt_skill_full(T.wave3a, T.wave3b, 3, 1, 2)
         master.master_skill(T.wave3a, 2, 2)
         # noinspection PyStatementEffect
         label.h
