@@ -3,27 +3,21 @@ from battle import *
 glog = get_logger(save=False)
 
 
-def get_center(pos):
-    assert isinstance(pos, (list, tuple))
-    if len(pos) == 2:
-        return pos[0] + G.get('offset_x', 0), pos[1] + G.get('offset_y', 0)
-    elif len(pos) == 4:
-        return (pos[0] + pos[2]) / 2 + G.get('offset_x', 0), (pos[1] + pos[3]) / 2 + G.get('offset_y', 0)
-
-
 class Gacha:
 
-    def __init__(self):
-        self.T = ImageTemplates('img/gacha')
+    def __init__(self, path='img/gacha'):
+        self.T = ImageTemplates(path)
         self.LOC = Regions()
 
     def draw(self):
         wait_which_target(self.T.get('gacha_initial'), self.LOC.drawer_10_initial)
         glog.info('start gacha...')
         num = 0
+        whole_time = 0
+        clock = Timer().start()
         while True:
             num += 1
-            print(f'\r{num:<4d} ', end='')
+            print(f'\r{num:<4d}', end='')
             click(self.LOC.drawer, lapse=0.1)
             shot = screenshot()
             if match_which_target(shot, self.T.get('gacha_empty'), self.LOC.drawer_empty) >= 0 and \
@@ -34,7 +28,10 @@ class Gacha:
                                          [self.LOC.reset_action, self.LOC.box_full_confirm])
             if page_no == 0:
                 click(self.LOC.reset_action)
-                glog.info('reset')
+                _all_lapse = clock.lapse()
+                whole_time += _all_lapse
+                print('\n')
+                glog.log(f'{num:<4d} reset: t={_all_lapse - whole_time:>3d}/{_all_lapse:<5d}\n', end='')
                 wait_which_target(self.T.get('reset_confirm'), self.LOC.reset_confirm, at=True)
                 wait_which_target(self.T.get('reset_finish'), self.LOC.reset_finish, at=True)
                 wait_which_target(self.T.get('gacha_initial'), self.LOC.drawer_10_initial)
@@ -58,13 +55,35 @@ class Gacha:
                 glog.info('bag full!')
                 click(self.LOC.bag_full_enhance)
                 break
-
         click(self.LOC.box_back)
 
 
-# %%
-G['offset_x'] = -1920
-time.sleep(2)
-test = Gacha()
-test.draw()
+# main entrance
+def draw_with_check(check=True):
+    G['offset_x'] = -1920
+    check_sys_admin()
+    test = Gacha()
+    time.sleep(2)
+    if check:
+        t1 = threading.Thread(target=test.draw, name='gacha',
+                              args=[], daemon=True)
+        supervise_log_time(t1, 120, mail=False, interval=3)
+    else:
+        pass
+        test.draw()
 
+
+# %%
+if __name__ == '__main__':
+    draw_with_check()
+
+
+# %% backup
+def get_center(pos):
+    assert isinstance(pos, (list, tuple))
+    if len(pos) == 2:
+        return pos[0] + G.get('offset_x', 0), pos[1] + G.get('offset_y', 0)
+    elif len(pos) == 4:
+        return (pos[0] + pos[2]) / 2 + G.get('offset_x', 0), (pos[1] + pos[3]) / 2 + G.get('offset_y', 0)
+
+# end

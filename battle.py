@@ -14,7 +14,7 @@ class Battle:
     @with_goto
     def start(self, battle_func, num=10, apple=-1, support=True):
         T = self.master.T
-        T.read_templates('img/zaxiu-caster-full')
+        # T.read_templates('img/zaxiu-caster-full')
         LOC = self.master.LOC
         timer = Timer()
         finished = 0
@@ -57,11 +57,15 @@ class Battle:
             # ready to restart a battle
             click(LOC.finish_next)
             while True:
-                page_no = wait_which_target([T.restart_quest, T.apply_friend],
-                                            [LOC.restart_quest_yes, LOC.apply_friend])
-                if page_no == 1:
+                page_no = wait_which_target([T.quest, T.restart_quest, T.apply_friend],
+                                            [LOC.quest, LOC.restart_quest_yes, LOC.apply_friend])
+                if page_no == 0:
+                    # in server cn, restart from quest page
+                    click(LOC.quest_c)
+                    break
+                elif page_no == 2:
                     click(LOC.apply_friend_deny)
-                elif page_no == 0:
+                elif page_no == 1:
                     click(LOC.restart_quest_yes)
                     break
 
@@ -71,26 +75,24 @@ class Battle:
         logger.info(f'>>>>> All {finished} battles "{self.master.quest_name}" finished. <<<<<')
 
     @with_goto
-    def zaxiu_caster(self, support=True):
+    def a_zaxiu(self, support=True):
         """
-        阵容: 豆爸-R莫(醉贞)-孔明-X-X-X
+        阵容: CBA-狂兰(醉贞)-CBA2-孔明-X-X
         """
         master = self.master
         T = self.master.T
         LOC = self.master.LOC
         if not master.quest_name:
-            master.quest_name = 'zaxiu-caster'
-        master.svt_names = ['豆爸', 'R莫', '孔明']
-        T.read_templates('img/zaxiu-caster')
-        # T.read_templates('img/test')
-        # LOC.relocate((88, 45, 1830, 1024))
-        # LOC.relocate((106, 60, 1813, 1020))
-        master.set_card_weights([1, 3, 2])
-        # ---------------------------  NP    Quick    Arts    Buster ----
-        master.set_card_templates([[(1, 6), (3, 4), (2, 3), (1, 1)],
-                                   [(2, 7), (1, 2), (1, 3), (3, 2)],
-                                   [(2, 0), [(1, 5), (5, 4), (9, 2)], [(1, 4), (5, 3), (7, 3)],
-                                    [(3, 1), (4, 2), (9, 5)]]])
+            master.quest_name = 'a-zaxiu-1'
+        master.svt_names = ['CBA', '狂兰', '孔明']
+        T.read_templates('img/a-zaxiu-1')
+        master.set_card_weights([1, 3, 1, 1])
+        # ----  NP     Quick    Arts   Buster ----
+        master.set_card_templates(
+            [[(1, 0), [(3, 1), (4, 4), (7, 5)], [(1, 5), (5, 4), (7, 1)], [(2, 4), (5, 3), (8, 4)]],
+             [(1, 7), (2, 3), (3, 2), (1, 1)],
+             [(1, 0), (6, 1), (2, 5), (7, 4)]
+             ])
         G.setdefault('img_net', T.net_error)
         G.setdefault('loc_net', LOC.net_error)
         if G.setdefault('goto', False):
@@ -99,193 +101,46 @@ class Battle:
             # noinspection PyStatementEffect
             goto.h
 
+        wait_which_target(T.support, LOC.support_refresh)
+        print('at support choosing page.')
         if support:
             master.choose_support(match_svt=False, match_ce=False, match_ce_max=False)
         else:
             logger.debug('please choose support manually!')
-        logger.debug('Quest zaxiu-caster start...')
         # wave 1
         wait_which_target(T.wave1a, LOC.enemies[1])
+        logger.debug('Quest zaxiu-caster start...')
         wait_which_target(T.wave1a, LOC.master_skill)
         logger.debug('wave 1...')
-        # noinspection PyStatementEffect
-        label.h
-        master.svt_skill(T.wave1a, T.wave1b, 1, 1)
-        master.svt_skill(T.wave1a, T.wave1b, 1, 2)
-        master.svt_skill(T.wave1a, T.wave1b, 3, 2)
-        master.svt_skill(T.wave1a, T.wave1b, 3, 3)
-        master.attack([1, 6, 2])
+        master.svt_skill(T.wave1a, T.wave1b, 3, 1, 2)
+        master.svt_skill(T.wave1a, T.wave1b, 3, 3, 2)
+        master.svt_skill(T.wave1a, T.wave1b, 1, 1, 2)
+        master.svt_skill(T.wave1a, T.wave1b, 2, 3)
+        # master.attack([7, 1, 2])
+        master.auto_attack(nps=7)
 
         # wave 2
         wait_which_target(T.wave2a, LOC.master_skill)
         logger.debug('wave 2...')
-        master.svt_skill(T.wave2a, T.wave2b, 1, 3, 2)
-        master.svt_skill(T.wave2a, T.wave2b, 2, 1)
-        master.svt_skill(T.wave2a, T.wave2b, 2, 2)
-        master.svt_skill(T.wave2a, T.wave2b, 3, 1, 2)
+        master.svt_skill(T.wave2a, T.wave2b, 3, 2)
+        master.master_skill(T.wave2a, 3, order_change=(3, 4), order_change_img=T.order_change)
+        master.svt_skill(T.get('wave2c'), T.get('wave2d'), 3, 1, 2)
         master.auto_attack(nps=7)
 
         # wave 3
         wait_which_target(T.wave3a, LOC.enemies[1])
         wait_which_target(T.wave3a, LOC.master_skill, lapse=1)
         logger.debug('wave 3...')
-        master.master_skill(T.wave3a, 2, 2)
-
+        master.svt_skill(T.wave3a, T.wave3b, 1, 3, 2)
+        master.svt_skill(T.wave3a, T.wave3b, 1, 2)
+        master.svt_skill(T.wave3a, T.wave3b, 3, 2)
+        master.svt_skill(T.wave3a, T.wave3b, 3, 3)
+        master.master_skill(T.wave3a, 1)
+        # noinspection PyStatementEffect
+        label.h
+        print('here?')
         master.auto_attack(nps=7)
         master.xjbd(T.kizuna, LOC.kizuna, mode='dmg', allow_unknown=True)
-
-        return
-
-    @with_goto
-    def zaxiu_caster_full(self, support=True):
-        """
-        阵容: 豆爸-R莫(醉贞)-孔明-X-X-X
-        """
-        master = self.master
-        T = self.master.T
-        LOC = self.master.LOC
-        if not master.quest_name:
-            master.quest_name = 'zaxiu-caster-full'
-        master.svt_names = ['R莫', '蛇夫', '孔明', '小玉']
-        T.read_templates('img/zaxiu-caster-full')
-        # T.read_templates('img/test')
-        # LOC.relocate((88, 45, 1830, 1024))
-        # LOC.relocate((106, 60, 1813, 1020))
-        master.set_card_weights([3, 1, 2, 2])
-        # ---------------------------  NP    Quick    Arts    Buster ----
-        master.set_card_templates([[(1, 6), (1, 3), (2, 3), (2, 4)],
-                                   [(2, 0), (1, 0), (1, 0), (3, 0)],
-                                   [(2, 0), [(3, 3), (5, 4), (7, 5)], [(1, 1), (5, 1), (7, 4)],
-                                    [(1, 2), (4, 2), (9, 1)]],
-                                   [(2, 0), (3, 4), (2, 2), (2, 5)]])
-        wave1c = T.get('wave1c')
-        wave1d = T.get('wave1d')
-
-        G.setdefault('img_net', T.net_error)
-        G.setdefault('loc_net', LOC.net_error)
-        if G.setdefault('goto', False):
-            G['goto'] = False
-            logger.warning('goto label.h')
-            # noinspection PyStatementEffect
-            goto.h
-
-        if support:
-            master.choose_support(match_svt=True, match_ce=False, match_ce_max=False)
-        else:
-            logger.debug('please choose support manually!')
-
-        logger.debug('Quest zaxiu-caster-full start...')
-
-        # wave 1
-        wait_which_target(T.wave1a, LOC.enemies[1])
-        wait_which_target(T.wave1a, LOC.master_skill)
-        logger.debug('wave 1...')
-        master.svt_skill(T.wave1a, T.wave1b, 2, 2)
-        master.svt_skill(T.wave1a, T.wave1b, 2, 3)
-        master.master_skill(T.wave1b, 3, order_change=(2, 4), order_change_img=T.order_change)
-        master.svt_skill(wave1c, wave1d, 1, 1)
-
-        master.svt_skill(wave1c, wave1d, 1, 3)
-        master.svt_skill(wave1c, wave1d, 2, 1)
-        master.svt_skill(wave1c, wave1d, 2, 3, 1)
-        master.svt_skill(wave1c, wave1d, 3, 1, 1)
-        master.svt_skill(wave1c, wave1d, 3, 2)
-        master.svt_skill(wave1c, wave1d, 3, 3)
-        master.attack([6, 1, 2])
-
-        # wave 2
-        wait_which_target(T.wave2a, LOC.master_skill)
-        logger.debug('wave 2...')
-        master.svt_skill(T.wave2a, T.wave2b, 1, 2)
-        # master.svt_skill(T.wave2a, T.wave2b, 2, 1)
-        # master.svt_skill(T.wave2a, T.wave2b, 2, 2)
-        # master.svt_skill(T.wave2a, T.wave2b, 3, 1, 2)
-        master.attack([6, 1, 2])
-        # master.auto_attack(nps=7)
-        # noinspection PyStatementEffect
-        label.h
-
-        # wave 3
-        wait_which_target(T.wave3a, LOC.enemies[1])
-        wait_which_target(T.wave3a, LOC.master_skill, lapse=1)
-        logger.debug('wave 3...')
-        # master.svt_skill(T.wave3a, T.wave3b, 2, 3)
-        # master.svt_skill(T.wave3a, T.wave3b, 3, 1, 1)
-        master.master_skill(T.wave3a, 1)
-
-        # master.attack([6, 1, 2])
-        master.auto_attack(nps=6)
-        master.xjbd(T.kizuna, LOC.kizuna, mode='dmg')
-        return
-
-    @with_goto
-    def zaxiu_cba(self, support=True):
-        """
-        阵容: 豆爸-R莫(醉贞)-孔明-X-X-X
-        """
-        master = self.master
-        T = self.master.T
-        LOC = self.master.LOC
-        if not master.quest_name:
-            master.quest_name = 'zaxiu-cba'
-        master.svt_names = ['R莫', '小玉', 'CBA']
-        T.read_templates('img/zaxiu-cba')
-        master.set_card_weights([3, 2, 2.01])
-        # ---------------------------  NP    Quick    Arts    Buster ----
-        master.set_card_templates([[(1, 6), (1, 4), (1, 1), (3, 3)],
-                                   [(2, 0), (2, 4), (1, 2), (3, 1)],
-                                   [(2, 0), [(1, 3), (4, 4), (8, 5)], [(1, 5), (5, 2), (7, 5)],
-                                    [(3, 4), (6, 4), (9, 3)]]])
-        wave1c = T.get('wave1c')
-        wave1d = T.get('wave1d')
-
-        G.setdefault('img_net', T.net_error)
-        G.setdefault('loc_net', LOC.net_error)
-        if G.setdefault('goto', False):
-            G['goto'] = False
-            logger.warning('goto label.h')
-            # noinspection PyStatementEffect
-            goto.h
-
-        if support:
-            master.choose_support(match_svt=True, match_ce=False, match_ce_max=False, match_skills=[2, 3])
-        else:
-            logger.debug('please choose support manually!')
-        logger.debug('Quest zaxiu-cba start...')
-
-        # wave 1
-        wait_which_target(T.wave1a, LOC.enemies[1])
-        wait_which_target(T.wave1a, LOC.master_skill)
-        logger.debug('wave 3...')
-        master.svt_skill(T.wave1a, T.wave1b, 2, 2)
-        master.svt_skill(T.wave1a, T.wave1b, 2, 3)
-
-        master.master_skill(T.wave1a, 3, order_change=(2, 4), order_change_img=T.order_change)
-        # noinspection PyStatementEffect
-        label.h
-        master.svt_skill(wave1c, wave1d, 1, 1)
-        master.svt_skill(wave1c, wave1d, 1, 3)
-        master.svt_skill(wave1c, wave1d, 2, 1)
-        master.svt_skill(wave1c, wave1d, 2, 3, 1)
-        master.svt_skill(wave1c, wave1d, 3, 3, 1)
-        master.attack([6, 1, 2])
-
-        # wave 2
-        wait_which_target(T.wave2a, LOC.master_skill)
-        logger.debug('wave 3...')
-        master.svt_skill(T.wave2a, T.wave2b, 1, 2)
-        master.auto_attack(nps=6, parse_np=False)
-
-        # wave 3
-        wait_which_target(T.wave3a, LOC.enemies[1])
-        wait_which_target(T.wave3a, LOC.master_skill, lapse=1)
-        logger.debug('wave 3...')
-        master.svt_skill(T.wave3a, T.wave3b, 3, 2)
-        master.svt_skill(T.wave3a, T.wave3b, 3, 1, 1)
-        master.master_skill(T.wave3a, 1)
-        master.master_skill(T.wave3a, 2)
-        master.auto_attack(nps=6, parse_np=False)
-        master.xjbd(T.kizuna, LOC.kizuna, mode='dmg')
         return
 
 

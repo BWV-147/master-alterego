@@ -178,6 +178,7 @@ class Master:
             click(self.LOC.support_refresh_confirm)
             logger.debug('refresh support')
         while True:
+            # =1: in server cn and first loop to click START
             page_no = wait_which_target([self.T.team, self.T.wave1a], [self.LOC.team_cloth, self.LOC.master_skill])
             if page_no == 0:
                 click(self.LOC.team)
@@ -226,7 +227,8 @@ class Master:
         assert skill in valid and friend in valid2 and enemy in valid2, (skill, friend, enemy)
         if order_change is not None:
             assert order_change[0] in (1, 2, 3) and order_change[1] in (4, 5, 6)
-            assert skill == 3 and order_change_img is not None, ('order_change', skill, order_change_img)
+            assert skill == 3 and (order_change_img is not None or order_change is not None), \
+                ('order_change', skill, order_change_img)
         # assert (friend, enemy, order_change).count(None) <= 2, (friend, enemy, order_change)
         s = f' to friend {friend}' if friend else f' to enemy {enemy}' if enemy \
             else f' order change {order_change}' if order_change else ''
@@ -521,5 +523,3 @@ class Master:
             for i, ww in enumerate(weights):
                 for j, w in enumerate(ww):
                     self.weights[(i + 1) * 10 + 1 + j] = w
-
-
