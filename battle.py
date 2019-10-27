@@ -22,8 +22,8 @@ class Battle:
             timer.start()
             finished += 1
             logger.info(f'>>>>> Battle "{self.master.quest_name}" No.{finished}/{num} <<<<<')
-            if G.setdefault('goto_outer', False):
-                G['goto_outer'] = False
+            if Config.jump_start:
+                Config.jump_start = False
                 logger.warning('outer: goto label.g')
                 # noinspection PyStatementEffect
                 goto.g
@@ -36,9 +36,9 @@ class Battle:
             rewards = screenshot()
             logger.info('battle finished, checking rewards.')
             craft_dropped = match_which_target(rewards, T.rewards, LOC.finish_craft) >= 0
-            if craft_dropped:
+            if craft_dropped and Config.check_drop:
                 logger.warning(f'{info.craft_num}th craft dropped!!!')
-                rewards.save(f'img/craft/craft-{self.master.quest_name}-{time.strftime("%m%d-%H-%M-%S")}'
+                rewards.save(f'img/_drops/craft-{self.master.quest_name}-{time.strftime("%m%d-%H-%M-%S")}'
                              + f'-drop{info.craft_num}.png')
                 if info.craft_num in (5, 8, 9, 12, 13, 16, 17, 20, 21, 25):
                     send_mail(f'NEED Enhancement! {info.craft_num}th craft dropped!!!')
@@ -47,7 +47,7 @@ class Battle:
                 else:
                     send_mail(f'{info.craft_num}th craft dropped!!!')
             else:
-                rewards.save(f"img/craft/craft-{self.master.quest_name}-{time.strftime('%m%d-%H-%M-%S')}.png")
+                rewards.save(f"img/_drops/craft-{self.master.quest_name}-{time.strftime('%m%d-%H-%M-%S')}.png")
             dt = timer.stop().dt
             info.add_battle(craft_dropped, int(dt))
             info.save()
@@ -92,10 +92,10 @@ class Battle:
              [(1, 7), (2, 3), (3, 2), (1, 1)],
              [(1, 0), (6, 1), (2, 5), (7, 4)]
              ])
-        G.setdefault('img_net', T.net_error)
-        G.setdefault('loc_net', LOC.net_error)
-        if G.setdefault('goto', False):
-            G['goto'] = False
+        Config.img_net = T.net_error
+        Config.loc_net = LOC.net_error
+        if Config.jump_battle:
+            Config.jump_battle = False
             logger.warning('goto label.h')
             # noinspection PyStatementEffect
             goto.h
@@ -157,23 +157,20 @@ class Battle:
         T.read_templates('img/a-zaxiu-ass')
         master.set_card_weights([1, 3, 1.2])
         # ----  NP     Quick    Arts   Buster ----
-        master.set_card_templates(
-            [[(1, 0), [(3, 1), (4, 4), (7, 5)], [(1, 5), (5, 4), (7, 1)], [(2, 4), (5, 3), (8, 4)]],
-             [(1, 7), (2, 3), (3, 2), (1, 1)],
-             [(1, 0), (6, 1), (2, 5), (7, 4)]
-             ])
-        G.setdefault('img_net', T.net_error)
-        G.setdefault('loc_net', LOC.net_error)
-        if G.setdefault('goto', False):
-            G['goto'] = False
+        master.set_card_templates([
+            [(1, 6), (2, 4), (2, 5), (2, 3)],
+            [(1, 7), (1, 1), (1, 2), (1, 5)],
+            [(1, 0), (2, 1), (3, 3), (1, 3)]
+        ])
+        Config.img_net = T.net_error
+        Config.loc_net = LOC.net_error
+        if Config.jump_battle:
+            Config.jump_battle = False
             logger.warning('goto label.h')
             # noinspection PyStatementEffect
             goto.h
 
-        # noinspection PyStatementEffect
-        label.h
         wait_which_target(T.support, LOC.support_refresh)
-        print('at support choosing page.')
         if support:
             master.choose_support(match_svt=True, match_ce=True, match_ce_max=True)
         else:
@@ -186,15 +183,15 @@ class Battle:
         master.set_waves(T.wave1a, T.wave1b) \
             .svt_skill(3, 1, 2) \
             .svt_skill(3, 2) \
-            .svt_skill(3, 3)
-        master.master_skill(T.wave1a, 3, order_change=(3, 4), order_change_img=T.order_change)
-        master.svt_skill(1, 1) \
+            .svt_skill(3, 3) \
+            .svt_skill(1, 1) \
             .svt_skill(1, 2)
-        # master.attack([6, 1, 2])
-        master.auto_attack(nps=6)
+        master.master_skill(T.wave1a, 3, order_change=(3, 4), order_change_img=T.order_change)
+        master.attack([6, 1, 2])
+        # master.auto_attack(nps=6)
 
         # wave 2
-        wait_which_target(T.wave3a, LOC.enemies[0])
+        wait_which_target(T.wave2a, LOC.enemies[0])
         wait_which_target(T.wave2a, LOC.master_skill)
         logger.debug('wave 2...')
         master.set_waves(T.wave2a, T.wave2b) \
@@ -202,8 +199,10 @@ class Battle:
             .svt_skill(1, 3, 2) \
             .svt_skill(2, 1) \
             .svt_skill(2, 2)
-        # master.attack([7, 1, 2])
-        master.auto_attack(nps=7)
+        # noinspection PyStatementEffect
+        label.h
+        master.attack([7, 1, 2])
+        # master.auto_attack(nps=7)
 
         # wave 3
         wait_which_target(T.wave3a, LOC.enemies[1])
@@ -212,9 +211,9 @@ class Battle:
         master.set_waves(T.wave3a, T.wave3b) \
             .svt_skill(2, 3) \
             .svt_skill(3, 2)
-        master.master_skill(T.wave3a, 1)
-        # master.attack([7, 1, 2])
-        master.auto_attack(nps=7)
+        # master.master_skill(T.wave3a, 1)
+        master.attack([7, 1, 2])
+        # master.auto_attack(nps=7)
         master.xjbd(T.kizuna, LOC.kizuna, mode='dmg', allow_unknown=True)
         return
 
@@ -276,8 +275,8 @@ class BattleBackup:
         master.set_card_templates([[(4, 6), (2, 1), (3, 5), (1, 4)],
                                    [(4, 7), (3, 2), (2, 4), (2, 3)],
                                    [(0, 0), (1, 3), (1, 2), (1, 1)]])
-        if G.setdefault('goto', False):
-            G['goto'] = False
+        if Config.jump_battle:
+            Config.jump_battle = False
             logger.warning('goto label.h')
             # noinspection PyStatementEffect
             goto.h
@@ -347,8 +346,8 @@ class BattleBackup:
         master.set_card_templates([[(1, 6), (3, 4), (2, 2), (1, 4)],
                                    [(3, 7), (3, 5), (3, 2), (1, 1)],
                                    [(0, 0), (1, 3), (2, 3), (1, 5)]])
-        if G.setdefault('goto', False):
-            G['goto'] = False
+        if Config.jump_battle:
+            Config.jump_battle = False
             logger.warning('goto label.h')
             # noinspection PyStatementEffect
             goto.h
@@ -411,8 +410,8 @@ class BattleBackup:
         master.set_card_templates([[(1, 0), (3, 1), (1, 1), (2, 2)],
                                    [(1, 0), (1, 4), (1, 5), (1, 4)],
                                    [(0, 0), (3, 2), (3, 4), (3, 3)]])
-        if G.setdefault('goto', False):
-            G['goto'] = False
+        if Config.jump_battle:
+            Config.jump_battle = False
             logger.warning('goto label.h')
             # noinspection PyStatementEffect
             goto.h
@@ -474,8 +473,8 @@ class BattleBackup:
         #                            [(2, 7), (3, 1), (3, 2), (1, 2)],
         #                            [(2, 0), (2, 3), (2, 5), (2, 4)],
         #                            [(1, 6), (1, 1), (1, 5), (3, 3)]])
-        if G.setdefault('goto', False):
-            G['goto'] = False
+        if Config.jump_battle:
+            Config.jump_battle = False
             logger.warning('goto label.h')
             # noinspection PyStatementEffect
             goto.h
@@ -533,8 +532,8 @@ class BattleBackup:
         #                            [(2, 7), (3, 1), (3, 2), (1, 2)],
         #                            [(2, 0), (2, 3), (2, 5), (2, 4)],
         #                            [(1, 6), (1, 1), (1, 5), (3, 3)]])
-        if G.setdefault('goto', False):
-            G['goto'] = False
+        if Config.jump_battle:
+            Config.jump_battle = False
             logger.warning('goto label.h')
             # noinspection PyStatementEffect
             goto.h

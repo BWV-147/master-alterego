@@ -89,7 +89,7 @@ class Master:
     # procedures
     def eat_apple(self, apple=-1, check_time=False):
         if apple == -1:
-            G['finish'] = True
+            Config.finished = True
             logger.debug("don't eat apple, all battles finished. Existing...")
             exit()
         if apple not in (0, 1, 2, 3):
@@ -173,16 +173,17 @@ class Master:
             # refresh support
             if found:
                 break
-            wait_which_target(self.T.support, self.LOC.support_refresh)
-            time.sleep(3)
-            click(self.LOC.support_refresh)
+            logger.debug('refresh support')
+            wait_which_target(self.T.support, self.LOC.support_refresh, at=True)
+            print('click support refresh confirm')
             wait_which_target(self.T.support_confirm, self.LOC.support_confirm_title)
             click(self.LOC.support_refresh_confirm)
-            logger.debug('refresh support')
         while True:
             # =1: in server cn and first loop to click START
             page_no = wait_which_target([self.T.team, self.T.wave1a], [self.LOC.team_cloth, self.LOC.master_skill])
             if page_no == 0:
+                # print('click start please')
+                # time.sleep(5)
                 click(self.LOC.team)
             elif page_no == 1:
                 break
@@ -220,12 +221,12 @@ class Master:
             click(self.LOC.skill_to_target[friend - 1])
         wait_which_target(after, region)
 
-    def set_waves(self, before: Image.Image, after: Image.Image) -> Master:
+    def set_waves(self, before: Image.Image, after: Image.Image):
         self.wave_a = before
         self.wave_b = after
         return self
 
-    def svt_skill(self, who: int, skill: int, friend: int = None, enemy: int = None) -> Master:
+    def svt_skill(self, who: int, skill: int, friend: int = None, enemy: int = None):
         self.svt_skill_full(self.wave_a, self.wave_b, who, skill, friend, enemy)
         return self
 
@@ -271,7 +272,7 @@ class Master:
         wait_which_target(before, self.LOC.master_skill)
         return self
 
-    def auto_attack(self, nps: Union[List[int], int] = None, mode='dmg', parse_np=True, allow_unknown=False):
+    def auto_attack(self, nps: Union[List[int], int] = None, mode='dmg', parse_np=False, allow_unknown=False):
         """
         :param parse_np:
         :param nps:

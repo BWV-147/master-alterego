@@ -3,12 +3,12 @@ import numpy as np
 from PIL import ImageGrab
 import cv2
 from mss import mss
-from skimage.measure import compare_ssim as sk_compare_ssim
+from skimage.metrics import structural_similarity as sk_compare_ssim
 from skimage.feature import match_template as sk_match_template
 from util.dataset import *
 
 
-def screenshot(region: Union[tuple, list] = None, filepath: str = None, monitor=1) -> Image.Image:
+def screenshot(region: Union[tuple, list] = None, filepath: str = None, monitor=Config.monitor) -> Image.Image:
     """
     take screenshot of multi-monitors. set python.exe and pythonw.exe high dpi first!(see README.md)
     :param region: region inside monitor

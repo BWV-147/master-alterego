@@ -60,7 +60,7 @@ class Gacha:
 
 # main entrance
 def draw_with_check(check=True):
-    G['offset_x'] = -1920
+    Config.offset_x = -1920
     check_sys_admin()
     test = Gacha()
     time.sleep(2)
@@ -82,8 +82,8 @@ if __name__ == '__main__':
 def get_center(pos):
     assert isinstance(pos, (list, tuple))
     if len(pos) == 2:
-        return pos[0] + G.get('offset_x', 0), pos[1] + G.get('offset_y', 0)
+        return pos[0] + Config.offset_x, pos[1] + Config.offset_y
     elif len(pos) == 4:
-        return (pos[0] + pos[2]) / 2 + G.get('offset_x', 0), (pos[1] + pos[3]) / 2 + G.get('offset_y', 0)
+        return (pos[0] + pos[2]) / 2 + Config.offset_x, (pos[1] + pos[3]) / 2 + Config.offset_y
 
 # end

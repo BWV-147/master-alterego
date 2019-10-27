@@ -22,8 +22,18 @@ from email.mime.image import MIMEImage
 from typing import List, Tuple, Union, Dict, Callable
 from pprint import pprint
 
-# check network_error
-G = {}  # shared global data
+
+class Config:
+    monitor = 1  # >=1, check sct.monitors to see running at which monitor, 0 is total size
+    offset_x = 0  # xy offset for mouse click event, relative to MAIN monitor's origin
+    offset_y = 0
+    check_drop = True  # check craft dropped or not, if True, make sure rewards.png contains the dropped craft.
+    jump_battle = False  # goto decoration in Battle.battle_func
+    jump_start = False  # goto decoration in Battle.start
+    log_time = 0  # record the time of last logging.info/debug..., set NO_LOG_TIME outside battle progress
+    finished = False  # all battles finished, set to True before child process exist.
+    img_net = None  # img & loc of network error, especially for jp server.
+    loc_net = None
 
 
 # %% logger
@@ -37,7 +47,7 @@ def get_logger(name='log', level=logging.INFO, save=True):
     _logger.setLevel(logging.DEBUG)
 
     def log_func():
-        G['log_time'] = time.time()
+        Config.log_time = time.time()
 
     log_filter = LogFilter(func=log_func)
     _logger.addFilter(log_filter)
@@ -78,19 +88,16 @@ class LogFilter(logging.Filter):
 
     def filter(self, record: logging.LogRecord):
         if NO_LOG_TIME in record.args:
-            self.func()
             record.args = [x for x in record.args if x is not NO_LOG_TIME]
+        else:
+            self.func()
         return True
 
 
 logger = get_logger()
 
 
-# logger2 = get_logger('craft', logging.WARNING)
-
-
 # %% child thread
-
 # inspired by https://github.com/mosquito/crew/blob/master/crew/worker/thread.py
 def kill_thread(thread: threading.Thread) -> None:
     logger.warning(f'ready to kill thread-{thread.ident}({thread.name})')
@@ -176,14 +183,14 @@ def supervise_log_time(thread: threading.Thread, secs: float = 60, mail=False, i
     assert thread is not None, thread
 
     def _overtime():
-        return time.time() - G['log_time'] > secs
+        return time.time() - Config.log_time > secs
 
     logger.info(f'start supervising thread {thread.name}...')
     thread.start()
     while not thread.is_alive():
         time.sleep(0.01)
     logger.info(f'Thread-{thread.ident}({thread.name}) started...')
-    G['log_time'] = time.time()
+    Config.log_time = time.time()
     # from here, every logging should have arg: NO_LOG_TIME, otherwise endless loop.
     while True:
         # every case: stop or continue
@@ -192,26 +199,25 @@ def supervise_log_time(thread: threading.Thread, secs: float = 60, mail=False, i
             time.sleep(interval)
             continue
         # case 2: thread finished normally - stop supervision
-        if not thread.is_alive() and G.get('finish', False):
+        if not thread.is_alive() and Config.finished:
             # thread finished
             logger.debug(f'Thread-{thread.ident}({thread.name}) finished. Stop supervising.')
             break
 
         # something wrong
         # case 3: network error - click "retry" and continue
-        img_net = G.get('img_net')
-        loc_net = G.get('loc_net')
-        if img_net is not None and loc_net is not None:
+        if Config.img_net is not None and Config.loc_net is not None:
             shot = screenshot()
-            if cal_sim(shot, img_net, loc_net[0]) > 0.9 and cal_sim(shot, img_net, loc_net[1]) > 0.9:
+            if cal_sim(shot, Config.img_net, Config.loc_net[0]) > 0.9 and cal_sim(shot, Config.img_net,
+                                                                                  Config.loc_net[1]) > 0.9:
                 logger.warning('Network error! click "retry" button', NO_LOG_TIME)
-                click(loc_net[1])
+                click(Config.loc_net[1])
                 continue
         # case 4: unrecognized error - waiting user to handle (in 30 secs)
         loops = 15
         logger.warning(f'Something went wrong, please solve it\n', NO_LOG_TIME)
         while loops > 0:
-            print(f'Or it will be force stopped after {loops * 2} seconds...')
+            print(f'Or it will be force stopped...')
             loops -= 1
             if mute:
                 time.sleep(2)
@@ -224,7 +230,7 @@ def supervise_log_time(thread: threading.Thread, secs: float = 60, mail=False, i
             else:
                 # case 4.2: wrong! kill thread and stop
                 err_msg = f'Thread-{thread.ident}({thread.name}):' \
-                          f' Time run out! lapse={time.time() - G["log_time"]:.2f}(>{secs}) secs.'
+                          f' Time run out! lapse={time.time() - Config.log_time:.2f}(>{secs}) secs.'
                 print(err_msg)
                 if mail:
                     subject = f'{time.strftime("[%m-%d %H:%M]")} {thread.name} went wrong!'
@@ -236,14 +242,16 @@ def supervise_log_time(thread: threading.Thread, secs: float = 60, mail=False, i
 def check_sys_admin(admin=True):
     # set dpi awareness & check admin permission
     # useless in Python Console of Pycharm
-    print('set "G[\'offset_x\'] = -1920" if window in left & vice screen')
+    print('HINT: make sure "Config.offset_x/y" is set properly')
     # SetProcessDpiAwareness: see
     # https://docs.microsoft.com/zh-cn/windows/win32/api/shellscalingapi/ne-shellscalingapi-process_dpi_awareness
+    print('set process dpi awareness = PROCESS_PER_MONITOR_DPI_AWARE')
     ctypes.windll.shcore.SetProcessDpiAwareness(2)
     if admin:
         if ctypes.windll.shell32.IsUserAnAdmin() == 0:
-            print('e.g. click somewhere inside admin programs(Blupapa), the python process also need admin permission.')
-            print('applying admin permission in a new process, take no effect when in console mode.')
+            print('Please run cmd/Pycharm as admin to click inside programs with admin permission(e.g. MuMu).')
+            # To run a new process as admin, no effect in Pycharm's Python Console mode.
+            # print('applying admin permission in a new process, and no effect when in console mode.')
             # ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, __file__, None, 1)
             exit(0)
         else:
@@ -251,10 +259,6 @@ def check_sys_admin(admin=True):
 
 
 # %% win32: mouse & screen pixel
-def is_second_screen():
-    return 'right' in threading.current_thread().name or G.get('right', False)
-
-
 def move_mouse(x=None, y=None):
     x = int(x)
     y = int(y)
@@ -278,8 +282,8 @@ def click(xy: tuple = None, lapse=0.5, r=2):
             x, y = ((xy[0] + xy[2]) / 2, (xy[1] + xy[3]) / 2)
         else:
             raise ValueError(f'xy=${xy}: len(xy) should be 2 or 4.')
-        x += random.randint(-r, r) + G.get('offset_x', 0)
-        y += random.randint(-r, r) + G.get('offset_y', 0)
+        x += random.randint(-r, r) + Config.offset_x
+        y += random.randint(-r, r) + Config.offset_y
         move_mouse(x, y)
         # print('click (%d, %d)' % (x, y))
     win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0)

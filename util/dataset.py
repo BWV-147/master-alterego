@@ -319,7 +319,7 @@ class StatInfo:
             self.history = data.get('history', [])
             self.durations = data.get('durations', [])
         else:
-            print('file not exist, skip loading')
+            print(f'StatInfo file {self.fp}  not exist, skip loading')
 
     def __repr__(self):
         data = json.dumps(self, ensure_ascii=False, default=lambda x: x.__dict__)
