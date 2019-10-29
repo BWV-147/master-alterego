@@ -9,5 +9,5 @@ BB の AI です。
 
 > TODO
  - support selection slide
- - G -> class Config
+ - zihuiti mode
  

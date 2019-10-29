@@ -145,7 +145,7 @@ def send_mail(content, subject=None, receiver=None):
         msg.attach(body)
 
     from util.image_process import screenshot
-    screenshot().save(open('img/crash.png', 'wb'), quality=50)
+    screenshot(monitor=Config.monitor).save(open('img/crash.png', 'wb'), quality=50)
     with open('img/crash.png', 'rb') as fd:
         m1 = MIMEImage(fd.read())
         m1.add_header('Content-ID', '<image1>')
@@ -237,6 +237,7 @@ def supervise_log_time(thread: threading.Thread, secs: float = 60, mail=False, i
                     send_mail(err_msg, subject=subject)
                 kill_thread(thread)
                 print('exit supervisor after killing thread.')
+                return
 
 
 def check_sys_admin(admin=True):

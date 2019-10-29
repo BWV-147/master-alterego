@@ -44,14 +44,14 @@ class Regions:
     apply_friend = (1692, 521, 1826, 588)
     apply_friend_deny = (464, 913)
     quest = (937, 240, 1848, 360)
-    quest_c = (1277, 351)
+    quest_c = (1600, 265)
     # rewards = (1680, 33, 1868, 91)
 
     ap_time = (346, 1041, 366, 1072)
     apple_page = (471, 177, 645, 359)
     apple_close = (1000, 925)
     apples = ((471, 177, 645, 359), (471, 397, 645, 579), (474, 621, 645, 803), (471, 840, 645, 861))
-    apple_confirm = (1061, 802, 1455, 882)
+    apple_confirm = (1195, 802, 1313, 882)
     # support = ((72,489,1617,560), (72,790,1617,860))
     # 2 supports one time，support[svt][skill]
     support_team_icon = (1637, 320, 1767, 384)
@@ -296,9 +296,9 @@ class StatInfo:
         self.durations = []
         self.load()
 
-    def add_battle(self, craft_dropped: bool = False, duration: int = 0):
+    def add_battle(self, craft_dropped: bool = False):
         self.battle_no += 1
-        self.durations.append((self.battle_no, duration))
+        # self.durations.append((self.battle_no, duration))
         if craft_dropped:
             self.craft_num += 1
             self.history.append((self.craft_num, self.battle_no))

@@ -87,7 +87,7 @@ class Master:
         time.sleep(100)
 
     # procedures
-    def eat_apple(self, apple=-1, check_time=False):
+    def eat_apple(self, apple=-1):
         if apple == -1:
             Config.finished = True
             logger.debug("don't eat apple, all battles finished. Existing...")
@@ -97,31 +97,18 @@ class Master:
             return
         if apple == 0:  # 不舍得吃彩苹果
             apple = 3
-        logger.debug(f"eating {['Colorful', 'Gold', 'Silver', 'Cropper'][apple]} apple...")
-        wait_which_target(self.T.apple_page, self.LOC.apple_page)
-        # if apple == 1 and check_time:
-        #     click(self.LOC.apple_close)
-        #     click(self.LOC.safe_area)  # why?
-        #     ap_time = self.T.quest.crop(self.LOC.ap_time)
-        #     while True:
-        #         sim = cal_sim(screenshot().crop(self.LOC.ap_time), ap_time)
-        #         if sim > THR:
-        #             click(self.LOC.quest_c, lapse=0.1)
-        #             click(self.LOC.safe_area, lapse=0.1)  # why: sometimes click once to select, twice to enter
-        #             click(self.LOC.quest_c, lapse=0.1)
-        #             break
-        #         time.sleep(2)
-        # eating apple page
-        shot = screenshot()
-        if match_which_target(shot, self.T.apple_page, self.LOC.apples[apple]) >= 0:
-            click(self.LOC.apples[apple])
-            wait_which_target(self.T.apple_confirm, self.LOC.apple_confirm, at=True)
-            wait_which_target(self.T.support, self.LOC.support_refresh)
-            return
-        elif match_which_target(shot, self.T.support, self.LOC.support_refresh) >= 0:
-            return
-        else:
-            logger.debug('apple?? where??')
+        # wait_which_target(self.T.apple_page, self.LOC.apple_page)
+        while True:
+            shot = screenshot()
+            page_no = match_which_target(shot, [self.T.apple_page, self.T.apple_confirm, self.T.support],
+                                         [self.LOC.apples[apple], self.LOC.apple_confirm, self.LOC.support_refresh])
+            if page_no == 0:
+                logger.debug(f"eating {['Colorful', 'Gold', 'Silver', 'Cropper'][apple]} apple...")
+                click(self.LOC.apples[apple])
+            elif page_no == 1:
+                click(self.LOC.apple_confirm, lapse=1)
+            elif page_no == 2:
+                break
 
     def choose_support(self, match_svt=True, match_ce=False, match_ce_max=False, match_skills=None):
         # type:(bool,bool,bool,List[int])->None
@@ -166,6 +153,7 @@ class Master:
                             if match_which_target(shot, self.T.support, self.LOC.support_ce_max[svt]) < 0:
                                 continue
                         click(self.LOC.support_ce[svt])
+                        logger.debug(f'choose support No.{svt}')
                         # if cn server, it will be used.
                         # wait_which_target(self.T.team, self.LOC.team, at=True, threshold=0.5)
                         found = True
@@ -176,7 +164,7 @@ class Master:
             logger.debug('refresh support')
             wait_which_target(self.T.support, self.LOC.support_refresh, at=True)
             print('click support refresh confirm')
-            wait_which_target(self.T.support_confirm, self.LOC.support_confirm_title)
+            wait_which_target(self.T.support_confirm, self.LOC.support_confirm_title, clicking=self.LOC.support_refresh)
             click(self.LOC.support_refresh_confirm)
         while True:
             # =1: in server cn and first loop to click START

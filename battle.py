@@ -12,10 +12,11 @@ class Battle:
         pass
 
     @with_goto
-    def start(self, battle_func, num=10, apple=-1, support=True):
+    def start(self, battle_func, folder, num=10, apple=-1, support=True):
         T = self.master.T
         LOC = self.master.LOC
         timer = Timer()
+        T.read_templates(folder)
         finished = 0
         info = StatInfo()
         while finished < num:
@@ -27,30 +28,40 @@ class Battle:
                 logger.warning('outer: goto label.g')
                 # noinspection PyStatementEffect
                 goto.g
+            while True:
+                page_no = wait_which_target([T.quest, T.apple_page, T.support],
+                                            [LOC.quest, LOC.apple_page, LOC.support_refresh])
+                if page_no == 0:
+                    click(LOC.quest_c)
+                elif page_no == 1:
+                    self.master.eat_apple(apple)
+                elif page_no == 2:
+                    break
             battle_func(support)
             wait_which_target(T.rewards, LOC.finish_qp, clicking=LOC.finish_qp, lapse=0.5)
             click(LOC.rewards_show_num, lapse=1)
             # check reward_page has CE dropped or not
-            # noinspection PyStatementEffect
-            label.g
             rewards = screenshot()
             logger.info('battle finished, checking rewards.')
             craft_dropped = match_which_target(rewards, T.rewards, LOC.finish_craft) >= 0
+
             if craft_dropped and Config.check_drop:
+                info.add_battle(True)
+                info.save()
                 logger.warning(f'{info.craft_num}th craft dropped!!!')
                 rewards.save(f'img/_drops/craft-{self.master.quest_name}-{time.strftime("%m%d-%H-%M-%S")}'
                              + f'-drop{info.craft_num}.png')
-                if info.craft_num in (5, 8, 9, 12, 13, 16, 17, 20, 21, 25):
+                if info.craft_num in (7, 8, 11, 12, 15, 16, 19, 20):
                     send_mail(f'NEED Enhancement! {info.craft_num}th craft dropped!!!')
                     logger.warning('need to change party or enhance crafts. Exit.')
                     exit()
                 else:
                     send_mail(f'{info.craft_num}th craft dropped!!!')
             else:
+                info.add_battle(False)
+                info.save()
                 rewards.save(f"img/_drops/craft-{self.master.quest_name}-{time.strftime('%m%d-%H-%M-%S')}.png")
             dt = timer.stop().dt
-            info.add_battle(craft_dropped, int(dt))
-            info.save()
             logger.info(f'--- Battle {finished}/{num} finished, time = {int(dt // 60)} min {int(dt % 60)} sec.'
                         + f' (total {info.battle_no})')
             # ready to restart a battle
@@ -60,38 +71,35 @@ class Battle:
                                             [LOC.quest, LOC.restart_quest_yes, LOC.apply_friend])
                 if page_no == 0:
                     # in server cn, restart from quest page
-                    click(LOC.quest_c)
                     break
                 elif page_no == 2:
                     click(LOC.apply_friend_deny)
                 elif page_no == 1:
                     click(LOC.restart_quest_yes)
-                    break
 
-            page_no = wait_which_target([T.apple_page, T.support], [LOC.apple_page, LOC.support_refresh])
-            if page_no == 0:
-                self.master.eat_apple(apple)
+            # noinspection PyStatementEffect
+            label.g
         logger.info(f'>>>>> All {finished} battles "{self.master.quest_name}" finished. <<<<<')
 
     @with_goto
-    def a_zaxiu(self, support=True):
+    def s_zaxiu_ass(self, support=True):
         """
-        阵容: CBA-狂兰(醉贞)-CBA2-孔明-X-X
+        阵容: 豆爸-齐格(倍卡)-孔明(T1换下去)-CBA-X-X
         """
         master = self.master
         T = self.master.T
         LOC = self.master.LOC
         if not master.quest_name:
-            master.quest_name = 'a-zaxiu-1'
-        master.svt_names = ['CBA', '狂兰', '孔明']
-        T.read_templates('img/a-zaxiu-1')
-        master.set_card_weights([1, 3, 1, 1])
+            master.quest_name = 's-zaxiu-ass'
+        master.svt_names = ['豆爸', '齐格', 'CBA']
+        # T.read_templates('img/s-zaxiu-ass')
+        master.set_card_weights([1, 3, 1.2])
         # ----  NP     Quick    Arts   Buster ----
-        master.set_card_templates(
-            [[(1, 0), [(3, 1), (4, 4), (7, 5)], [(1, 5), (5, 4), (7, 1)], [(2, 4), (5, 3), (8, 4)]],
-             [(1, 7), (2, 3), (3, 2), (1, 1)],
-             [(1, 0), (6, 1), (2, 5), (7, 4)]
-             ])
+        master.set_card_templates([
+            [(1, 6), (2, 4), (2, 5), (2, 3)],
+            [(1, 7), (1, 1), (1, 2), (1, 5)],
+            [(1, 0), (2, 1), (3, 3), (1, 3)]
+        ])
         Config.img_net = T.net_error
         Config.loc_net = LOC.net_error
         if Config.jump_battle:
@@ -101,45 +109,49 @@ class Battle:
             goto.h
 
         wait_which_target(T.support, LOC.support_refresh)
-        print('at support choosing page.')
         if support:
-            master.choose_support(match_svt=False, match_ce=False, match_ce_max=False)
+            master.choose_support(match_svt=True, match_ce=True, match_ce_max=True)
         else:
             logger.debug('please choose support manually!')
         # wave 1
-        wait_which_target(T.wave1a, LOC.enemies[1])
-        logger.debug('Quest zaxiu-caster start...')
+        # noinspection PyStatementEffect
+        label.h
+        wait_which_target(T.wave1a, LOC.enemies[0])
+        logger.debug(f'Quest {master.quest_name} start...')
         wait_which_target(T.wave1a, LOC.master_skill)
         logger.debug('wave 1...')
         master.set_waves(T.wave1a, T.wave1b) \
             .svt_skill(3, 1, 2) \
-            .svt_skill(3, 3, 2) \
-            .svt_skill(1, 1, 2) \
-            .svt_skill(2, 3)
-        # master.attack([7, 1, 2])
-        master.auto_attack(nps=7)
+            .svt_skill(3, 2) \
+            .svt_skill(3, 3) \
+            .svt_skill(1, 1) \
+            .svt_skill(1, 2)
+        master.master_skill(T.wave1a, 3, order_change=(3, 4), order_change_img=T.order_change)
+        master.attack([6, 1, 2])
+        # master.auto_attack(nps=6)
 
         # wave 2
+        wait_which_target(T.wave2a, LOC.enemies[0])
         wait_which_target(T.wave2a, LOC.master_skill)
         logger.debug('wave 2...')
-        master.svt_skill(T.wave2a, T.wave2b, 3, 2)
-        master.master_skill(T.wave2a, 3, order_change=(3, 4), order_change_img=T.order_change)
-        master.svt_skill_full(T.get('wave2c'), T.get('wave2d'), 3, 1, 2)
-        master.auto_attack(nps=7)
+        master.set_waves(T.wave2a, T.wave2b) \
+            .svt_skill(3, 3, 2) \
+            .svt_skill(1, 3, 2) \
+            .svt_skill(2, 1) \
+            .svt_skill(2, 2)
+        master.attack([7, 1, 2])
+        # master.auto_attack(nps=7)
 
         # wave 3
         wait_which_target(T.wave3a, LOC.enemies[1])
         wait_which_target(T.wave3a, LOC.master_skill, lapse=1)
         logger.debug('wave 3...')
         master.set_waves(T.wave3a, T.wave3b) \
-            .svt_skill(1, 3, 2) \
-            .svt_skill(1, 2) \
-            .svt_skill(3, 2) \
-            .svt_sll(3, 3) \
-            .master_skill(T.wave3a, 1)
-        # noinspection PyStatementEffect
-        label.h
-        master.auto_attack(nps=7)
+            .svt_skill(2, 3) \
+            .svt_skill(3, 2)
+        # master.master_skill(T.wave3a, 1)
+        master.attack([7, 1, 2])
+        # master.auto_attack(nps=7)
         master.xjbd(T.kizuna, LOC.kizuna, mode='dmg', allow_unknown=True)
         return
 
@@ -178,6 +190,8 @@ class Battle:
         # wave 1
         wait_which_target(T.wave1a, LOC.enemies[0])
         logger.debug(f'Quest {master.quest_name} start...')
+        # noinspection PyStatementEffect
+        label.h
         wait_which_target(T.wave1a, LOC.master_skill)
         logger.debug('wave 1...')
         master.set_waves(T.wave1a, T.wave1b) \
@@ -199,8 +213,6 @@ class Battle:
             .svt_skill(1, 3, 2) \
             .svt_skill(2, 1) \
             .svt_skill(2, 2)
-        # noinspection PyStatementEffect
-        label.h
         master.attack([7, 1, 2])
         # master.auto_attack(nps=7)
 
