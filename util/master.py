@@ -132,11 +132,6 @@ class Master:
                     # match ce too, temp.
                     click(self.LOC.support_ce[0])
                     found = True
-                    break
-                # if cn server, it will be used.
-                # click(self.LOC.support_ce[0])
-                # wait_which_target(self.T.team, self.LOC.team, at=True)
-                # return
             else:
                 for svt in range(2):  # 2 support one time, no scroll
                     if match_which_target(shot, self.T.support, self.LOC.support_skill[svt]) >= 0:
@@ -158,9 +153,9 @@ class Master:
                         # wait_which_target(self.T.team, self.LOC.team, at=True, threshold=0.5)
                         found = True
                         break
-            # refresh support
             if found:
                 break
+            # refresh support
             logger.debug('refresh support')
             wait_which_target(self.T.support, self.LOC.support_refresh, at=True)
             print('click support refresh confirm')
@@ -170,8 +165,6 @@ class Master:
             # =1: in server cn and first loop to click START
             page_no = wait_which_target([self.T.team, self.T.wave1a], [self.LOC.team_cloth, self.LOC.master_skill])
             if page_no == 0:
-                # print('click start please')
-                # time.sleep(5)
                 click(self.LOC.team)
             elif page_no == 1:
                 break
@@ -193,8 +186,8 @@ class Master:
         # validation
         valid1, valid2 = (1, 2, 3), (1, 2, 3, None)
         assert who in valid1 and skill in valid1 and friend in valid2 and enemy in valid2, (who, skill, friend, enemy)
-        s = f'to friend {self.svt_names[friend - 1]}' if friend \
-            else f'to enemy {self.svt_names[enemy - 1]}' if enemy else ''
+        s = f'to friend {friend}' if friend \
+            else f'to enemy {enemy}' if enemy else ''
         logger.debug('Servant skill %s-%d %s.' % (who, skill, s))
 
         # start
@@ -205,7 +198,7 @@ class Master:
         if friend is not None:
             # it should also match the saved screenshot, but...
             # TODO: match select target shot, same as master_skill
-            time.sleep(0.3)
+            time.sleep(0.5)
             click(self.LOC.skill_to_target[friend - 1])
         wait_which_target(after, region)
 
@@ -283,7 +276,7 @@ class Master:
             if cards == {}:
                 if time.time() - t0 > 5 and allow_unknown:
                     # if lapse>3s, maybe someone has been died
-                    chosen_cards = convert_list(nps)
+                    chosen_cards = convert_to_list(nps)
                     chosen_cards.extend([1, 2, 3])
                     logger.debug('unrecognized cards, choose [1,2,3]')
                     self.play_cards(chosen_cards[0:3])
@@ -314,17 +307,14 @@ class Master:
             print(f'warning! Less then 3 cards to play: {self.str_cards(locs_or_cards)}')
             # time.sleep(1)
         logger.debug(f'Attack cards: {self.str_cards(locs_or_cards)}')
-        # if isinstance(locs_or_cards[0], Card):
         locs: List[int] = [c.loc if isinstance(c, Card) else c for c in locs_or_cards]
-        # else:
-        #     locs: List[int] = locs_or_cards
         for loc in locs:
             # print(f'click card {loc}')
             click(self.LOC.cards[loc - 1])
             time.sleep(0.2)
 
     def xjbd(self, target, regions, mode='dmg', turns=100, allow_unknown=False, nps=None):
-        # type:(Union[Image.Image,List[Image.Image]],Union[tuple,list],str,int,bool,Union[int,tuple,list])->int
+        # type:(Union[Image.Image,Sequence[Image.Image]],Sequence,str,int,bool,Union[int,Sequence])->int
         if isinstance(regions[0], (int, float)):
             regions = [regions]
         cur_turn = 0
@@ -338,10 +328,10 @@ class Master:
                 logger.debug(f'xjbd: turn {cur_turn}/{turns}.')
                 time.sleep(1)
                 if nps is not None:
-                    nps = nps if isinstance(nps, (list, tuple)) else [nps, ]
+                    nps = convert_to_list(nps)
                     while not compare_regions(screenshot(), self.T.cards1, self.LOC.cards_back):
-                        click(self.LOC.attack,
-                              lapse=0.2)  # self.LOC.attack should be not covered by self.LOC.cards_back
+                        # self.LOC.attack should be not covered by self.LOC.cards_back
+                        click(self.LOC.attack, lapse=0.2)
                         time.sleep(0.2)
                     self.play_cards(nps)
                 self.auto_attack(mode=mode, allow_unknown=allow_unknown)
@@ -354,13 +344,13 @@ class Master:
         """
         recognize the cards of current screenshot
         :param img:
-        :param nps: which servants' np must be found. nps=(1~6,)
+        :param nps: which servants' np **MUST** be found. you'd better not set it.
         :return: location-card(svt*10+color) pair dictionary
         """
         # TODO: if xjbd, someone is dead, should allow unrecognized cards(card code could be -1).
         assert self.templates != {}, 'Please set cards templates first!!!'
         t0 = Timer().start()
-        nps = convert_list(nps)
+        nps = convert_to_list(nps)
         base_line = -1
 
         def traverse(outer, mode):
@@ -425,14 +415,8 @@ class Master:
         :param mode: dmg,np
         :return: locations of chosen cards
         """
-        nps = convert_list(nps)
+        nps = convert_to_list(nps)
         chosen_nps = [np_cards.get(_np, Card(_np, (_np - 5) * 10)) for _np in nps]
-        # if isinstance(nps, int):
-        #     chosen_nps: List[cards] = [np_cards[nps]]
-        # elif nps is None:
-        #     chosen_nps = []
-        # else:
-        #     chosen_nps = [np_cards[_np] for _np in nps]
         s_cards = sorted(cards.values(), key=lambda o: self.weights.get(o.code, 0))
 
         if mode == 'dmg':
@@ -442,11 +426,9 @@ class Master:
                         s_cards[i], s_cards[-3] = s_cards[-3], s_cards[i]
                         break
                 chosen_cards = s_cards[-3:]
-                # return s_cards[-3:]
             else:
                 chosen_nps.extend(s_cards[2 + len(chosen_nps):5])
                 chosen_cards = chosen_nps
-                # return chosen_nps
         elif mode == 'alter':
             s_cards.reverse()
             for i in (1, 2, 3, 4):
@@ -459,17 +441,14 @@ class Master:
                     s_cards.insert(2, popped)
             if not chosen_nps:
                 chosen_cards = s_cards[0:3]
-                # return s_cards[0:3]
             else:
                 chosen_nps.extend(s_cards)
                 chosen_cards = chosen_nps[0:3]
-                # return chosen_nps[0:3]
         elif mode == 'np':
             # TODO: gain np mode
             chosen_nps.extend(s_cards)
             chosen_cards = chosen_nps
         else:
-            # chosen_cards=[]
             raise KeyError(f'Invalid mode "{mode}"')
         logger.debug(f'chosen cards: {self.str_cards(chosen_cards)}')
         return chosen_cards
@@ -487,7 +466,7 @@ class Master:
         return str(s)
 
     # set battle data in self.set_battle_data()
-    def set_card_templates(self, locs: list):
+    def set_card_templates(self, locs: List):
         """
         parse card templates from cards[1~3].png file. regions using inner boundary `self.LOC.cards`
         :param locs: locations(tmpl:1~3, card:1~5 6~8) of  [svt1:[np, Q, A, B], svt2:...], loc=-1 if no card
@@ -506,7 +485,7 @@ class Master:
                         self.templates[card_id].append(
                             templs[loc_i[0] - 1].crop(self.LOC.cards[loc_i[1] - 1]))
 
-    def set_card_weights(self, weights: list, color_weight: str = 'QAB'):
+    def set_card_weights(self, weights: List, color_weight: str = 'QAB'):
         """
         key:svt*10+color, value:weight
         :param weights: <6*3, M-servants, 3-quick/art/buster; or 6*1.

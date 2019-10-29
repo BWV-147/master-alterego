@@ -57,14 +57,14 @@ class Gacha:
 
 # main entrance
 def draw_with_check(check=True):
-    Config.offset_x = 0
     check_sys_admin()
+    Config.offset_x = 0
     gacha = Gacha()
     time.sleep(2)
     if check:
-        t1 = threading.Thread(target=gacha.draw, name='gacha',
-                              args=[], daemon=True)
-        supervise_log_time(t1, 90, mail=False, interval=3)
+        t = threading.Thread(target=gacha.draw, name='gacha',
+                             args=[], daemon=True)
+        supervise_log_time(t, 90, mail=False, interval=3)
     else:
         gacha.draw()
 
@@ -72,14 +72,5 @@ def draw_with_check(check=True):
 # %%
 if __name__ == '__main__':
     draw_with_check(True)
-
-
-# %% backup
-def get_center(pos):
-    assert isinstance(pos, (list, tuple))
-    if len(pos) == 2:
-        return pos[0] + Config.offset_x, pos[1] + Config.offset_y
-    elif len(pos) == 4:
-        return (pos[0] + pos[2]) / 2 + Config.offset_x, (pos[1] + pos[3]) / 2 + Config.offset_y
 
 # end

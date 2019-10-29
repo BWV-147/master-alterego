@@ -148,7 +148,7 @@ class ImageTemplates:
     directory: str
     templates: Dict[str, Image.Image]
 
-    def __init__(self, directory=None):
+    def __init__(self, directory: str = None):
         self.directory = directory
         self.templates = {}
         if directory is not None:
@@ -169,7 +169,7 @@ class ImageTemplates:
         self.directory = directory
 
     def get(self, attr):
-        # type:(Union[str, List[str], Tuple[str]])-> Union[Image.Image, List[Image.Image], Dict[str, Image.Image]]
+        # type:(Union[str, Sequence[str]])-> Union[Image.Image, Sequence[Image.Image], Dict[str, Image.Image]]
         if attr is None:
             return self.templates.copy()
         elif isinstance(attr, (list, tuple)):
@@ -317,7 +317,7 @@ class ImageTemplates:
 
 class StatInfo:
 
-    def __init__(self, fp=None):
+    def __init__(self, fp: str = None):
         self.fp = fp if fp is not None else 'record.json'
         self.craft_num = 0
         self.battle_no = 0

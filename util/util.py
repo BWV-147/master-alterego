@@ -15,11 +15,12 @@ import ctypes
 import threading
 import winsound
 import smtplib
+import pyautogui
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 # noinspection PyUnresolvedReferences
-from typing import List, Tuple, Union, Dict, Callable
+from typing import List, Tuple, Union, Dict, Callable, Sequence
 from pprint import pprint
 
 
@@ -100,7 +101,7 @@ logger = get_logger()
 
 # %% child thread
 # inspired by https://github.com/mosquito/crew/blob/master/crew/worker/thread.py
-def kill_thread(thread: threading.Thread) -> None:
+def kill_thread(thread: threading.Thread):
     logger.warning(f'ready to kill thread-{thread.ident}({thread.name})')
     if not thread.isAlive():
         return
@@ -255,7 +256,7 @@ def check_sys_admin(admin=True):
             # To run a new process as admin, no effect in Pycharm's Python Console mode.
             # print('applying admin permission in a new process, and no effect when in console mode.')
             # ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, __file__, None, 1)
-            exit(0)
+            raise PermissionError('Run as admin')
         else:
             print('already admin')
 
@@ -269,7 +270,7 @@ def move_mouse(x=None, y=None):
     time.sleep(0.1)
 
 
-def click(xy: tuple = None, lapse=0.5, r=2):
+def click(xy: Collection = None, lapse=0.5, r=2):
     """
     click at point (x,y) or region center (x1,y1,x2,y2) within a random offset in radius 0~r
     :param xy:
@@ -293,15 +294,26 @@ def click(xy: tuple = None, lapse=0.5, r=2):
     time.sleep(lapse)
 
 
-def drag(start: tuple, end: tuple, duration=1):
-    # TODO
-    import pyautogui
-    time.sleep(0.2)
-    pyautogui.dragTo()
-    move_mouse(start)
-    win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0)
-    time.sleep(0.5)
-    pass
+def drag(start: Sequence, end: Sequence, duration=1.0, down_time=0.0, up_time=0.0, lapse=0.5):
+    """
+    drag event
+    :param start: (x1,y1)
+    :param end: (x2,y2) both absolute coordinate
+    :param duration: duration of mouse moving
+    :param down_time: (None, double) time between mouse down and move start. If None, no mouse down event.
+    :param up_time: (None, double) time between move end and mouse up. If None, no mouse up event.
+    :param lapse: lapse after mouse up
+    :return:
+    """
+    move_mouse(start[0], start[1])
+    if down_time is not None:
+        pyautogui.mouseDown()
+        time.sleep(down_time)
+    pyautogui.dragRel(end[0] - start[0], end[1] - start[1], duration, mouseDownUp=False)
+    if up_time is not None:
+        pyautogui.mouseUp()
+        time.sleep(up_time)
+    time.sleep(lapse)
 
 
 def get_pixel(xy):
@@ -310,10 +322,10 @@ def get_pixel(xy):
     return color
 
 
-def convert_list(items):
+def convert_to_list(items):
     if items is None:
         return []
-    elif isinstance(items, (list, tuple)):
+    elif isinstance(items, Sequence):
         return list(items)
     else:
         return [items]
