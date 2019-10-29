@@ -270,7 +270,7 @@ class BattleBackup:
         logger.info(f'>>>>> All {finished} battles "{self.master.quest_name}" finished. <<<<<')
 
     @with_goto
-    def steel_android(self, apple=-1):
+    def steel_android(self):
         """
         阵容：杀师匠（醉贞）-茶茶（满破虚数）-孔明-X-X-X
         """
@@ -296,7 +296,7 @@ class BattleBackup:
         wait_which_target(T.quest, LOC.quest, at=True)
         page_no = wait_which_target([T.support, T.apple_page], [LOC.support_team_icon, LOC.apple_page])
         if page_no == 1:
-            master.eat_apple(-1, False)
+            master.eat_apple(-1)
         master.choose_support(match_ce=True, match_ce_max=True)
         # wait_which_target(T.team, LOC.team, at=True, clicking=(1387, 114), interval=5)
         logger.debug('start battle!')
@@ -341,7 +341,7 @@ class BattleBackup:
 
     # Free
     @with_goto
-    def charlotte_android(self, apple=-1):
+    def charlotte_android(self):
         """
         阵容：豆爸（醉贞）-旧剑（虚数）-孔明-X-X-X
         """
@@ -367,7 +367,7 @@ class BattleBackup:
         wait_which_target(T.quest, LOC.quest, at=True)
         page_no = wait_which_target([T.support, T.apple_page], [LOC.support_team_icon, LOC.apple_page])
         if page_no == 1:
-            master.eat_apple(-1, False)
+            master.eat_apple(-1)
         # master.choose_support(match_ce=True, match_ce_max=True)
         wait_which_target(T.team, LOC.team, at=True, clicking=(1387, 114), interval=5)
         # logger.info('Quest Charlotte-android start...')
@@ -406,7 +406,7 @@ class BattleBackup:
         return
 
     @with_goto
-    def charlotte_ios(self, apple=-1):
+    def charlotte_ios(self):
         """
         阵容：豆爸（醉贞）-lily（宝石）-孔明-X-X-X
         """
@@ -431,7 +431,7 @@ class BattleBackup:
         wait_which_target(T.quest, LOC.quest, at=True)
         page_no = wait_which_target([T.support, T.apple_page], [LOC.support_team_icon, LOC.apple_page])
         if page_no == 1:
-            master.eat_apple(-1, False)
+            master.eat_apple(-1)
         master.choose_support(match_ce=True, match_ce_max=True)
         # logger.info('Quest Charlotte-iOS start...')
         # wave 1
@@ -494,7 +494,7 @@ class BattleBackup:
         wait_which_target(T.quest, LOC.quest, at=True)
         page_no = wait_which_target([T.support, T.apple_page], [LOC.support_team_icon, LOC.apple_page])
         if page_no == 1:
-            master.eat_apple(apple, True)
+            master.eat_apple(apple)
         master.choose_support(match_svt=True, match_ce=True, match_ce_max=False)
         logger.debug('Quest Chaos-android start...')
         # wave 1
@@ -553,7 +553,7 @@ class BattleBackup:
         wait_which_target(T.quest, LOC.quest, at=True)
         page_no = wait_which_target([T.support, T.apple_page], [LOC.support_team_icon, LOC.apple_page])
         if page_no == 1:
-            master.eat_apple(apple, False)
+            master.eat_apple(apple)
         master.choose_support(match_svt=True, match_ce=True, match_ce_max=False)
         logger.debug('Quest Chaos-iOS start...')
 

@@ -55,7 +55,7 @@ def get_logger(name='log', level=logging.INFO, save=True):
     formatter = logging.Formatter(
         style='{',
         datefmt="%m-%d %H:%M:%S",
-        fmt='{asctime} - {filename:<10.10s}[line:{lineno:>3d}] - {levelname:<5s}: [{threadName:<10s}] {message}')
+        fmt='{asctime} - {filename:<10.10s}[line:{lineno:>3d}] - {levelname:<5s}: [{threadName}] {message}')
 
     console = logging.StreamHandler()
     console.setFormatter(formatter)
@@ -90,7 +90,8 @@ class LogFilter(logging.Filter):
         if NO_LOG_TIME in record.args:
             record.args = [x for x in record.args if x is not NO_LOG_TIME]
         else:
-            self.func()
+            if threading.current_thread().name != 'MainThread':
+                self.func()
         return True
 
 
@@ -178,7 +179,7 @@ def send_mail(content, subject=None, receiver=None):
             logger.info(f'retry sending mail...({retry_time}/5 times)', NO_LOG_TIME)
 
 
-def supervise_log_time(thread: threading.Thread, secs: float = 60, mail=False, interval=10, mute=False):
+def supervise_log_time(thread: threading.Thread, secs: float = 60, mail=False, interval=10, mute=True):
     from util.image_process import screenshot, cal_sim, match_which_target
     assert thread is not None, thread
 

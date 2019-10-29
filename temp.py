@@ -15,12 +15,18 @@ def generate(base):
     for filename in filenames:
         filepath = os.path.join(base, filename)
         if os.path.isfile(filepath) and filename.endswith('.png'):
-            s = f"""# %%\nscreenshot().save('{base + filename}')"""
-            print(s)
+            key = filename[:-4]
+            s = f"""# %%\ncapture('{key}')"""
+            s2 = f"""
+    @property
+    def {key}(self):
+        return self.get('{key}')"""
+            print(s2)
 
 
 # %%
-base_path = 'img/a-zaxiu-ass'
+# base_path = 'img/a-zaxiu-ass'
+base_path = 'img/gacha'
 
 
 def capture(fn: str):
@@ -28,7 +34,6 @@ def capture(fn: str):
     if os.path.exists(full_fp):
         print(f'"{full_fp}" exists, replace it.')
     screenshot().save(full_fp)
-    # screenshot().save(path + fn + '.png')
 
 
 # generate(base)
@@ -86,6 +91,21 @@ capture('apply_friend')
 capture('friend_point')
 # %%
 capture('net_error')
+
+# %% gacha
+capture('gacha_initial')
+# %%
+capture('gacha_empty')
+# %%
+capture('reset_confirm')
+# %%
+capture('reset_finish')
+# %%
+capture('mailbox_full')
+# %%
+capture('mailbox')
+# %%
+capture('bag_full')
 # %% pickling
 import json
 

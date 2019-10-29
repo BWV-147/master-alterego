@@ -285,6 +285,35 @@ class ImageTemplates:
     def wave3b(self):
         return self.get('wave3b')
 
+    # gacha
+    @property
+    def gacha_initial(self):
+        return self.get('gacha_initial')
+
+    @property
+    def gacha_empty(self):
+        return self.get('gacha_empty')
+
+    @property
+    def reset_confirm(self):
+        return self.get('reset_confirm')
+
+    @property
+    def reset_finish(self):
+        return self.get('reset_finish')
+
+    @property
+    def mailbox_full(self):
+        return self.get('mailbox_full')
+
+    @property
+    def mailbox(self):
+        return self.get('mailbox')
+
+    @property
+    def bag_full(self):
+        return self.get('bag_full')
+
 
 class StatInfo:
 
