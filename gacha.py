@@ -19,8 +19,8 @@ class Gacha:
             for _ in range(15):
                 click(self.LOC.drawer, lapse=0.1)
             shot = screenshot()
-            if match_which_target(shot, self.T.gacha_empty, self.LOC.drawer_empty) >= 0 and \
-                    match_which_target(shot, self.T.gacha_empty, self.LOC.reset_action) == -1:
+            if is_match_target(shot, self.T.gacha_empty, self.LOC.drawer_empty) and \
+                    not is_match_target(shot, self.T.gacha_empty, self.LOC.reset_action):
                 gacha_logger.warning('no ticket left!')
                 return
             page_no = match_which_target(shot, [self.T.gacha_empty, self.T.mailbox_full],

@@ -111,6 +111,11 @@ def match_which_target(img, targets, regions, threshold=THR, at=None):
     return res
 
 
+def is_match_target(img, target, region, threshold=THR, at=None):
+    # type:(Image.Image,Image.Image,Sequence,float,Union[bool,Sequence])->bool
+    return match_which_target(img, target, region, threshold, at) >= 0
+
+
 # 直到匹配某一个target
 def wait_which_target(targets, regions, threshold=THR, lapse=0.1, at=None, clicking=None, interval=0.5):
     # type:(Union[Image.Image,Sequence[Image.Image]],Sequence,float,float,Union[bool,Sequence],Sequence,int)->int

@@ -93,25 +93,25 @@ class Master:
             time.sleep(2)
             shot = screenshot()
             if match_svt is False:  # select first one
-                if match_which_target(shot, support_page, self.LOC.support_team_icon) >= 0 \
-                        and match_which_target(shot, support_page, self.LOC.support_ce[0]) >= 0:
+                if is_match_target(shot, support_page, self.LOC.support_team_icon) \
+                        and is_match_target(shot, support_page, self.LOC.support_ce[0]):
                     # match ce too, temp.
                     click(self.LOC.support_ce[0])
                     found = True
             else:
                 for svt in range(2):  # 2 support one time, no scroll
-                    if match_which_target(shot, support_page, self.LOC.support_skill[svt]) >= 0:
+                    if is_match_target(shot, support_page, self.LOC.support_skill[svt]):
                         if match_skills is not None:
-                            rs = [match_which_target(shot, support_page,
-                                                     self.LOC.support_skills[svt][skill_loc - 1]) >= 0
+                            rs = [is_match_target(shot, support_page,
+                                                  self.LOC.support_skills[svt][skill_loc - 1])
                                   for skill_loc in match_skills]
                             if rs.count(True) != len(match_skills):
                                 continue
                         if match_ce:
-                            if match_which_target(shot, support_page, self.LOC.support_ce[svt]) < 0:
+                            if not is_match_target(shot, support_page, self.LOC.support_ce[svt]):
                                 continue
                         if match_ce_max:
-                            if match_which_target(shot, support_page, self.LOC.support_ce_max[svt]) < 0:
+                            if not is_match_target(shot, support_page, self.LOC.support_ce_max[svt]):
                                 continue
                         click(self.LOC.support_ce[svt])
                         logger.debug(f'choose support No.{svt + 1}')

@@ -1,4 +1,7 @@
 """Store battle_func for different battles"""
+
+import winsound
+
 # noinspection PyPackageRequirements
 from goto import with_goto
 
@@ -44,7 +47,7 @@ class Battle:
             # check reward_page has CE dropped or not
             rewards = screenshot()
             logger.info('battle finished, checking rewards.')
-            craft_dropped = match_which_target(rewards, T.rewards, LOC.finish_craft) >= 0
+            craft_dropped = is_match_target(rewards, T.rewards, LOC.finish_craft)
 
             if craft_dropped and config.check_drop:
                 info.add_battle(True)
@@ -221,3 +224,65 @@ class Battle:
         # master.auto_attack(nps=7)
         master.xjbd(T.kizuna, LOC.kizuna, mode='dmg', allow_unknown=True)
         return
+
+
+# %% supervisor
+def supervise_log_time(thread: threading.Thread, secs: float = 60, mail=False, interval=10, mute=True):
+    assert thread is not None, thread
+
+    def _overtime():
+        return time.time() - config.log_time > secs
+
+    logger.info(f'start supervising thread {thread.name}...')
+    thread.start()
+    while not thread.is_alive():
+        time.sleep(0.01)
+    logger.info(f'Thread-{thread.ident}({thread.name}) started...')
+    config.log_time = time.time()
+    # from here, every logging should have arg: NO_LOG_TIME, otherwise endless loop.
+    while True:
+        # every case: stop or continue
+        # case 1: all right - continue supervision
+        if not _overtime():
+            time.sleep(interval)
+            continue
+        # case 2: thread finished normally - stop supervision
+        if not thread.is_alive() and config.finished:
+            # thread finished
+            logger.debug(f'Thread-{thread.ident}({thread.name}) finished. Stop supervising.')
+            break
+
+        # something wrong
+        # case 3: network error - click "retry" and continue
+        if config.img_net is not None and config.loc_net is not None:
+            shot = screenshot()
+            if is_match_target(shot, config.img_net, config.loc_net[0]) and \
+                    is_match_target(shot, config.img_net, config.loc_net[1]):
+                logger.warning('Network error! click "retry" button', NO_LOG_TIME)
+                click(config.loc_net[1], lapse=5)
+                continue
+        # case 4: unrecognized error - waiting user to handle (in 30 secs)
+        loops = 15
+        logger.warning(f'Something went wrong, please solve it\n', NO_LOG_TIME)
+        while loops > 0:
+            print(f'Or it will be force stopped...')
+            loops -= 1
+            if mute:
+                time.sleep(2)
+            else:
+                winsound.Beep(600, 1400)
+                time.sleep(0.6)
+            if not _overtime():
+                # case 4.1: user solved the issue and continue supervision
+                break
+            else:
+                # case 4.2: wrong! kill thread and stop
+                err_msg = f'Thread-{thread.ident}({thread.name}):' \
+                          f' Time run out! lapse={time.time() - config.log_time:.2f}(>{secs}) secs.'
+                print(err_msg)
+                if mail:
+                    subject = f'[{thread.name}]something went wrong!'
+                    send_mail(err_msg, subject=subject)
+                kill_thread(thread)
+                print('exit supervisor after killing thread.')
+                return
