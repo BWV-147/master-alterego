@@ -1,8 +1,6 @@
 # %%
 from pprint import pprint
-from mss import mss
-import os
-from util.image_process import screenshot
+
 from util.master import *
 
 sct = mss()
@@ -15,12 +13,17 @@ def generate(base):
     for filename in filenames:
         filepath = os.path.join(base, filename)
         if os.path.isfile(filepath) and filename.endswith('.png'):
-            s = f"""# %%\nscreenshot().save('{base + filename}')"""
-            print(s)
+            key = filename[:-4]
+            s = f"""# %%\ncapture('{key}')"""
+            s2 = f"""
+    @property
+    def {key}(self):
+        return self.get('{key}')"""
+            print(s2)
 
 
 # %%
-base_path = 'img/a-zaxiu-ass'
+base_path = 'img/s-zaxiu-final'  # 'img/gacha'
 
 
 def capture(fn: str):
@@ -28,10 +31,8 @@ def capture(fn: str):
     if os.path.exists(full_fp):
         print(f'"{full_fp}" exists, replace it.')
     screenshot().save(full_fp)
-    # screenshot().save(path + fn + '.png')
 
 
-# generate(base)
 # %%
 capture('quest')
 # %%
@@ -59,21 +60,11 @@ capture('order_change')
 # %%
 capture('cards2')
 # %%
-capture('wave2c')
-# %%
-capture('wave2d')
-# %%
-capture('cards4')
-# %%
 capture('wave3a')
 # %%
 capture('wave3b')
 # %%
 capture('cards3')
-# %%
-capture('cards4')
-# %%
-capture('cards5')
 # %%
 capture('kizuna')
 # %%
@@ -86,15 +77,44 @@ capture('apply_friend')
 capture('friend_point')
 # %%
 capture('net_error')
-# %% pickling
-import json
 
-app_dir = "C:/Apps/of/apps/MD_visual 2/bin/data/atom_data"
-for fn in os.listdir(app_dir):
-    fp = os.path.join(app_dir, fn)
-    if fp.endswith('.json'):
-        obj = json.load(open(fp, 'r'))
-        json.dump(obj, open("C:/Apps/of/apps/MD_visual 2/bin/data/atom_data2/" + fn, 'w'), ensure_ascii=False, indent=2)
-        print('converted ' + fp)
-
+# %% -------------extra parts-------------
+capture('cards4')
 # %%
+capture('cards5')
+# %%
+capture('cards6')
+# %%
+capture('cards7')
+# %%
+capture('cards8')
+# %%
+capture('cards9')
+# %%
+capture('wave2c')
+# %%
+capture('wave2d')
+
+# %% gacha
+capture('gacha_initial')
+# %%
+capture('gacha_empty')
+# %%
+capture('reset_confirm')
+# %%
+capture('reset_finish')
+# %%
+capture('mailbox_full')
+# %%
+capture('mailbox')
+# %%
+capture('bag_full')
+
+# %% temp
+d = 'img/_drops'
+for fn in os.listdir(d):
+    if fn.startswith('craft'):
+        new_name = fn.replace('craft', 'drops', 1)
+        os.rename(os.path.join(d, fn), os.path.join(d, new_name))
+        print(f'rename "{fn}" to "{new_name}"')
+# end

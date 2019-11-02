@@ -1,11 +1,34 @@
-flask
-pyautogui
-mss
-goto-statement
+pillow
 numpy
-scipy
-Pillow
-pypiwin32==223
-pywin32==224
-scikit-image
+flask
+goto-statement
+mss
 opencv-python
+pip-chill
+pyautogui
+scikit-image
+# click # Installed as dependency for pip-chill, flask
+# cycler # Installed as dependency for matplotlib
+# decorator # Installed as dependency for networkx
+# imageio # Installed as dependency for scikit-image
+# itsdangerous # Installed as dependency for flask
+# jinja2 # Installed as dependency for flask
+# kiwisolver # Installed as dependency for matplotlib
+# markupsafe # Installed as dependency for jinja2
+# matplotlib # Installed as dependency for scikit-image
+# mouseinfo # Installed as dependency for pyautogui
+# networkx # Installed as dependency for scikit-image
+# numpy # Installed as dependency for matplotlib, imageio, opencv-python, pywavelets, scipy
+# pillow # Installed as dependency for imageio, scikit-image, mouseinfo, pyscreeze
+# pygetwindow # Installed as dependency for pyautogui
+# pymsgbox # Installed as dependency for pyautogui
+# pyparsing # Installed as dependency for matplotlib
+# pyperclip # Installed as dependency for mouseinfo
+# pyrect # Installed as dependency for pygetwindow
+# pyscreeze # Installed as dependency for pyautogui
+# python-dateutil # Installed as dependency for matplotlib
+# pytweening # Installed as dependency for pyautogui
+# pywavelets # Installed as dependency for scikit-image
+# scipy # Installed as dependency for scikit-image
+# six # Installed as dependency for python-dateutil, cycler
+# werkzeug # Installed as dependency for flask

@@ -1,10 +1,8 @@
 """Data definition, constants
-
-Coordination: using PIL coordination, (x,y), (left,top,right,bottom),
+Coordination: using PIL coordination, (x,y), (left,top,right,bottom), e.g. (0,0,1920-1,1080-1)
 """
-# Coordination: (x,y), (0,0,1920,1080)
-import os
 from PIL import Image
+
 from util.util import *
 
 THR = 0.85  # default threshold
@@ -43,7 +41,7 @@ class Regions:
     # drawer
     apply_friend = (1692, 521, 1826, 588)
     apply_friend_deny = (464, 913)
-    quest = (937, 240, 1848, 360)
+    quest = (966, 165, 1149, 417)  # (937, 240, 1848, 360)
     quest_c = (1600, 265)
     # rewards = (1680, 33, 1868, 91)
 
@@ -148,7 +146,7 @@ class ImageTemplates:
     directory: str
     templates: Dict[str, Image.Image]
 
-    def __init__(self, directory=None):
+    def __init__(self, directory: str = None):
         self.directory = directory
         self.templates = {}
         if directory is not None:
@@ -169,7 +167,7 @@ class ImageTemplates:
         self.directory = directory
 
     def get(self, attr):
-        # type:(Union[str, List[str], Tuple[str]])-> Union[Image.Image, List[Image.Image], Dict[str, Image.Image]]
+        # type:(Union[str, Sequence[str]])-> Union[Image.Image, Sequence[Image.Image], Dict[str, Image.Image]]
         if attr is None:
             return self.templates.copy()
         elif isinstance(attr, (list, tuple)):
@@ -285,10 +283,39 @@ class ImageTemplates:
     def wave3b(self):
         return self.get('wave3b')
 
+    # gacha
+    @property
+    def gacha_initial(self):
+        return self.get('gacha_initial')
+
+    @property
+    def gacha_empty(self):
+        return self.get('gacha_empty')
+
+    @property
+    def reset_confirm(self):
+        return self.get('reset_confirm')
+
+    @property
+    def reset_finish(self):
+        return self.get('reset_finish')
+
+    @property
+    def mailbox_full(self):
+        return self.get('mailbox_full')
+
+    @property
+    def mailbox(self):
+        return self.get('mailbox')
+
+    @property
+    def bag_full(self):
+        return self.get('bag_full')
+
 
 class StatInfo:
 
-    def __init__(self, fp=None):
+    def __init__(self, fp: str = None):
         self.fp = fp if fp is not None else 'record.json'
         self.craft_num = 0
         self.battle_no = 0
@@ -302,6 +329,7 @@ class StatInfo:
         if craft_dropped:
             self.craft_num += 1
             self.history.append((self.craft_num, self.battle_no))
+        self.save()
 
     def save(self):
         directory, filename = os.path.split(self.fp)

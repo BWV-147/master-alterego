@@ -1,14 +1,14 @@
 """Image processing and computation"""
-import numpy as np
-from PIL import ImageGrab
 import cv2
+import numpy as np
 from mss import mss
-from skimage.metrics import structural_similarity as sk_compare_ssim
 from skimage.feature import match_template as sk_match_template
+from skimage.metrics import structural_similarity as sk_compare_ssim
+
 from util.dataset import *
 
 
-def screenshot(region: Union[tuple, list] = None, filepath: str = None, monitor=Config.monitor) -> Image.Image:
+def screenshot(region: Union[tuple, list] = None, filepath: str = None, monitor=config.monitor) -> Image.Image:
     """
     take screenshot of multi-monitors. set python.exe and pythonw.exe high dpi first!(see README.md)
     :param region: region inside monitor
@@ -160,7 +160,7 @@ def wait_search_template(target: Image.Image, threshold=THR, lapse=0.1):
 
 # 搜索目标模板存在匹配的最大值
 # noinspection PyTypeChecker
-def search_target(img: Image.Image, target: Image.Image, mode='cv2') -> float:
+def search_target(img: Image.Image, target: Image.Image, mode='cv2'):
     """
     return the maximum of matched
     mode ='cv2'(default) to use open-cv(quick), 'sk' to use skimage package(VERY slow)
