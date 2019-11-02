@@ -8,7 +8,7 @@ from skimage.metrics import structural_similarity as sk_compare_ssim
 from util.dataset import *
 
 
-def screenshot(region: Union[tuple, list] = None, filepath: str = None, monitor=config.monitor) -> Image.Image:
+def screenshot(region: Sequence = None, filepath: str = None, monitor=config.monitor) -> Image.Image:
     """
     take screenshot of multi-monitors. set python.exe and pythonw.exe high dpi first!(see README.md)
     :param region: region inside monitor
@@ -64,7 +64,7 @@ def cal_sim(img1: Image.Image, img2: Image.Image, region=None, method='ssim') ->
 
 # 是否匹配一个或多个regions
 def compare_regions(img, target, regions=None, threshold=THR, at=None):
-    # type:(Image.Image,Image.Image,Union[tuple,list],float,Union[bool,tuple,list])->bool
+    # type:(Image.Image,Image.Image,Sequence,float,Union[bool,Sequence])->bool
     """
     compare two image at `region`, click `at` if matches. use `screenshot()` as img if img is None
     :return: bool: match or not
@@ -72,30 +72,22 @@ def compare_regions(img, target, regions=None, threshold=THR, at=None):
     if regions is None:
         res = cal_sim(img, target) > threshold
     else:
-        if isinstance(regions[0], (list, tuple)):
+        if isinstance(regions[0], Sequence):
             matches = [cal_sim(img.crop(region), target.crop(region)) > threshold for region in regions]
             res = False not in matches
         else:
             res = cal_sim(img.crop(regions), target.crop(regions)) > threshold
-    # if isinstance(regions, (list, tuple)):
-    #     if isinstance(regions[0], (list, tuple)):
-    #         matches = [cal_sim(img.crop(region), target.crop(region)) > threshold for region in regions]
-    #         res = matches.count(True) == len(regions)
-    #     else:
-    #         res = cal_sim(img.crop(regions), target.crop(regions)) > threshold
-    # else:
-    #     res = cal_sim(img.crop(regions), target.crop(regions)) > threshold
     if res:
         if at is True:
             click(regions)
-        elif isinstance(at, (tuple, list)):
+        elif isinstance(at, Sequence):
             click(at)
     return res
 
 
 # 匹配第几个target
 def match_which_target(img, targets, regions, threshold=THR, at=None):
-    # type:(Image.Image,Union[Image.Image,tuple,list],Union[list,tuple],float,Union[bool,tuple,list])->int
+    # type:(Image.Image,Union[Image.Image,Sequence[Image.Image]],Sequence,float,Union[bool,Sequence])->int
     """
     compare img with multi targets, click `at` if matches.
     :return: matched index, -1 if not matched.
@@ -114,14 +106,14 @@ def match_which_target(img, targets, regions, threshold=THR, at=None):
     if res >= 0:
         if at is True:
             click(regions[res])
-        elif isinstance(at, (tuple, list)):
+        elif isinstance(at, Sequence):
             click(at)
     return res
 
 
 # 直到匹配某一个target
 def wait_which_target(targets, regions, threshold=THR, lapse=0.1, at=None, clicking=None, interval=0.5):
-    # type:(Union[Image.Image,tuple,list],Union[list,tuple],float,float,Union[bool,tuple,list],Union[list,tuple],int)->int
+    # type:(Union[Image.Image,Sequence[Image.Image]],Sequence,float,float,Union[bool,Sequence],Sequence,int)->int
     """
     Waiting for screenshot matching the region of some target.
     :param targets: an Image or list of Image.

@@ -98,10 +98,6 @@ class Master:
                     # match ce too, temp.
                     click(self.LOC.support_ce[0])
                     found = True
-                # if cn server, it will be used.
-                # click(self.LOC.support_ce[0])
-                # wait_which_target(self.T.team, self.LOC.team, at=True)
-                # return
             else:
                 for svt in range(2):  # 2 support one time, no scroll
                     if match_which_target(shot, support_page, self.LOC.support_skill[svt]) >= 0:
