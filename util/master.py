@@ -87,7 +87,7 @@ class Master:
         logger.debug('choosing support...')
         support_page = self.T.support if img is None else img
         wait_which_target(support_page, self.LOC.support_refresh)
-        refresh_time = 10
+        refresh_times = 0
         while True:
             found = False
             time.sleep(2)
@@ -120,10 +120,10 @@ class Master:
             # refresh support
             if found:
                 break
-            logger.debug('refresh support')
-            refresh_time -= 1
-            if refresh_time == 0:
-                send_mail(body='refresh support more than 10 times.', subject='refresh support more than 10 times')
+            logger.debug(f'refresh support {refresh_times} times')
+            refresh_times += 1
+            if refresh_times == 20:
+                send_mail(body='refresh support more than 20 times.', subject='refresh support more than 20 times')
             wait_which_target(support_page, self.LOC.support_refresh, at=True)
             wait_which_target(self.T.support_confirm, self.LOC.support_confirm_title, clicking=self.LOC.support_refresh)
             click(self.LOC.support_refresh_confirm)

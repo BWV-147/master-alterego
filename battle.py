@@ -15,7 +15,7 @@ class Battle:
         pass
 
     @with_goto
-    def start(self, battle_func, folder, num=10, apple=-1, auto_choose_support=True):
+    def start(self, battle_func, folder, num=10, apple=-1, auto_choose_support=True, max_battles=1000):
         T = self.master.T
         LOC = self.master.LOC
         timer = Timer()
@@ -24,9 +24,10 @@ class Battle:
         config.loc_net = LOC.net_error
         finished = 0
         info = StatInfo()
-        while finished < num:
+        total_num = min(num, max_battles - info.battle_no)
+        while finished < total_num:
             finished += 1
-            logger.info(f'>>>>> Battle "{self.master.quest_name}" No.{finished}/{num} <<<<<')
+            logger.info(f'>>>>> Battle "{self.master.quest_name}" No.{finished}/{total_num} <<<<<')
             if config.jump_start:
                 config.jump_start = False
                 logger.warning('outer: goto label.g')
@@ -64,7 +65,7 @@ class Battle:
                 info.add_battle(False)
                 rewards.save(f"img/_drops/drops-{self.master.quest_name}-{time.strftime('%m%d-%H-%M-%S')}.png")
             dt = timer.lapse()
-            logger.info(f'--- Battle {finished}/{num} finished, time = {int(dt // 60)} min {int(dt % 60)} sec.'
+            logger.info(f'--- Battle {finished}/{total_num} finished, time = {int(dt // 60)} min {int(dt % 60)} sec.'
                         + f' (total {info.battle_no})')
             # ready to restart a battle
             click(LOC.finish_next)

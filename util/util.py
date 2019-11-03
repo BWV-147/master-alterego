@@ -152,9 +152,9 @@ def kill_thread(thread: threading.Thread):
 def send_mail(body, subject=None, receiver=None):
     if subject is None:
         subject = f'{body[0:50]}...' if len(body) > 50 else body
-        if threading.current_thread().name != 'MainThread':
-            subject = f'[{threading.current_thread().name}]' + subject
-        subject = f'{time.strftime("[%H:%M]")}{subject}'
+    if threading.current_thread().name != 'MainThread':
+        subject = f'[{threading.current_thread().name}]{subject}'
+    subject = f'{time.strftime("[%H:%M]")}{subject}'
     if receiver is None:
         receiver = config.receiver
     sender = config.sender

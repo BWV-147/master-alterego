@@ -19,7 +19,8 @@ def battle_with_check(check=True):
             thread = threading.Thread(target=my_battle.start, name='a-zaxiu-final',
                                       kwargs={"battle_func": my_battle.a_zaxiu_final,
                                               "folder": 'img/a-zaxiu-final',
-                                              "num": 300,
+                                              "num": 200,
+                                              "max_battles": 750,
                                               "apple": apple,
                                               "auto_choose_support": True},
                                       daemon=True)
@@ -37,14 +38,15 @@ def battle_with_check(check=True):
             thread = threading.Thread(target=my_battle.start, name='s-zaxiu-final',
                                       kwargs={"battle_func": my_battle.s_zaxiu_final,
                                               "folder": 'img/s-zaxiu-final',
-                                              "num": 300,
+                                              "num": 200,
+                                              "max_battles": 690,
                                               "apple": apple,
                                               "auto_choose_support": True},
                                       daemon=True)
             supervise_log_time(thread, 120, mail=True, interval=3)
         else:
             my_battle.start(battle_func=my_battle.s_zaxiu_final, folder='img/s-zaxiu-final',
-                            num=300, apple=apple, auto_choose_support=True)
+                            num=200, apple=apple, auto_choose_support=True)
     else:
         print(f'unknown user id: {user_id}')
 
