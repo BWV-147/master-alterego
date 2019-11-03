@@ -41,7 +41,8 @@ class Regions:
     # drawer
     apply_friend = (1692, 521, 1826, 588)
     apply_friend_deny = (464, 913)
-    quest = (966, 165, 1149, 417)  # (937, 240, 1848, 360)
+    quest = (966, 256, 1149, 417)  # (937, 240, 1848, 360)
+    quest_outer = (966, 246, 1149, 427)
     quest_c = (1600, 265)
     # rewards = (1680, 33, 1868, 91)
 
@@ -318,17 +319,17 @@ class StatInfo:
     def __init__(self, fp: str = None):
         self.fp = fp if fp is not None else 'record.json'
         self.craft_num = 0
-        self.battle_no = 0
+        self.battle_num = 0
         self.history = []
         self.durations = []
         self.load()
 
     def add_battle(self, craft_dropped: bool = False):
-        self.battle_no += 1
+        self.battle_num += 1
         # self.durations.append((self.battle_no, duration))
         if craft_dropped:
             self.craft_num += 1
-            self.history.append((self.craft_num, self.battle_no))
+            self.history.append((self.craft_num, self.battle_num))
         self.save()
 
     def save(self):
@@ -343,7 +344,7 @@ class StatInfo:
         if os.path.exists(self.fp):
             data = json.load(open(self.fp, 'r'))
             self.craft_num = data.get('craft_num', 0)
-            self.battle_no = data.get('battle_no', 0)
+            self.battle_num = data.get('battle_num', 0)
             self.history = data.get('history', [])
             self.durations = data.get('durations', [])
         else:

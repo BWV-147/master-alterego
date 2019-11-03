@@ -90,7 +90,7 @@ class Master:
         refresh_times = 0
         while True:
             found = False
-            time.sleep(2)
+            time.sleep(1)
             shot = screenshot()
             if match_svt is False:  # select first one
                 if is_match_target(shot, support_page, self.LOC.support_team_icon) \
@@ -120,13 +120,13 @@ class Master:
             # refresh support
             if found:
                 break
-            logger.debug(f'refresh support {refresh_times} times')
             refresh_times += 1
-            if refresh_times == 20:
-                send_mail(body='refresh support more than 20 times.', subject='refresh support more than 20 times')
+            logger.debug(f'refresh support {refresh_times} times')
+            if refresh_times == 40:
+                send_mail(body='refresh support more than 40 times.', subject='refresh support more than 40 times')
             wait_which_target(support_page, self.LOC.support_refresh, at=True)
             wait_which_target(self.T.support_confirm, self.LOC.support_confirm_title, clicking=self.LOC.support_refresh)
-            click(self.LOC.support_refresh_confirm)
+            click(self.LOC.support_refresh_confirm, lapse=2)
         while True:
             # =1: in server cn and first loop to click START
             page_no = wait_which_target([self.T.team, self.T.wave1a], [self.LOC.team_cloth, self.LOC.master_skill])

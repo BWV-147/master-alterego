@@ -23,7 +23,7 @@ def generate(base):
 
 
 # %%
-base_path = 'img/s-zaxiu-final'  # 'img/gacha'
+base_path = 'img/a-zaxiu-final'  # 'img/gacha'
 
 
 def capture(fn: str):

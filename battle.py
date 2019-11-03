@@ -15,33 +15,36 @@ class Battle:
         pass
 
     @with_goto
-    def start(self, battle_func, folder, num=10, apple=-1, auto_choose_support=True, max_battles=1000):
+    def start(self, battle_func, folder, battle_num=10, total_battle_num=1000, apple=-1, auto_choose_support=True):
         T = self.master.T
         LOC = self.master.LOC
         timer = Timer()
         T.read_templates(folder)
         config.img_net = T.net_error
         config.loc_net = LOC.net_error
+        config.task_finished = False
         finished = 0
         info = StatInfo()
-        total_num = min(num, max_battles - info.battle_no)
-        while finished < total_num:
+        actual_num = min(battle_num, total_battle_num - info.battle_num)
+        while finished < actual_num:
             finished += 1
-            logger.info(f'>>>>> Battle "{self.master.quest_name}" No.{finished}/{total_num} <<<<<')
+            logger.info(f'>>>>> Battle "{self.master.quest_name}" No.{finished}/{actual_num} <<<<<')
             if config.jump_start:
                 config.jump_start = False
                 logger.warning('outer: goto label.g')
                 # noinspection PyStatementEffect
                 goto.g
             while True:
-                page_no = wait_which_target([T.quest, T.apple_page, T.support],
-                                            [LOC.quest, LOC.apple_page, LOC.support_refresh])
-                if page_no == 0:
+                shot = screenshot()
+                res = search_target(shot.crop(LOC.quest_outer), T.quest.crop(LOC.quest))
+                print(f'res={res}')
+                if res[0] > THR:
                     click(LOC.quest_c)
-                elif page_no == 1:
+                elif is_match_target(shot, T.apple_page, LOC.apple_page):
                     self.master.eat_apple(apple)
-                elif page_no == 2:
+                elif is_match_target(shot, T.support, LOC.support_refresh):
                     break
+                time.sleep(0.5)
             battle_func(auto_choose_support)
             wait_which_target(T.rewards, LOC.finish_qp, clicking=LOC.finish_qp, lapse=0.5)
             click(LOC.rewards_show_num, lapse=1)
@@ -65,21 +68,19 @@ class Battle:
                 info.add_battle(False)
                 rewards.save(f"img/_drops/drops-{self.master.quest_name}-{time.strftime('%m%d-%H-%M-%S')}.png")
             dt = timer.lapse()
-            logger.info(f'--- Battle {finished}/{total_num} finished, time = {int(dt // 60)} min {int(dt % 60)} sec.'
-                        + f' (total {info.battle_no})')
+            logger.info(f'--- Battle {finished}/{actual_num} finished, time = {int(dt // 60)} min {int(dt % 60)} sec.'
+                        + f' (total {info.battle_num})')
             # ready to restart a battle
             click(LOC.finish_next)
             while True:
-                page_no = wait_which_target([T.quest, T.restart_quest, T.apply_friend],
-                                            [LOC.quest, LOC.restart_quest_yes, LOC.apply_friend])
-                if page_no == 0:
-                    # in server cn, restart from quest page
+                shot = screenshot()
+                if search_target(shot.crop(LOC.quest_outer), T.quest.crop(LOC.quest))[0] > THR:
                     break
-                elif page_no == 2:
-                    click(LOC.apply_friend_deny)
-                elif page_no == 1:
+                elif is_match_target(shot, T.restart_quest, LOC.restart_quest_yes):
                     click(LOC.restart_quest_yes)
-
+                elif is_match_target(shot, T.apply_friend, LOC.apply_friend):
+                    click(LOC.apply_friend_deny)
+                time.sleep(0.5)
             # noinspection PyStatementEffect
             label.g
         logger.info(f'>>>>> All {finished} battles "{self.master.quest_name}" finished. <<<<<')
@@ -248,7 +249,7 @@ def supervise_log_time(thread: threading.Thread, secs: float = 60, mail=False, i
             time.sleep(interval)
             continue
         # case 2: thread finished normally - stop supervision
-        if not thread.is_alive() and config.finished:
+        if not thread.is_alive() and config.task_finished:
             # thread finished
             logger.debug(f'Thread-{thread.ident}({thread.name}) finished. Stop supervising.')
             break

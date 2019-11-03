@@ -32,7 +32,7 @@ class Config:
         self.jump_battle = False  # goto decoration in Battle.battle_func
         self.jump_start = False  # goto decoration in Battle.start
         self.log_time = 0  # record the time of last logging.info/debug..., set NO_LOG_TIME outside battle progress
-        self.finished = False  # all battles finished, set to True before child process exist.
+        self.task_finished = False  # all battles finished, set to True before child process exist.
         self.img_net = None  # img & loc of network error, especially for jp server.
         self.loc_net = None
 
