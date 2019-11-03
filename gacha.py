@@ -1,10 +1,10 @@
-from battle import *
+from util.autogui import *
+from util.supervisor import supervise_log_time
 
 gacha_logger = get_logger(save=False)
 
 
 class Gacha:
-
     def __init__(self, path='img/gacha'):
         self.T = ImageTemplates(path)
         self.LOC = Regions()
@@ -33,9 +33,9 @@ class Gacha:
                 wait_which_target(self.T.gacha_initial, self.LOC.drawer_10_initial)
             elif page_no == 1:
                 click(self.LOC.box_full_confirm)
-                self.mailbox()
+                self.clean_mailbox()
 
-    def mailbox(self, num=40):
+    def clean_mailbox(self, num=40):
         gacha_logger.info('cleaning mailbox...')
         while num > 0:
             num -= 1
@@ -58,7 +58,7 @@ class Gacha:
 # main entrance
 def draw_with_check(check=True):
     check_sys_admin()
-    config.offset_x = 0
+    CONFIG.offset_x = 0
     gacha = Gacha()
     time.sleep(2)
     if check:
@@ -72,5 +72,4 @@ def draw_with_check(check=True):
 # %%
 if __name__ == '__main__':
     draw_with_check(True)
-
 # end

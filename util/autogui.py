@@ -6,9 +6,10 @@ from skimage.feature import match_template as sk_match_template
 from skimage.metrics import structural_similarity as sk_compare_ssim
 
 from util.dataset import *
+from util.gui import *
 
 
-def screenshot(region: Sequence = None, filepath: str = None, monitor=config.monitor) -> Image.Image:
+def screenshot(region: Sequence = None, filepath: str = None, monitor=CONFIG.monitor) -> Image.Image:
     """
     take screenshot of multi-monitors. set python.exe and pythonw.exe high dpi first!(see README.md)
     :param region: region inside monitor
@@ -178,23 +179,3 @@ def search_target(img: Image.Image, target: Image.Image, mode='cv2'):
         pos = np.where(matches == max_match)
         # in PIL system, (x~w,y~h)
         return np.max(matches), (pos[1][0], pos[0][0])
-
-
-def _test():
-    # m1 = screenshot()
-    m2 = screenshot()
-    t1, t2 = [], []
-    reg = (100, 200, 300, 600)
-    for i in range(10):
-        t0 = time.time()
-        wait_which_target(m2, reg)
-        t1.append(time.time() - t0)
-    print('avg time=%.6f sec' % (np.mean(t1)))
-    for i in range(10):
-        t0 = time.time()
-        wait_which_target(m2, reg)
-        t2.append(time.time() - t0)
-    print('avg time=%.6f sec' % (np.mean(t2)))
-
-# if __name__ == '__main__':
-#     _test()

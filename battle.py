@@ -1,11 +1,10 @@
 """Store battle_func for different battles"""
 
-import winsound
-
 # noinspection PyPackageRequirements
 from goto import with_goto
 
 from util.master import *
+from util.supervisor import send_mail
 
 
 # noinspection PyPep8Naming,DuplicatedCode
@@ -20,31 +19,32 @@ class Battle:
         LOC = self.master.LOC
         timer = Timer()
         T.read_templates(folder)
-        config.img_net = T.net_error
-        config.loc_net = LOC.net_error
-        config.task_finished = False
+        CONFIG.img_net = T.net_error
+        CONFIG.loc_net = LOC.net_error
+        CONFIG.task_finished = False
         finished = 0
         info = StatInfo()
         actual_num = min(battle_num, total_battle_num - info.battle_num)
         while finished < actual_num:
             finished += 1
             logger.info(f'>>>>> Battle "{self.master.quest_name}" No.{finished}/{actual_num} <<<<<')
-            if config.jump_start:
-                config.jump_start = False
+            if CONFIG.jump_start:
+                CONFIG.jump_start = False
                 logger.warning('outer: goto label.g')
                 # noinspection PyStatementEffect
                 goto.g
-            while True:
-                shot = screenshot()
-                res = search_target(shot.crop(LOC.quest_outer), T.quest.crop(LOC.quest))
-                print(f'res={res}')
-                if res[0] > THR:
-                    click(LOC.quest_c)
-                elif is_match_target(shot, T.apple_page, LOC.apple_page):
-                    self.master.eat_apple(apple)
-                elif is_match_target(shot, T.support, LOC.support_refresh):
-                    break
-                time.sleep(0.5)
+            if not CONFIG.jump_battle:
+                while True:
+                    shot = screenshot()
+                    res = search_target(shot.crop(LOC.quest_outer), T.quest.crop(LOC.quest))
+                    # print(f'res={res}')
+                    if res[0] > THR:
+                        click(LOC.quest_c)
+                    elif is_match_target(shot, T.apple_page, LOC.apple_page):
+                        self.master.eat_apple(apple)
+                    elif is_match_target(shot, T.support, LOC.support_refresh):
+                        break
+                    time.sleep(0.5)
             battle_func(auto_choose_support)
             wait_which_target(T.rewards, LOC.finish_qp, clicking=LOC.finish_qp, lapse=0.5)
             click(LOC.rewards_show_num, lapse=1)
@@ -53,12 +53,12 @@ class Battle:
             logger.info('battle finished, checking rewards.')
             craft_dropped = is_match_target(rewards, T.rewards, LOC.finish_craft)
 
-            if craft_dropped and config.check_drop:
+            if craft_dropped and CONFIG.check_drop:
                 info.add_battle(True)
                 logger.warning(f'{info.craft_num}th craft dropped!!!')
                 rewards.save(f'img/_drops/drops-{self.master.quest_name}-{time.strftime("%m%d-%H-%M-%S")}'
                              + f'-drop{info.craft_num}.png')
-                if info.craft_num in config.enhance_craft_nums:
+                if info.craft_num in CONFIG.enhance_craft_nums:
                     send_mail(f'NEED Enhancement! {info.craft_num}th craft dropped!!!')
                     logger.warning('need to change party or enhance crafts. Exit.')
                     exit()
@@ -103,8 +103,8 @@ class Battle:
             [(2, 7), (3, 3), (2, 1), (2, 2)],
             [(1, 0), [(3, 5), (5, 2), (8, 2)], [(1, 5), (5, 3), (8, 1)], [(1, 4), (6, 1), (7, 2)]]
         ])
-        if config.jump_battle:
-            config.jump_battle = False
+        if CONFIG.jump_battle:
+            CONFIG.jump_battle = False
             logger.warning('goto label.h')
             # noinspection PyStatementEffect
             goto.h
@@ -174,8 +174,8 @@ class Battle:
             [(2, 7), (3, 5), (1, 3), (1, 1)],
             [(1, 0), [(2, 2), (4, 4), (8, 5)], [(3, 1), (4, 1), (7, 2)], [(3, 4), (6, 4), (9, 5)]]
         ])
-        if config.jump_battle:
-            config.jump_battle = False
+        if CONFIG.jump_battle:
+            CONFIG.jump_battle = False
             logger.warning('goto label.h')
             # noinspection PyStatementEffect
             goto.h
@@ -226,65 +226,3 @@ class Battle:
         # master.auto_attack(nps=7)
         master.xjbd(T.kizuna, LOC.kizuna, mode='dmg', allow_unknown=True)
         return
-
-
-# %% supervisor
-def supervise_log_time(thread: threading.Thread, secs: float = 60, mail=False, interval=10, mute=True):
-    assert thread is not None, thread
-
-    def _overtime():
-        return time.time() - config.log_time > secs
-
-    logger.info(f'start supervising thread {thread.name}...')
-    thread.start()
-    while not thread.is_alive():
-        time.sleep(0.01)
-    logger.info(f'Thread-{thread.ident}({thread.name}) started...')
-    config.log_time = time.time()
-    # from here, every logging should have arg: NO_LOG_TIME, otherwise endless loop.
-    while True:
-        # every case: stop or continue
-        # case 1: all right - continue supervision
-        if not _overtime():
-            time.sleep(interval)
-            continue
-        # case 2: thread finished normally - stop supervision
-        if not thread.is_alive() and config.task_finished:
-            # thread finished
-            logger.debug(f'Thread-{thread.ident}({thread.name}) finished. Stop supervising.')
-            break
-
-        # something wrong
-        # case 3: network error - click "retry" and continue
-        if config.img_net is not None and config.loc_net is not None:
-            shot = screenshot()
-            if is_match_target(shot, config.img_net, config.loc_net[0]) and \
-                    is_match_target(shot, config.img_net, config.loc_net[1]):
-                logger.warning('Network error! click "retry" button', NO_LOG_TIME)
-                click(config.loc_net[1], lapse=5)
-                continue
-        # case 4: unrecognized error - waiting user to handle (in 30 secs)
-        loops = 15
-        logger.warning(f'Something went wrong, please solve it\n', NO_LOG_TIME)
-        while loops > 0:
-            print(f'Or it will be force stopped...')
-            loops -= 1
-            if mute:
-                time.sleep(2)
-            else:
-                winsound.Beep(600, 1400)
-                time.sleep(0.6)
-            if not _overtime():
-                # case 4.1: user solved the issue and continue supervision
-                break
-            else:
-                # case 4.2: wrong! kill thread and stop
-                err_msg = f'Thread-{thread.ident}({thread.name}):' \
-                          f' Time run out! lapse={time.time() - config.log_time:.2f}(>{secs}) secs.'
-                print(err_msg)
-                if mail:
-                    subject = f'[{thread.name}]something went wrong!'
-                    send_mail(err_msg, subject=subject)
-                kill_thread(thread)
-                print('exit supervisor after killing thread.')
-                return

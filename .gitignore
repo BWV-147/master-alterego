@@ -4,7 +4,7 @@
 *.log.*
 record.json
 record.md
-/config.json
+/user.json
 !**/.gitkeep
 
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio and WebStorm

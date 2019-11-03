@@ -2,7 +2,7 @@
 
 additional, Card class included.
 """
-from util.image_process import *
+from util.autogui import *
 
 
 class Card:
@@ -53,7 +53,7 @@ class Master:
     # procedures
     def eat_apple(self, apple=-1):
         if apple == -1:
-            config.finished = True
+            CONFIG.task_finished = True
             logger.debug("don't eat apple, all battles finished. Existing...")
             exit()
         if apple not in (0, 1, 2, 3):

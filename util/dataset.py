@@ -1,9 +1,11 @@
 """Data definition, constants
 Coordination: using PIL coordination, (x,y), (left,top,right,bottom), e.g. (0,0,1920-1,1080-1)
 """
+import json
+
 from PIL import Image
 
-from util.util import *
+from util.base import *
 
 THR = 0.85  # default threshold
 
