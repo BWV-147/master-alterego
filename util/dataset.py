@@ -37,7 +37,11 @@ class Regions:
     box_back = (49, 34, 242, 100)
     box_get_action = (1509, 535, 1810, 582)
     box_get_all_action = (1524, 302, 1805, 354)  # WARNING: don't click
-    box_items = [(1272, 400), (1272, 600), (1272, 800), (1272, 980)]
+    # box_items = [(1272, 400), (1272, 600), (1272, 800), (1272, 980)]
+    box_items = [(1231, 365, 1314, 447), (1231, 558, 1314, 640), (1231, 751, 1314, 833), (1231, 944, 1314, 1026)]
+    box_check_column = (1231, 264, 1314, 1079)
+    box_drag_start = (1070, 914)
+    box_drag_end = (1070, 84)
     box_history = (365, 30, 522, 102)
     # from mailbox move to bag/enhancement
     bag_full_sell_action = (900, 810, 1020, 870)
@@ -46,7 +50,7 @@ class Regions:
     # in bag
     bag_back = (49, 34, 242, 100)
     bag_select_start = (200, 350)
-    bag_select_end = (1416, 1000)
+    bag_select_end = (1416, 1050)
     bag_sell_action = (1600, 975, 1870, 1047)
     bag_sell_confirm = (1200, 849, 1317, 908)
     bag_sell_finish = (910, 850, 1015, 905)
@@ -353,10 +357,6 @@ class ImageTemplates:
     @property
     def shop(self):
         return self.get('shop')
-
-    @property
-    def rewards_action(self):
-        return self.get('rewards_action')
 
 
 class StatInfo:

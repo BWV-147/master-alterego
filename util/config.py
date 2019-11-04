@@ -3,6 +3,7 @@ import os
 
 
 class Config:
+    # TODO: save all config params into json file
     def __init__(self, fp='user.json'):
         self.monitor = 1  # >=1, check sct.monitors to see running at which monitor, 0 is total size
         self.offset_x = 0  # xy offset for mouse click event, relative to MAIN monitor's origin

@@ -8,9 +8,9 @@ def draw_with_check(gacha: Gacha, check=True):
     gacha_logger.info('start battle')
     check_sys_admin()
     if CONFIG.user.id == 'android':
-        gacha.max_clean_box_times = 35
+        gacha.max_clean_item_num = 130
     elif CONFIG.user.id == 'ios':
-        gacha.max_clean_box_times = 40
+        gacha.max_clean_item_num = 130
     time.sleep(3)
     if check:
         thread = threading.Thread(target=gacha.draw, name='gacha',

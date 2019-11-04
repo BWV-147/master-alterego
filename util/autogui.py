@@ -2,6 +2,7 @@
 import cv2
 import numpy as np
 from mss import mss
+from scipy.signal import find_peaks
 from skimage.feature import match_template as sk_match_template
 from skimage.metrics import structural_similarity as sk_compare_ssim
 
@@ -179,3 +180,17 @@ def search_target(img: Image.Image, target: Image.Image, mode='cv2'):
         pos = np.where(matches == max_match)
         # in PIL system, (x~w,y~h)
         return np.max(matches), (pos[1][0], pos[0][0])
+
+
+# noinspection PyTypeChecker
+def search_peaks(img: Image.Image, target: Image.Image, column=True, threshold=THR, **kwargs):
+    if column is True:
+        assert img.size[0] == target.size[0], f'must be same width: img {img.size}, target {target.size}.'
+    else:
+        assert img.size[1] == target.size[1], f'must be same height: img {img.size}, target {target.size}.'
+    m1: np.ndarray = np.array(img.convert('RGB'))
+    m2: np.ndarray = np.array(target.convert('RGB'))
+    cv_img, cv_target = (cv2.cvtColor(m1, cv2.COLOR_RGB2BGR), cv2.cvtColor(m2, cv2.COLOR_RGB2BGR))
+    matches: np.ndarray = cv2.matchTemplate(cv_img, cv_target, cv2.TM_CCOEFF_NORMED)
+    return find_peaks(matches.reshape(matches.size), height=threshold, **kwargs)[0]
+

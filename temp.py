@@ -36,7 +36,7 @@ def capture(fn: str):
     screenshot().save(full_fp)
 
 
-# %%
+# %% ------------- battle part --------------
 capture('quest')
 # %%
 capture('apple_page')
@@ -81,7 +81,7 @@ capture('friend_point')
 # %%
 capture('net_error')
 
-# %% -------------extra parts-------------
+# %% ---------- battle extra parts ----------
 capture('cards4')
 # %%
 capture('cards5')
@@ -98,7 +98,7 @@ capture('wave2c')
 # %%
 capture('wave2d')
 
-# %% ------- gacha --------
+# %% -------------- gacha part --------------
 capture('gacha_initial')
 # %%
 capture('gacha_empty')
@@ -124,14 +124,7 @@ capture('bag_sell_confirm')
 capture('bag_sell_finish')
 # %%
 capture('shop')
-# %%
-capture('rewards_action')
 
 # %% temp
-d = 'img/_drops'
-for fn in os.listdir(d):
-    if fn.startswith('craft'):
-        new_name = fn.replace('craft', 'drops', 1)
-        os.rename(os.path.join(d, fn), os.path.join(d, new_name))
-        print(f'rename "{fn}" to "{new_name}"')
+
 # end
