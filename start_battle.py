@@ -5,12 +5,12 @@ from util.supervisor import supervise_log_time
 # main entrance
 def battle_with_check(battle: Battle, check=True):
     CONFIG.user.load_config()
-    logger.warning('start battle', NO_LOG_TIME)
+    logger.info('start battle')
     check_sys_admin()
     time.sleep(3)
     user_id = CONFIG.user.id
     if user_id == 'android':
-        apple = 1
+        apple = -1
         CONFIG.jump_battle = False
         CONFIG.check_drop = True
         CONFIG.offset_x = 0

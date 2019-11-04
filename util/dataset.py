@@ -16,31 +16,46 @@ class Regions:
     Store region(length 4) or point(length 2) data at default screensize 1920*1080.
     Properties could be a region/point or a list(1 or multi dimension) of regions/points
     """
+    # common, or for supervisor
     net_error = ((599, 814, 720, 872), (1138, 813, 1378, 876))
     safe_area = (1400, 40)
-    rewards_action = (1681, 29, 1872, 97)
-    bag_back = (49, 34, 242, 100)
-    bag_finish = (870, 849, 1044, 908)
-    bag_confirm = (1170, 845, 1340, 907)
-    bag_select = (1600, 975, 1870, 1047)
-    bag_full_sell = (485, 660, 583, 718)
-    bag_full_enhance = (887, 660, 1029, 718)
 
-    box_back = (49, 34, 242, 100)
-    box_get_action = (1509, 535, 1810, 582)
-    box_get_all = (1524, 302, 1805, 354)
-    box_items = [(1272, 400), (1272, 600), (1272, 800), (1272, 980)]
-    box_history = (365, 30, 522, 102)
+    # --- gacha part ----
+    # in gacha
+    gacha_point = (600, 622)
+    gacha_logo = (78, 222, 191, 315)
+    gacha_tab = (1009, 188, 1213, 228)
+    gacha_10_initial = (483, 630, 800, 774)
+    gacha_reset_action = (1546, 337, 1863, 394)
+    gacha_reset_confirm = (1097, 813, 1416, 879)
+    gacha_reset_finish = (800, 811, 1113, 878)
+    gacha_empty = (285, 631, 524, 780)  # used when no ticket left
+    # move to mailbox
     box_full_confirm = (1112, 822, 1463, 873)
 
-    drawer = (600, 622)
-    drawer_10_initial = (483, 630, 800, 774)
-    drawer_empty = (285, 631, 524, 780)
-    reset_action = (1546, 337, 1863, 394)
-    reset_confirm = (1097, 813, 1416, 879)
-    reset_finish = (800, 811, 1113, 878)
+    # in mailbox
+    box_back = (49, 34, 242, 100)
+    box_get_action = (1509, 535, 1810, 582)
+    box_get_all_action = (1524, 302, 1805, 354)  # WARNING: don't click
+    box_items = [(1272, 400), (1272, 600), (1272, 800), (1272, 980)]
+    box_history = (365, 30, 522, 102)
+    # from mailbox move to bag/enhancement
+    bag_full_sell_action = (900, 810, 1020, 870)
+    bag_full_enhance_action = (887, 660, 1029, 718)
 
-    # drawer
+    # in bag
+    bag_back = (49, 34, 242, 100)
+    bag_select_start = (200, 350)
+    bag_select_end = (1416, 1000)
+    bag_sell_action = (1600, 975, 1870, 1047)
+    bag_sell_confirm = (1200, 849, 1317, 908)
+    bag_sell_finish = (910, 850, 1015, 905)
+
+    # from bag to drawer
+    shop_sell = (1352, 465, 1723, 552)
+    rewards_action = (1688, 29, 1872, 97)
+
+    # ------- battle part -------
     apply_friend = (1692, 521, 1826, 588)
     apply_friend_deny = (464, 913)
     quest = (966, 256, 1149, 417)  # (937, 240, 1848, 360)
@@ -296,24 +311,52 @@ class ImageTemplates:
         return self.get('gacha_empty')
 
     @property
-    def reset_confirm(self):
-        return self.get('reset_confirm')
+    def gacha_reset_confirm(self):
+        return self.get('gacha_reset_confirm')
 
     @property
-    def reset_finish(self):
-        return self.get('reset_finish')
+    def gacha_reset_finish(self):
+        return self.get('gacha_reset_finish')
 
     @property
-    def mailbox_full(self):
-        return self.get('mailbox_full')
+    def box_full_alert(self):
+        return self.get('box_full_alert')
 
     @property
-    def mailbox(self):
-        return self.get('mailbox')
+    def box_selected(self):
+        return self.get('box_selected')
 
     @property
-    def bag_full(self):
-        return self.get('bag_full')
+    def box_unselected(self):
+        return self.get('box_unselected')
+
+    @property
+    def bag_full_alert(self):
+        return self.get('bag_full_alert')
+
+    @property
+    def bag_unselected(self):
+        return self.get('bag_unselected')
+
+    @property
+    def bag_selected(self):
+        return self.get('bag_selected')
+
+    @property
+    def bag_sell_confirm(self):
+        return self.get('bag_sell_confirm')
+
+    @property
+    def bag_sell_finish(self):
+        return self.get('bag_sell_finish')
+
+    @property
+    def shop(self):
+        return self.get('shop')
+
+    @property
+    def rewards_action(self):
+        return self.get('rewards_action')
 
 
 class StatInfo:

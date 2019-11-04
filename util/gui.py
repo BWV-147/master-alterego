@@ -74,8 +74,8 @@ def drag(start: Sequence, end: Sequence, duration=1.0, down_time=0.0, up_time=0.
         time.sleep(down_time)
     pyautogui.dragRel(end[0] - start[0], end[1] - start[1], duration, mouseDownUp=False)
     if up_time is not None:
-        pyautogui.mouseUp()
         time.sleep(up_time)
+        pyautogui.mouseUp()
     time.sleep(lapse)
 
 

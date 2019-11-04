@@ -23,7 +23,10 @@ def generate(base):
 
 
 # %%
-base_path = 'img/a-zaxiu-final'  # 'img/gacha'
+generate('img/gacha')
+
+# %%
+base_path = 'img/gacha'  # 'img/gacha'
 
 
 def capture(fn: str):
@@ -95,20 +98,34 @@ capture('wave2c')
 # %%
 capture('wave2d')
 
-# %% gacha
+# %% ------- gacha --------
 capture('gacha_initial')
 # %%
 capture('gacha_empty')
 # %%
-capture('reset_confirm')
+capture('gacha_reset_confirm')
 # %%
-capture('reset_finish')
+capture('gacha_reset_finish')
 # %%
-capture('mailbox_full')
+capture('box_full_alert')
 # %%
-capture('mailbox')
+capture('box_unselected')
 # %%
-capture('bag_full')
+capture('box_selected')
+# %%
+capture('bag_full_alert')
+# %%
+capture('bag_unselected')
+# %%
+capture('bag_selected')
+# %%
+capture('bag_sell_confirm')
+# %%
+capture('bag_sell_finish')
+# %%
+capture('shop')
+# %%
+capture('rewards_action')
 
 # %% temp
 d = 'img/_drops'
