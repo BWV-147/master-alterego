@@ -1,8 +1,9 @@
 import logging
 import os
 import threading
-from logging.handlers import RotatingFileHandler
 import time
+from logging.handlers import RotatingFileHandler
+
 from util.config import CONFIG
 
 NO_LOG_TIME = 'NO_LOG_TIME'
@@ -49,14 +50,15 @@ def get_logger(name='log', level=logging.INFO, save=True):
     _logger.addHandler(console)
 
     if save:
-        fh = RotatingFileHandler(os.path.join(log_path, f'{name}.log'), maxBytes=1024 * 1024, backupCount=3)
+        fh = RotatingFileHandler(os.path.join(log_path, f'{name}.log'),
+                                 encoding='utf8', maxBytes=1024 * 1024, backupCount=3)
         fh.setFormatter(formatter)
         fh.setLevel(level)
         _logger.addHandler(fh)
 
         if level > logging.DEBUG:
-            full_fh = RotatingFileHandler(os.path.join(log_path, f'{name}.full.log'), maxBytes=1024 * 1024,
-                                          backupCount=3)
+            full_fh = RotatingFileHandler(os.path.join(log_path, f'{name}.full.log'),
+                                          encoding='utf8', maxBytes=1024 * 1024, backupCount=3)
             full_fh.setFormatter(formatter)
             full_fh.setLevel(logging.DEBUG)
             _logger.addHandler(full_fh)
