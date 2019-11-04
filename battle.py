@@ -182,7 +182,8 @@ class Battle:
 
         wait_which_target(T.support, LOC.support_refresh)
         if support:
-            master.choose_support(match_svt=True, match_ce=True, match_ce_max=True, img=T.get('support2'))
+            master.choose_support(match_svt=True, match_ce=True, match_ce_max=True, img=T.get('support2'),
+                                  switch_classes=(0, 5))
         else:
             logger.debug('please choose support manually!')
         # wave 1

@@ -3,6 +3,7 @@
 additional, Card class included.
 """
 from util.autogui import *
+from util.supervisor import send_mail
 
 
 class Card:
@@ -74,8 +75,9 @@ class Master:
             elif page_no == 2:
                 break
 
-    def choose_support(self, match_svt=True, match_ce=False, match_ce_max=False, match_skills=None, img=None):
-        # type:(bool,bool,bool,List[int],Image.Image)->None
+    def choose_support(self, match_svt=True, match_ce=False, match_ce_max=False, match_skills=None, img=None,
+                       switch_classes=None):
+        # type:(bool,bool,bool,List[int],Image.Image,Sequence)->None
         """
         choose support servant. default match the region of 3 svt_skills, additional craft-essences
         :param match_svt:
@@ -83,40 +85,52 @@ class Master:
         :param match_ce_max: whether match CE max star
         :param match_skills: skills to match, a list of int value (1,2,3)
         :param img: support page img
+        :param switch_classes: e.g. (0,5,...) means switch between ALL and CASTER.
+                        ALL=0, Saber-Berserker=1-7, extra=8, Mixed=9. if empty, set (-1,), click Regions.safe_area
         """
         logger.debug('choosing support...')
         support_page = self.T.support if img is None else img
+        if switch_classes is None:
+            switch_classes = (-1,)
         wait_which_target(support_page, self.LOC.support_refresh)
         refresh_times = 0
         while True:
             found = False
             time.sleep(1)
-            shot = screenshot()
-            if match_svt is False:  # select first one
-                if is_match_target(shot, support_page, self.LOC.support_team_icon) \
-                        and is_match_target(shot, support_page, self.LOC.support_ce[0]):
-                    # match ce too, temp.
-                    click(self.LOC.support_ce[0])
-                    found = True
-            else:
-                for svt in range(2):  # 2 support one time, no scroll
-                    if is_match_target(shot, support_page, self.LOC.support_skill[svt]):
-                        if match_skills is not None:
-                            rs = [is_match_target(shot, support_page,
-                                                  self.LOC.support_skills[svt][skill_loc - 1])
-                                  for skill_loc in match_skills]
-                            if rs.count(True) != len(match_skills):
-                                continue
-                        if match_ce:
-                            if not is_match_target(shot, support_page, self.LOC.support_ce[svt]):
-                                continue
-                        if match_ce_max:
-                            if not is_match_target(shot, support_page, self.LOC.support_ce_max[svt]):
-                                continue
-                        click(self.LOC.support_ce[svt])
-                        logger.debug(f'choose support No.{svt + 1}')
+            for icon in switch_classes:
+                if icon == -1:
+                    click(self.LOC.safe_area)
+                else:
+                    click(self.LOC.support_class_icons[icon])
+                    logger.debug(f'switch support class to No.{icon}.')
+                shot = screenshot()
+                if match_svt is False:  # select first one
+                    if is_match_target(shot, support_page, self.LOC.support_team_icon) \
+                            and is_match_target(shot, support_page, self.LOC.support_ce[0]):
+                        # match ce too, temp.
+                        click(self.LOC.support_ce[0])
                         found = True
-                        break
+                else:
+                    for svt in range(2):  # 2 support one time, no scroll
+                        if is_match_target(shot, support_page, self.LOC.support_skill[svt]):
+                            if match_skills is not None:
+                                rs = [is_match_target(shot, support_page,
+                                                      self.LOC.support_skills[svt][skill_loc - 1])
+                                      for skill_loc in match_skills]
+                                if rs.count(True) != len(match_skills):
+                                    continue
+                            if match_ce:
+                                if not is_match_target(shot, support_page, self.LOC.support_ce[svt]):
+                                    continue
+                            if match_ce_max:
+                                if not is_match_target(shot, support_page, self.LOC.support_ce_max[svt]):
+                                    continue
+                            click(self.LOC.support_ce[svt])
+                            logger.debug(f'choose support No.{svt + 1}')
+                            found = True
+                            break
+                if found:
+                    break
             # refresh support
             if found:
                 break
@@ -131,7 +145,7 @@ class Master:
             # =1: in server cn and first loop to click START
             page_no = wait_which_target([self.T.team, self.T.wave1a], [self.LOC.team_cloth, self.LOC.master_skill])
             if page_no == 0:
-                # print('click start please')
+                # print('click start please\r', end='\r')
                 # time.sleep(5)
                 click(self.LOC.team)
             elif page_no == 1:
