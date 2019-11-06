@@ -26,24 +26,19 @@ def battle_with_check(battle: Battle, check=True):
             battle.start(battle_func=battle.a_zaxiu_final, folder='img/a-zaxiu-final',
                          battle_num=140, total_battle_num=770, apple=CONFIG.apple, auto_choose_support=True)
     elif user_id == 'ios':
-        apple = -1
-        CONFIG.jump_battle = False
-        CONFIG.check_drop = True
-        CONFIG.offset_x = 0
-        CONFIG.enhance_craft_nums = (7, 8, 11, 12, 15, 16, 20)
         if check:
             thread = threading.Thread(target=battle.start, name='s-zaxiu-final',
                                       kwargs={"battle_func": battle.s_zaxiu_final,
                                               "folder": 'img/s-zaxiu-final',
                                               "battle_num": 200,
                                               "total_battle_num": 750,
-                                              "apple": apple,
+                                              "apple": CONFIG.apple,
                                               "auto_choose_support": True},
                                       daemon=True)
             supervise_log_time(thread, 120, mail=True, interval=3)
         else:
             battle.start(battle_func=battle.s_zaxiu_final, folder='img/s-zaxiu-final',
-                         battle_num=200, total_battle_num=690, apple=apple, auto_choose_support=True)
+                         battle_num=200, total_battle_num=690, apple=CONFIG.apple, auto_choose_support=True)
     else:
         print(f'unknown user id: {user_id}')
 

@@ -2,6 +2,7 @@
 Basic, standalone functions
 """
 import smtplib
+import socket
 import winsound
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
@@ -108,6 +109,7 @@ def send_mail(body, subject=None, receiver=None):
             recent_records = lines[n + 1 - min(10, n):n + 1]
             body = f"""
 <b>{body}</b><br>
+Computer name: <b>{socket.getfqdn(socket.gethostname())}</b><br>
 ----------------------------------<br>
 <b>Recent log({CONFIG.log_file})</b>:<br>
 {'<br>'.join(recent_records)}<br>
