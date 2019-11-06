@@ -10,7 +10,7 @@ class Gacha:
         self.max_clean_item_num = 100
         self.do_sell = True
 
-    def draw(self):
+    def draw(self, num=10):
         T = self.T
         LOC = self.LOC
         wait_which_target(T.gacha_initial, LOC.gacha_10_initial)
@@ -30,10 +30,14 @@ class Gacha:
             if is_match_target(shot, T.gacha_empty, LOC.gacha_reset_action):
                 click(LOC.gacha_reset_action)
                 reset_num += 1
-                gacha_logger.debug(f'reset {reset_num} times.')
+                gacha_logger.debug(f'reset {reset_num}/{num} times.')
                 wait_which_target(T.gacha_reset_confirm, LOC.gacha_reset_confirm, at=True)
                 wait_which_target(T.gacha_reset_finish, LOC.gacha_reset_finish, at=True)
                 wait_which_target(T.gacha_initial, LOC.gacha_10_initial)
+                if reset_num >= num:
+                    gacha_logger.info(f'All {num} gacha finished.')
+                    CONFIG.task_finished = True
+                    return
             elif is_match_target(shot, T.box_full_alert, LOC.box_full_confirm):
                 click(LOC.box_full_confirm)
                 gacha_logger.debug('mailbox full.')

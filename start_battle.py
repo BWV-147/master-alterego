@@ -14,7 +14,7 @@ def battle_with_check(battle: Battle, check=True):
         CONFIG.jump_battle = False
         CONFIG.check_drop = True
         CONFIG.offset_x = 0
-        CONFIG.enhance_craft_nums = (7, 8, 11, 12, 15, 16, 19, 20)
+        CONFIG.enhance_craft_nums = (7, 8, 11, 12, 15, 16, 20)
         if check:
             thread = threading.Thread(target=battle.start, name='a-zaxiu-final',
                                       kwargs={"battle_func": battle.a_zaxiu_final,
@@ -29,17 +29,17 @@ def battle_with_check(battle: Battle, check=True):
             battle.start(battle_func=battle.a_zaxiu_final, folder='img/a-zaxiu-final',
                          battle_num=140, total_battle_num=770, apple=apple, auto_choose_support=True)
     elif user_id == 'ios':
-        apple = 1
+        apple = -1
         CONFIG.jump_battle = False
         CONFIG.check_drop = True
         CONFIG.offset_x = 0
-        CONFIG.enhance_craft_nums = (7, 8, 11, 12, 15, 16, 19, 20)
+        CONFIG.enhance_craft_nums = (7, 8, 11, 12, 15, 16, 20)
         if check:
             thread = threading.Thread(target=battle.start, name='s-zaxiu-final',
                                       kwargs={"battle_func": battle.s_zaxiu_final,
                                               "folder": 'img/s-zaxiu-final',
                                               "battle_num": 200,
-                                              "total_battle_num": 690,
+                                              "total_battle_num": 750,
                                               "apple": apple,
                                               "auto_choose_support": True},
                                       daemon=True)

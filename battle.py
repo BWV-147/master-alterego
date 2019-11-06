@@ -83,6 +83,7 @@ class Battle:
                 time.sleep(0.5)
             # noinspection PyStatementEffect
             label.g
+        CONFIG.task_finished = True
         logger.info(f'>>>>> All {finished} battles "{self.master.quest_name}" finished. <<<<<')
 
     @with_goto
@@ -187,6 +188,8 @@ class Battle:
         else:
             logger.debug('please choose support manually!')
         # wave 1
+        # noinspection PyStatementEffect
+        label.h
         wait_which_target(T.wave1a, LOC.enemies[0])
         logger.debug(f'Quest {master.quest_name} start...')
         wait_which_target(T.wave1a, LOC.master_skill)
@@ -196,8 +199,6 @@ class Battle:
         master.svt_skill(3, 2)
         master.svt_skill(3, 3)
         master.svt_skill(1, 1)
-        # noinspection PyStatementEffect
-        label.h
         master.master_skill(T.wave1a, 3, order_change=(3, 4), order_change_img=T.order_change)
         master.attack([6, 1, 2])
         # master.auto_attack(nps=6)

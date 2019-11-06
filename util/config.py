@@ -10,9 +10,9 @@ class Config:
         self.offset_y = 0
         self.check_drop = True  # check craft dropped or not, if True, make sure rewards.png contains the dropped craft.
         # if crash_num in list, send_mail to remind crafts enhancing, default 5 bonus(self 4 + friend 1)
-        # 5 bonus: (7, 8, 11, 12, 15, 16, 19, 20)
-        # 6 bonus: (5, 8, 9, 12, 13, 16, 17, 20, 21, 24, 25)
-        self.enhance_craft_nums = (7, 8, 11, 12, 15, 16, 19, 20)
+        # 5 bonus: (7, 8, 11, 12, 15, 16, 20)
+        # 6 bonus: (5, 8, 9, 12, 13, 16, 17, 20, 21, 25)
+        self.enhance_craft_nums = (7, 8, 11, 12, 15, 16, 20)
         self.jump_battle = False  # goto decoration in Battle.battle_func
         self.jump_start = False  # goto decoration in Battle.start
         self.log_time = 0  # record the time of last logging.info/debug..., set NO_LOG_TIME outside battle progress

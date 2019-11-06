@@ -35,7 +35,7 @@ def show_log(log_name):
             lines = fd.readlines()
             n = len(lines)
             recent_records = lines[n + 1 - min(50, n):n + 1]
-        resp = make_response(f'recent logs(max 50 lines):\n{chr(10).join(recent_records)}')
+        resp = make_response(f'recent logs(max 50 records):\n{chr(10).join(recent_records)}')
         resp.headers["Content-type"] = "text/plan;charset=UTF-8"
         return resp
     except Exception as e:
