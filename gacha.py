@@ -68,7 +68,7 @@ class Gacha:
         drag_num = 10
 
         no = 0
-        while no <= num:
+        while True:
             page_no = wait_which_target([T.box_unselected, T.bag_full_alert],
                                         [LOC.box_get_all_action, LOC.bag_full_sell_action])
             if page_no == 0:
@@ -100,6 +100,8 @@ class Gacha:
                 click(LOC.bag_full_sell_action)
                 self.sell()
                 return
+            if no >= num:
+                break
         wait_which_target(T.box_unselected, LOC.box_get_all_action)
         click(self.LOC.box_back)
         gacha_logger.debug('from mailbox back to gacha')
