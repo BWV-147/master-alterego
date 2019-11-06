@@ -91,7 +91,7 @@ class Regions:
     support_refresh = (1238, 160, 1318, 230)
     support_scroll = ((1860, 520), (1860, 640), (760, 880))
 
-    team = (1655, 973, 1902, 1052)
+    team_start_action = (1655, 973, 1902, 1052)
     team_cloth = (20, 980, 263, 1054)
     wave = (1261, 78, 1281, 106)
     enemies_all = (0, 0, 1080, 128)

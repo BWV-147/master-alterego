@@ -3,7 +3,6 @@ import os
 
 
 class Config:
-    # TODO: save all config params into json file
     def __init__(self):
         # base config
         self.id = None
@@ -25,7 +24,7 @@ class Config:
         self.jump_battle = False  # goto decoration in Battle.battle_func
         self.jump_start = False  # goto decoration in Battle.start
         self.img_net = None  # img & loc of network error, especially for jp server.
-        self.loc_net = None
+        self.loc_net = None  # TODO: this two params should not be stored
 
         # gacha specific
         self.gacha_num = 1  # auto decrease
@@ -50,7 +49,8 @@ class Config:
             print(f'Created the empty config file "{fp}". Please fill out it.')
 
     def save(self, fp='config.json'):
-        json.dump(self.__dict__, open(fp, 'w', encoding='utf8'), ensure_ascii=False, indent=2)
+        json.dump(self.__dict__, open(fp, 'w', encoding='utf8'), ensure_ascii=False, indent=2, skipkeys=True,
+                  default=lambda o: None)
 
     def count_gacha(self):
         self.gacha_num -= 1

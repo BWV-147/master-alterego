@@ -69,7 +69,7 @@ class Master:
                                          [self.LOC.apples[apple], self.LOC.apple_confirm, self.LOC.support_refresh])
             if page_no == 0:
                 logger.debug(f"eating {['Colorful', 'Gold', 'Silver', 'Cropper'][apple]} apple...")
-                click(self.LOC.apples[apple])
+                click(self.LOC.apples[apple], lapse=1)
             elif page_no == 1:
                 click(self.LOC.apple_confirm, lapse=1)
             elif page_no == 2:
@@ -147,7 +147,8 @@ class Master:
             if page_no == 0:
                 # print('click start please\r', end='\r')
                 # time.sleep(5)
-                click(self.LOC.team)
+                logger.debug('entering battle')
+                click(self.LOC.team_start_action, lapse=2)
             elif page_no == 1:
                 break
             else:

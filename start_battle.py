@@ -4,6 +4,7 @@ from util.supervisor import supervise_log_time
 
 # main entrance
 def battle_with_check(battle: Battle, check=True):
+    # TODO: add start server before start battle, if is not listening. the port
     CONFIG.load_config()
     CONFIG.task_finished = False
     CONFIG.log_file = 'logs/log.full.log'
@@ -16,29 +17,29 @@ def battle_with_check(battle: Battle, check=True):
             thread = threading.Thread(target=battle.start, name='a-zaxiu-final',
                                       kwargs={"battle_func": battle.a_zaxiu_final,
                                               "folder": 'img/a-zaxiu-final',
-                                              "battle_num": 140,
-                                              "total_battle_num": 800,
+                                              "battle_num": CONFIG.battle_num,
+                                              "total_battle_num": 1000,
                                               "apple": CONFIG.apple,
                                               "auto_choose_support": True},
                                       daemon=True)
             supervise_log_time(thread, 120, mail=True, interval=3)
         else:
-            battle.start(battle_func=battle.a_zaxiu_final, folder='img/a-zaxiu-final',
-                         battle_num=140, total_battle_num=770, apple=CONFIG.apple, auto_choose_support=True)
+            battle.start(battle_func=battle.a_zaxiu_final, folder='img/a-zaxiu-final', apple=CONFIG.apple,
+                         battle_num=CONFIG.battle_num, total_battle_num=1000, auto_choose_support=True)
     elif user_id == 'ios':
         if check:
             thread = threading.Thread(target=battle.start, name='s-zaxiu-final',
                                       kwargs={"battle_func": battle.s_zaxiu_final,
                                               "folder": 'img/s-zaxiu-final',
-                                              "battle_num": 200,
-                                              "total_battle_num": 750,
+                                              "battle_num": CONFIG.battle_num,
+                                              "total_battle_num": 1000,
                                               "apple": CONFIG.apple,
                                               "auto_choose_support": True},
                                       daemon=True)
             supervise_log_time(thread, 120, mail=True, interval=3)
         else:
-            battle.start(battle_func=battle.s_zaxiu_final, folder='img/s-zaxiu-final',
-                         battle_num=200, total_battle_num=690, apple=CONFIG.apple, auto_choose_support=True)
+            battle.start(battle_func=battle.s_zaxiu_final, folder='img/s-zaxiu-final', apple=CONFIG.apple,
+                         battle_num=CONFIG.battle_num, total_battle_num=1000, auto_choose_support=True)
     else:
         print(f'unknown user id: {user_id}')
 
