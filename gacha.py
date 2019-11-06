@@ -68,7 +68,7 @@ class Gacha:
         drag_num = 10
 
         no = 0
-        while no < num:
+        while no <= num:
             page_no = wait_which_target([T.box_unselected, T.bag_full_alert],
                                         [LOC.box_get_all_action, LOC.bag_full_sell_action])
             if page_no == 0:
@@ -86,7 +86,7 @@ class Gacha:
                         # print(f'{no:<4d}', end='\r')
                         if no % 10 == 0:
                             gacha_logger.debug(f'cleaning items {no}/{num}...')
-                        if no >= num:
+                        if no == num:
                             gacha_logger.debug(f'cleaned all items {no}/{num}...')
                             break
                     if no < num:
