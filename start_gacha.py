@@ -6,6 +6,7 @@ from util.supervisor import supervise_log_time
 def gacha_with_check(gacha: Gacha, check=True):
     CONFIG.load_config()
     CONFIG.task_finished = False
+    CONFIG.log_file = 'logs/gacha.full.log'
     gacha_logger.info('start gacha')
     check_sys_admin()
     if CONFIG.id == 'android':
@@ -16,7 +17,7 @@ def gacha_with_check(gacha: Gacha, check=True):
     if check:
         thread = threading.Thread(target=gacha.draw, name='gacha',
                                   args=[], daemon=True)
-        supervise_log_time(thread, 120, mail=False, interval=3)
+        supervise_log_time(thread, 120, mail=True, interval=3, )
     else:
         gacha.draw()
 

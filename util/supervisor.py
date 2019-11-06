@@ -34,6 +34,8 @@ def supervise_log_time(thread: threading.Thread, secs: float = 60, mail=False, i
         if not thread.is_alive() and CONFIG.task_finished:
             # thread finished
             logger.debug(f'Thread-{thread.ident}({thread.name}) finished. Stop supervising.')
+            if mail:
+                send_mail('Task finished.')
             break
 
         # something wrong
@@ -99,14 +101,15 @@ def send_mail(body, subject=None, receiver=None):
     if threading.current_thread().name != 'MainThread':
         subject = f'[{threading.current_thread().name}]{subject}'
     subject = f'{time.strftime("[%H:%M]")}{subject}'
-    with open('logs/log.full.log') as fd:
-        lines = fd.readlines()
-        n = len(lines)
-        recent_records = lines[n + 1 - min(10, n):n + 1]
-        body = f"""
+    if CONFIG.log_file is not None and os.path.exists(CONFIG.log_file):
+        with open(CONFIG.log_file) as fd:
+            lines = fd.readlines()
+            n = len(lines)
+            recent_records = lines[n + 1 - min(10, n):n + 1]
+            body = f"""
 <b>{body}</b><br>
 ----------------------------------<br>
-<b>Recent log(log.full.log)</b>:<br>
+<b>Recent log({CONFIG.log_file})</b>:<br>
 {'<br>'.join(recent_records)}<br>
 ----------------------------------<br>
 <b>Screenshot before shutdown</b>:<br>

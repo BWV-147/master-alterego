@@ -6,6 +6,7 @@ from util.supervisor import supervise_log_time
 def battle_with_check(battle: Battle, check=True):
     CONFIG.load_config()
     CONFIG.task_finished = False
+    CONFIG.log_file = 'logs/log.full.log'
     logger.info('start battle')
     check_sys_admin()
     time.sleep(3)

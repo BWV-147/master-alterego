@@ -13,6 +13,7 @@ class Config:
         self.log_time = 0  # record the time of last logging.info/debug..., set NO_LOG_TIME outside battle progress
         self.task_finished = False  # all battles finished, set to True before child process exist.
         self.check_drop = True  # check craft dropped or not, if True, make sure rewards.png contains the dropped craft.
+        self.log_file = None
 
         # battle specific
         self.battle_num = 1  # auto decrease
