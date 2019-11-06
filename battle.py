@@ -68,6 +68,7 @@ class Battle:
                 info.add_battle(False)
                 rewards.save(f"img/_drops/drops-{self.master.quest_name}-{time.strftime('%m%d-%H-%M-%S')}.png")
             dt = timer.lapse()
+            CONFIG.count_battle()
             logger.info(f'--- Battle {finished}/{actual_num} finished, time = {int(dt // 60)} min {int(dt % 60)} sec.'
                         + f' (total {info.battle_num})')
             # ready to restart a battle

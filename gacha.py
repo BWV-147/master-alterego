@@ -7,16 +7,15 @@ class Gacha:
     def __init__(self, path='img/gacha'):
         self.T = ImageTemplates(path)
         self.LOC = Regions()
-        self.max_clean_item_num = 100
         self.do_sell = True
 
-    def draw(self, num=10):
+    def draw(self):
         T = self.T
         LOC = self.LOC
         wait_which_target(T.gacha_initial, LOC.gacha_10_initial)
         gacha_logger.info('gacha: starting...')
         loops = 0
-        reset_num = 0
+        total_num = CONFIG.gacha_num
         while True:
             loops += 1
             # print(f'\rloop {loops:<4d}', end='')
@@ -29,13 +28,13 @@ class Gacha:
                 return
             if is_match_target(shot, T.gacha_empty, LOC.gacha_reset_action):
                 click(LOC.gacha_reset_action)
-                reset_num += 1
-                gacha_logger.debug(f'reset {reset_num}/{num} times.')
+                CONFIG.count_gacha()
+                gacha_logger.debug(f'reset {total_num - CONFIG.gacha_num}/{total_num} times.')
                 wait_which_target(T.gacha_reset_confirm, LOC.gacha_reset_confirm, at=True)
                 wait_which_target(T.gacha_reset_finish, LOC.gacha_reset_finish, at=True)
                 wait_which_target(T.gacha_initial, LOC.gacha_10_initial)
-                if reset_num >= num:
-                    gacha_logger.info(f'All {num} gacha finished.')
+                if CONFIG.gacha_num <= 0:
+                    gacha_logger.info(f'All {total_num} gacha finished.')
                     CONFIG.task_finished = True
                     return
             elif is_match_target(shot, T.box_full_alert, LOC.box_full_confirm):
@@ -59,7 +58,7 @@ class Gacha:
         gacha_logger.info('mailbox: cleaning...')
         print('Make sure the mailbox **FILTER** only shows "Experience Cards"/"Zhong Huo"!')
         if num is None:
-            num = self.max_clean_item_num
+            num = CONFIG.mailbox_clean_num
         wait_which_target(T.box_unselected, LOC.box_get_all_action)
 
         first_item = LOC.box_items[0]
@@ -90,8 +89,10 @@ class Gacha:
                         if no >= num:
                             gacha_logger.debug(f'cleaned all items {no}/{num}...')
                             break
-                    drag(start=LOC.box_drag_start, end=LOC.box_drag_end,
-                         duration=0.5, down_time=0.1, up_time=0.3, lapse=0.1)
+                    if no < num:
+                        drag(start=LOC.box_drag_start, end=LOC.box_drag_end,
+                             duration=0.5, down_time=0.1, up_time=0.3, lapse=0.1)
+                gacha_logger.debug('get mailbox items.')
                 click(LOC.box_get_action, lapse=1)
                 click(LOC.box_get_action, lapse=1)
             elif page_no == 1:

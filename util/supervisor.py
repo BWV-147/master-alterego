@@ -119,21 +119,20 @@ def send_mail(body, subject=None, receiver=None):
           f'subject: "{subject}"'
           f'body:\n{body}'
           f'----------------------------\n')
-    user = CONFIG.user
     if receiver is None:
-        receiver = user.receiver
-    if None in (receiver, user.sender, user.password):
+        receiver = CONFIG.receiver
+    if None in (receiver, CONFIG.sender, CONFIG.password):
         print(f'----Email account info needs to update.-----\n'
               f'receiver: {receiver}\n'
-              f'sender:{user.sender}\n'
-              f'password:{"*" * len(user.password)}'
+              f'sender:{CONFIG.sender}\n'
+              f'password:{"*" * len(CONFIG.password)}'
               f'----------------------------\n')
         return
 
     # Email object
     msg = MIMEMultipart()
     msg['Subject'] = subject
-    msg['From'] = formataddr([user.sender_name, user.sender])
+    msg['From'] = formataddr([CONFIG.sender_name, CONFIG.sender])
     msg['To'] = receiver
     msg.attach(MIMEText(body, 'html', 'utf-8'))
     with open(crash_fp, 'rb') as fd:
@@ -145,11 +144,11 @@ def send_mail(body, subject=None, receiver=None):
     while retry_time < 5:
         retry_time += 1
         try:
-            server = smtplib.SMTP_SSL(user.server_host, user.server_port)  # 邮件服务器及端口号
+            server = smtplib.SMTP_SSL(CONFIG.server_host, CONFIG.server_port)  # 邮件服务器及端口号
             # server.set_debuglevel(1)
             try:
-                server.login(user.sender, user.password)
-                result = server.sendmail(user.sender, receiver, msg.as_string())
+                server.login(CONFIG.sender, CONFIG.password)
+                result = server.sendmail(CONFIG.sender, receiver, msg.as_string())
                 if result == {}:
                     logger.warning(f'send success', NO_LOG_TIME)
                 else:
@@ -160,7 +159,7 @@ def send_mail(body, subject=None, receiver=None):
                 logger.warning(f'send error, error_type={type(e)},\ne={e}', NO_LOG_TIME)
                 server.quit()
         except Exception as e:
-            logger.warning(f'connect server "{(user.server_host, user.server_port)}" failed, error_type={type(e)},\n'
-                           f'e={e}', NO_LOG_TIME)
+            logger.warning(f'connect server "{(CONFIG.server_host, CONFIG.server_port)}" failed,'
+                           f' error_type={type(e)},\ne={e}', NO_LOG_TIME)
             logger.info(f'retry sending mail after 5 sec...({retry_time}/5 times)', NO_LOG_TIME)
         time.sleep(5)
