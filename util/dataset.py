@@ -57,6 +57,8 @@ class Regions:
 
     # from bag to drawer
     shop_sell = (1352, 465, 1723, 552)
+    shop_event_item_exchange = (1352, 239, 1723, 322)
+    shop_event_banner_list = [(848, 168, 1525, 445), (848, 468, 1525, 745), (848, 768, 1525, 1045)]
     rewards_action = (1688, 29, 1872, 97)
 
     # ---------- battle part ----------
@@ -360,6 +362,10 @@ class ImageTemplates:
     @property
     def shop(self):
         return self.get('shop')
+
+    @property
+    def shop_event_banner_list(self):
+        return self.get('shop_event_banner_list')
 
 
 class StatInfo:

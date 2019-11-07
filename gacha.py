@@ -125,8 +125,8 @@ class Gacha:
             elif page_no == 1:
                 gacha_logger.debug('all items are sold.')
                 click(LOC.bag_back)
-                wait_which_target(T.shop, LOC.shop_sell)
-                # TODO: if event banner is not first one, add shop_event_list_page
+                wait_which_target(T.shop, LOC.shop_event_item_exchange, at=True)
+                wait_which_target(T.shop_event_banner_list, LOC.shop_event_banner_list[CONFIG.event_banner_no], at=True)
                 wait_which_target(T.gacha_initial, LOC.gacha_10_initial, clicking=LOC.gacha_tab)
                 gacha_logger.debug('from shop back to gacha')
                 return

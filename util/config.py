@@ -28,7 +28,8 @@ class Config:
 
         # gacha specific
         self.gacha_num = 1  # auto decrease
-        self.mailbox_clean_num = 100
+        self.mailbox_clean_num = 100  # < max_num - 10 - retained_num
+        self.event_banner_no = 0  # values: 0,1,2
 
         # private data.
         self.receiver = None
