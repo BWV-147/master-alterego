@@ -12,19 +12,19 @@ def battle_with_check(battle: Battle, check=True):
     check_sys_admin()
     time.sleep(3)
     user_id = CONFIG.id
-    if user_id == 'android':
+    if user_id == 'jp':
         if check:
-            thread = threading.Thread(target=battle.start, name='a-zaxiu-final',
-                                      kwargs={"battle_func": battle.a_zaxiu_final,
-                                              "folder": 'img/a-zaxiu-final',
+            thread = threading.Thread(target=battle.start, name='jp-bond',
+                                      kwargs={"battle_func": battle.jp_bond,
+                                              "folder": 'img/jp-bond',
                                               "battle_num": CONFIG.battle_num,
-                                              "total_battle_num": 1000,
+                                              "total_battle_num": 2000,
                                               "apple": CONFIG.apple,
                                               "auto_choose_support": True},
                                       daemon=True)
             supervise_log_time(thread, 120, mail=True, interval=3)
         else:
-            battle.start(battle_func=battle.a_zaxiu_final, folder='img/a-zaxiu-final', apple=CONFIG.apple,
+            battle.start(battle_func=battle.a_zaxiu_final, folder='img/jp-bond', apple=CONFIG.apple,
                          battle_num=CONFIG.battle_num, total_battle_num=1000, auto_choose_support=True)
     elif user_id == 'ios':
         if check:
@@ -36,7 +36,7 @@ def battle_with_check(battle: Battle, check=True):
                                               "apple": CONFIG.apple,
                                               "auto_choose_support": True},
                                       daemon=True)
-            supervise_log_time(thread, 120, mail=True, interval=3)
+            supervise_log_time(thread, 200, mail=True, interval=3)
         else:
             battle.start(battle_func=battle.s_zaxiu_final, folder='img/s-zaxiu-final', apple=CONFIG.apple,
                          battle_num=CONFIG.battle_num, total_battle_num=1000, auto_choose_support=True)

@@ -158,7 +158,7 @@ def wait_search_template(target: Image.Image, threshold=THR, lapse=0.1):
 
 
 # 搜索目标模板存在匹配的最大值
-# noinspection PyTypeChecker
+# noinspection PyTypeChecker,PyUnresolvedReferences
 def search_target(img: Image.Image, target: Image.Image, mode='cv2'):
     """
     return the maximum of matched
@@ -182,7 +182,7 @@ def search_target(img: Image.Image, target: Image.Image, mode='cv2'):
         return np.max(matches), (pos[1][0], pos[0][0])
 
 
-# noinspection PyTypeChecker
+# noinspection PyTypeChecker,PyUnresolvedReferences
 def search_peaks(img: Image.Image, target: Image.Image, column=True, threshold=THR, **kwargs):
     if column is True:
         assert img.size[0] == target.size[0], f'must be same width: img {img.size}, target {target.size}.'
@@ -193,4 +193,3 @@ def search_peaks(img: Image.Image, target: Image.Image, column=True, threshold=T
     cv_img, cv_target = (cv2.cvtColor(m1, cv2.COLOR_RGB2BGR), cv2.cvtColor(m2, cv2.COLOR_RGB2BGR))
     matches: np.ndarray = cv2.matchTemplate(cv_img, cv_target, cv2.TM_CCOEFF_NORMED)
     return find_peaks(matches.reshape(matches.size), height=threshold, **kwargs)[0]
-

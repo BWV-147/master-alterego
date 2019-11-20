@@ -27,9 +27,10 @@ def pages():
 
 @app.route('/logs')
 def logs():
+    log_dir = 'logs'
     lines = []
-    for f in os.listdir(os.path.join(project_dir, 'logs')):
-        if not f.startswith('.'):
+    for f in os.listdir(os.path.join(project_dir, log_dir)):
+        if not f.startswith('.') and os.path.isfile(os.path.join(project_dir, log_dir, f)):
             lines.append(f'<li><a href="/log/{f}">{f}</a></li>')
     return f'Back to <a href="/pages">pages</a><br>' \
            f'Logs:<br>' \
@@ -69,11 +70,13 @@ def show_log(log_name):
 
 @app.route('/drops')
 def drops():
+    drops_dir = 'img/_drops'
     page = request.args.get('page', 0, type=int)
     size = request.args.get('size', 50, type=int)
     filter_drop = request.args.get('drop', 0, type=int)
     lines = []
-    img_files = os.listdir(os.path.join(project_dir, 'img/_drops'))
+    img_files = os.listdir(os.path.join(project_dir, drops_dir))
+    img_files = [f for f in img_files if os.path.isfile(os.path.join(project_dir, drops_dir, f))]
     img_files.sort(reverse=True)
     page_num = math.ceil(len(img_files) / size)
     page = min(page_num - 1, page)
@@ -125,7 +128,7 @@ def last_crash():
 
 if __name__ == '__main__':
     print(sys.argv)
-    if len(sys.argv) > 1:
+    if len(sys.argv) > 1 and str(sys.argv[1]).isdigit():
         port = int(sys.argv[1])
     else:
         port = 8080

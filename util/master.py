@@ -96,7 +96,7 @@ class Master:
         refresh_times = 0
         while True:
             found = False
-            time.sleep(1)
+            time.sleep(0.5)
             for icon in switch_classes:
                 if icon == -1:
                     click(self.LOC.safe_area)

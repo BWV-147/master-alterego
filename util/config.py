@@ -44,6 +44,7 @@ class Config:
             data: dict = json.load(open(fp, encoding='utf-8'))
             for k, v in data.items():
                 self.__dict__[k] = v
+            print(f'load config "{fp}"')
         else:
             print(f'config file "{fp}" not exists!')
             self.save(fp)

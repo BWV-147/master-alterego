@@ -79,14 +79,89 @@ class Battle:
                     break
                 elif is_match_target(shot, T.restart_quest, LOC.restart_quest_yes):
                     click(LOC.restart_quest_yes)
+                    logger.debug('restart the same battle')
+                    break
                 elif is_match_target(shot, T.apply_friend, LOC.apply_friend):
                     click(LOC.apply_friend_deny)
+                    logger.debug('not to apply friend')
                 time.sleep(0.5)
             # noinspection PyStatementEffect
             label.g
         CONFIG.task_finished = True
         logger.info(f'>>>>> All {finished} battles "{self.master.quest_name}" finished. <<<<<')
 
+    @with_goto
+    def jp_bond(self, support=True):
+        """
+        阵容: 狂兰(醉贞)-CBA-CBA(support)-孔明-X-X
+        """
+        master = self.master
+        T = self.master.T
+        LOC = self.master.LOC
+        if not master.quest_name:
+            master.quest_name = 'jp-bond'
+        master.svt_names = ['狂兰', 'CBA', '孔明']
+        master.set_card_weights([3, 1, 1], color_weight='AQB')
+        # ----  NP     Quick    Arts   Buster ----
+        master.set_card_templates([
+            [(4, 6), (4, 2), (5, 5), (4, 1)],
+            [(4, 0), (4, 3), (4, 4), (6, 4)],
+            [(4, 0), (6, 5), (6, 3), (6, 1)],
+        ])
+        if CONFIG.jump_battle:
+            CONFIG.jump_battle = False
+            logger.warning('goto label.h')
+            # noinspection PyStatementEffect
+            goto.h
+
+        wait_which_target(T.support, LOC.support_refresh)
+        if support:
+            master.choose_support(match_svt=True, match_ce=False, match_ce_max=False, switch_classes=(5,))
+        else:
+            logger.debug('please choose support manually!')
+        # wave 1
+        wait_which_target(T.wave1a, LOC.enemies[0])
+        logger.debug(f'Quest {master.quest_name} start...')
+        wait_which_target(T.wave1a, LOC.master_skill)
+        logger.debug('wave 1...')
+        master.set_waves(T.wave1a, T.wave1b)
+        master.svt_skill(3, 3, 1)
+        master.svt_skill(3, 1, 1)
+        master.svt_skill(2, 1, 1)
+        master.svt_skill(1, 3)
+        master.attack([6, 1, 2])
+        # master.auto_attack(nps=6)
+
+        # wave 2
+        wait_which_target(T.wave2a, LOC.enemies[0])
+        wait_which_target(T.wave2a, LOC.master_skill)
+        logger.debug('wave 2...')
+        master.set_waves(T.wave2a, T.wave2b)
+        master.svt_skill(3, 2)
+        master.master_skill(T.wave2a, 3, order_change=(3, 4), order_change_img=T.order_change)
+        # noinspection PyStatementEffect
+        label.h
+        master.set_waves(T.get('wave2c'), T.get('wave2d'))
+        master.svt_skill(3, 2)
+        master.svt_skill(3, 3)
+        master.attack([6, 1, 2])
+        # master.auto_attack(nps=7)
+
+        # wave 3
+        wait_which_target(T.wave3a, LOC.enemies[1])
+        wait_which_target(T.wave3a, LOC.master_skill)
+        logger.debug('wave 3...')
+        master.set_waves(T.wave3a, T.wave3b)
+        master.svt_skill(3, 1, 1)
+        master.svt_skill(2, 3, 1)
+        master.svt_skill(2, 2)
+        master.master_skill(T.wave3a, 1)
+        # master.attack([6, 1, 2])
+        master.auto_attack(nps=6)
+        master.xjbd(T.kizuna, LOC.kizuna, mode='dmg', allow_unknown=True)
+        return
+
+    # unused
     @with_goto
     def a_zaxiu_final(self, support=True):
         """

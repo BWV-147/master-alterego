@@ -23,10 +23,10 @@ def generate(base):
 
 
 # %%
-generate('img/gacha')
+generate('img/jp-bond')
 
 # %%
-base_path = 'img/gacha'  # 'img/gacha'
+base_path = 'img/jp-bond'  # 'img/gacha'
 
 
 def capture(fn: str):

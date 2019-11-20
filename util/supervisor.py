@@ -103,7 +103,7 @@ def send_mail(body, subject=None, receiver=None):
         subject = f'[{threading.current_thread().name}]{subject}'
     subject = f'{time.strftime("[%H:%M]")}{subject}'
     if CONFIG.log_file is not None and os.path.exists(CONFIG.log_file):
-        with open(CONFIG.log_file) as fd:
+        with open(CONFIG.log_file, encoding='utf8') as fd:
             lines = fd.readlines()
             n = len(lines)
             recent_records = lines[n + 1 - min(10, n):n + 1]
@@ -130,7 +130,7 @@ Computer name: <b>{socket.getfqdn(socket.gethostname())}</b><br>
         print(f'----Email account info needs to update.-----\n'
               f'receiver: {receiver}\n'
               f'sender:{CONFIG.sender}\n'
-              f'password:{"*" * len(CONFIG.password)}'
+              f'password:{"*****"}'
               f'----------------------------\n')
         return
 
