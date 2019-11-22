@@ -236,13 +236,15 @@ class Master:
         wait_which_target(before, self.LOC.master_skill)
         return self
 
-    def auto_attack(self, nps: Union[List[int], int] = None, mode='dmg', parse_np=False, allow_unknown=False):
+    def auto_attack(self, nps: Union[List[int], int] = None, mode='dmg', parse_np=False, allow_unknown=False,
+                    no_play_card=False):
         """
         :param parse_np:
         :param nps:
         :param mode: dmg/xjbd/alter
-        :param allow_unknown:
-        :return:
+        :param allow_unknown: if parse cards failed(more than 5s), just chose cards[1,2,3]
+        :param no_play_card: if True, return chosen_cards but no to play cards automatically.
+        :return: Optional, chosen_cards
         """
         t0 = time.time()
         if mode == 'xjbd':
@@ -256,20 +258,24 @@ class Master:
             time.sleep(1)
             cards, np_cards = self.parse_cards(screenshot(), nps=nps if parse_np else None)
             # print('in auto_attack: ', cards, np_cards)
+            chosen_cards = []
             if cards == {}:
                 if time.time() - t0 > 5 and allow_unknown:
                     # if lapse>3s, maybe someone has been died
                     chosen_cards = convert_to_list(nps)
                     chosen_cards.extend([1, 2, 3])
                     logger.debug('unrecognized cards, choose [1,2,3]')
-                    self.play_cards(chosen_cards[0:3])
+                    chosen_cards = chosen_cards[0:3]
                     break
                 else:
                     continue
             else:
                 chosen_cards = self.choose_cards(cards, np_cards, nps, mode=mode)
-                self.play_cards(chosen_cards)
                 break
+        if no_play_card is True:
+            return chosen_cards
+        else:
+            self.play_cards(chosen_cards)
 
     def attack(self, locs_or_cards: Union[List[Card], List[int]]):
         assert len(locs_or_cards) >= 3, locs_or_cards

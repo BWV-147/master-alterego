@@ -44,16 +44,16 @@ class Regions:
     box_drag_end = (1070, 84)
     box_history = (365, 30, 522, 102)
     # from mailbox move to bag/enhancement
-    bag_full_sell_action = (900, 810, 1020, 870)
-    bag_full_enhance_action = (887, 660, 1029, 718)
+    bag_full_sell_action = (471, 689, 565, 740)
+    bag_full_enhance_action = (907, 689, 1008, 736)
 
     # in bag
     bag_back = (49, 34, 242, 100)
     bag_select_start = (200, 350)
     bag_select_end = (1416, 1050)
     bag_sell_action = (1600, 975, 1870, 1047)
-    bag_sell_confirm = (1200, 849, 1317, 908)
-    bag_sell_finish = (910, 850, 1015, 905)
+    bag_sell_confirm = (1181, 912, 1340, 968)
+    bag_sell_finish = (875, 908, 1045, 966)
 
     # from bag to drawer
     shop_sell = (1352, 465, 1723, 552)
@@ -67,6 +67,7 @@ class Regions:
     quest = (966, 256, 1149, 417)  # (937, 240, 1848, 360)
     quest_outer = (966, 246, 1149, 427)
     quest_c = (1600, 265)
+    quest_master_avatar = (91, 835, 242, 997)
     # rewards = (1680, 33, 1868, 91)
 
     ap_time = (346, 1041, 366, 1072)

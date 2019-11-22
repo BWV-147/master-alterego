@@ -13,6 +13,36 @@ class Battle:
         self.master = Master()
         pass
 
+    def sell(self, num=100):
+        T = self.master.T
+        LOC = self.master.LOC
+        logger.info('shop: selling...')
+        print('Make sure the bag **FILTER** only shows "Experience Cards"/"Zhong Huo"!')
+        no = 0
+        while True:
+            wait_which_target(T.bag_unselected, LOC.bag_sell_action)
+            drag(LOC.bag_select_start, LOC.bag_select_end, duration=1, down_time=1, up_time=4)
+            page_no = wait_which_target([T.bag_selected, T.bag_unselected], [LOC.bag_sell_action, LOC.bag_sell_action])
+            if page_no == 0:
+                no += 1
+                logger.debug(f'sell {no} times.')
+                click(LOC.bag_sell_action)
+                wait_which_target(T.bag_sell_confirm, LOC.bag_sell_confirm, at=True)
+                wait_which_target(T.bag_sell_finish, LOC.bag_sell_finish, at=True)
+                if no >= num:
+                    break
+            elif page_no == 1:
+                logger.debug('all items are sold.')
+                break
+        wait_which_target(T.bag_unselected, LOC.bag_sell_action)
+        click(LOC.bag_back)
+        wait_which_target(T.shop, LOC.shop_event_item_exchange)
+        click(LOC.bag_back)
+        wait_which_target(T.quest, LOC.quest_master_avatar)
+        click(LOC.quest_c)
+        logger.debug('from shop back to supporting')
+        return
+
     @with_goto
     def start(self, battle_func, folder, battle_num=10, total_battle_num=1000, apple=-1, auto_choose_support=True):
         T = self.master.T
@@ -42,6 +72,11 @@ class Battle:
                         click(LOC.quest_c)
                     elif is_match_target(shot, T.apple_page, LOC.apple_page):
                         self.master.eat_apple(apple)
+                    elif is_match_target(shot, T.bag_full_alert, LOC.bag_full_sell_action):
+                        logger.debug('bag full, to sell...')
+                        click(LOC.bag_full_sell_action)
+                        self.sell(1)
+                        break
                     elif is_match_target(shot, T.support, LOC.support_refresh):
                         break
                     time.sleep(0.5)
@@ -155,9 +190,78 @@ class Battle:
         master.svt_skill(3, 1, 1)
         master.svt_skill(2, 3, 1)
         master.svt_skill(2, 2)
-        master.master_skill(T.wave3a, 1)
+        master.master_skill(T.wave3a, 1, enemy=2)
         # master.attack([6, 1, 2])
-        master.auto_attack(nps=6)
+        chosen_cards = master.auto_attack(nps=6, no_play_card=True)
+        master.play_cards([chosen_cards[i] for i in (2, 0, 1)])
+        master.xjbd(T.kizuna, LOC.kizuna, mode='dmg', allow_unknown=True)
+        return
+
+    @with_goto
+    def jp_bond_nito(self, support=True):
+        """
+        阵容: 尼托-Saber-梅莉-support-X-X
+        """
+        master = self.master
+        T = self.master.T
+        LOC = self.master.LOC
+        if not master.quest_name:
+            master.quest_name = 'jp-bond-nito'
+        master.svt_names = ['尼托', 'Saber', '梅莉']
+        master.set_card_weights([1, 3, 1])
+        # ----  NP     Quick    Arts   Buster ----
+        master.set_card_templates([
+            [(1, 6), (1, 4), (1, 2), (2, 4)],
+            [(3, 7), (2, 3), (1, 1), (1, 3)],
+            [(1, 0), (2, 2), (2, 1), (3, 3)],
+        ])
+        if CONFIG.jump_battle:
+            CONFIG.jump_battle = False
+            logger.warning('goto label.h')
+            # noinspection PyStatementEffect
+            goto.h
+
+        wait_which_target(T.support, LOC.support_refresh)
+        if support:
+            master.choose_support(match_svt=False, match_ce=True, match_ce_max=True, switch_classes=(5,))
+        else:
+            logger.debug('please choose support manually!')
+        # wave 1
+        wait_which_target(T.wave1a, LOC.enemies[0])
+        logger.debug(f'Quest {master.quest_name} start...')
+        wait_which_target(T.wave1a, LOC.master_skill)
+        logger.debug('wave 1...')
+        master.set_waves(T.wave1a, T.wave1b)
+        master.svt_skill(3, 1)
+        master.svt_skill(1, 1)
+        master.attack([6, 1, 2])
+        # master.auto_attack(nps=6)
+
+        # wave 2
+        wait_which_target(T.wave2a, LOC.enemies[0])
+        wait_which_target(T.wave2a, LOC.master_skill)
+        logger.debug('wave 2...')
+        master.set_waves(T.wave2a, T.wave2b)
+        master.svt_skill(1, 2)
+        # noinspection PyStatementEffect
+        label.h
+        master.attack([6, 1, 2])
+        # master.auto_attack(nps=7)
+
+        # wave 3
+        wait_which_target(T.wave3a, LOC.enemies[1])
+        wait_which_target(T.wave3a, LOC.master_skill)
+        logger.debug('wave 3...')
+        master.set_waves(T.wave3a, T.wave3b)
+        master.svt_skill(2, 1)
+        master.svt_skill(2, 2)
+        master.svt_skill(2, 3)
+        master.svt_skill(3, 3, 2)
+        master.master_skill(T.wave3a, 2, friend=2)
+        # master.attack([6, 1, 2])
+        click(LOC.enemies[1])
+        chosen_cards = master.auto_attack(nps=7, no_play_card=True)
+        master.play_cards([chosen_cards[i] for i in (2, 0, 1)])
         master.xjbd(T.kizuna, LOC.kizuna, mode='dmg', allow_unknown=True)
         return
 

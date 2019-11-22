@@ -14,9 +14,9 @@ def battle_with_check(battle: Battle, check=True):
     user_id = CONFIG.id
     if user_id == 'jp':
         if check:
-            thread = threading.Thread(target=battle.start, name='jp-bond',
-                                      kwargs={"battle_func": battle.jp_bond,
-                                              "folder": 'img/jp-bond',
+            thread = threading.Thread(target=battle.start, name='jp-bond-nito',
+                                      kwargs={"battle_func": battle.jp_bond_nito,
+                                              "folder": 'img/jp-bond-nito',
                                               "battle_num": CONFIG.battle_num,
                                               "total_battle_num": 2000,
                                               "apple": CONFIG.apple,

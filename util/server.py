@@ -132,4 +132,4 @@ if __name__ == '__main__':
         port = int(sys.argv[1])
     else:
         port = 8080
-    app.run(port=port)
+    app.run(host='::', port=port)
