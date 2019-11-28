@@ -2,7 +2,11 @@
 
 additional, Card class included.
 """
+# noinspection PyPackageRequirements
+from goto import with_goto
+
 from util.autogui import *
+from util.config import Config
 from util.supervisor import send_mail
 
 
@@ -260,7 +264,7 @@ class Master:
             # print('in auto_attack: ', cards, np_cards)
             chosen_cards = []
             if cards == {}:
-                if time.time() - t0 > 5 and allow_unknown:
+                if time.time() - t0 > 5 and allow_unknown or self.templates == {}:
                     # if lapse>3s, maybe someone has been died
                     chosen_cards = convert_to_list(nps)
                     chosen_cards.extend([1, 2, 3])
@@ -337,7 +341,9 @@ class Master:
         :return: location-card(svt*10+color) pair dictionary
         """
         # TODO: if xjbd, someone is dead, should allow unrecognized cards(card code could be -1).
-        assert self.templates != {}, 'Please set cards templates first!!!'
+        # assert self.templates != {}, 'Please set cards templates first!!!'
+        if self.templates == {}:
+            return {}, {}
         nps = convert_to_list(nps)
         base_line = -1
 
@@ -490,3 +496,124 @@ class Master:
             for i, ww in enumerate(weights):
                 for j, w in enumerate(ww):
                     self.weights[(i + 1) * 10 + 1 + j] = w
+
+
+# noinspection PyPep8Naming,DuplicatedCode
+class BattleBase:
+    def __init__(self):
+        self.master = Master()
+
+    def sell(self, num=100):
+        """
+        Called when bag full before entering quest, usually hunting events. Back to supporting finally.
+        :param num: selling times. 100~=ALL
+        """
+        T = self.master.T
+        LOC = self.master.LOC
+        logger.info('shop: selling...')
+        print('Make sure the bag **FILTER** only shows "Experience Cards"/"Zhong Huo"!')
+        no = 0
+        while True:
+            wait_which_target(T.bag_unselected, LOC.bag_sell_action)
+            drag(LOC.bag_select_start, LOC.bag_select_end, duration=1, down_time=1, up_time=4)
+            page_no = wait_which_target([T.bag_selected, T.bag_unselected], [LOC.bag_sell_action, LOC.bag_sell_action])
+            if page_no == 0:
+                no += 1
+                logger.debug(f'sell {no} times.')
+                click(LOC.bag_sell_action)
+                wait_which_target(T.bag_sell_confirm, LOC.bag_sell_confirm, at=True)
+                wait_which_target(T.bag_sell_finish, LOC.bag_sell_finish, at=True)
+                if no >= num:
+                    break
+            elif page_no == 1:
+                logger.debug('all items are sold.')
+                break
+        wait_which_target(T.bag_unselected, LOC.bag_sell_action)
+        click(LOC.bag_back)
+        wait_which_target(T.shop, LOC.shop_event_item_exchange)
+        click(LOC.bag_back)
+        wait_which_target(T.quest, LOC.quest_master_avatar)
+        click(LOC.quest_c)
+        logger.debug('from shop back to supporting')
+        return
+
+    @with_goto
+    def start(self, battle_func, folder, battle_num=10, max_finished_battles=1000, apple=-1, auto_choose_support=True):
+        T = self.master.T
+        LOC = self.master.LOC
+        timer = Timer()
+        T.read_templates(folder)
+        Config.img_net = T.net_error
+        Config.loc_net = LOC.net_error
+        CONFIG.task_finished = False
+        finished = 0
+        info = StatInfo()
+        actual_num = min(battle_num, max_finished_battles - info.battle_num)
+        while finished < actual_num:
+            finished += 1
+            logger.info(f'>>>>> Battle "{self.master.quest_name}" No.{finished}/{actual_num} <<<<<')
+            if CONFIG.jump_start:
+                CONFIG.jump_start = False
+                logger.warning('outer: goto label.g')
+                # noinspection PyStatementEffect
+                goto.g
+            if not CONFIG.jump_battle:
+                while True:
+                    shot = screenshot()
+                    res = search_target(shot.crop(LOC.quest_outer), T.quest.crop(LOC.quest))
+                    # print(f'res={res}')
+                    if res[0] > THR:
+                        click(LOC.quest_c)
+                    elif is_match_target(shot, T.apple_page, LOC.apple_page):
+                        self.master.eat_apple(apple)
+                    elif is_match_target(shot, T.bag_full_alert, LOC.bag_full_sell_action):
+                        logger.debug('bag full, to sell...')
+                        click(LOC.bag_full_sell_action)
+                        self.sell(1)
+                        break
+                    elif is_match_target(shot, T.support, LOC.support_refresh):
+                        break
+                    time.sleep(0.5)
+            battle_func(auto_choose_support)
+            wait_which_target(T.rewards, LOC.finish_qp, clicking=LOC.finish_qp, lapse=0.5)
+            click(LOC.rewards_show_num, lapse=1)
+            # check reward_page has CE dropped or not
+            rewards = screenshot()
+            logger.info('battle finished, checking rewards.')
+            craft_dropped = is_match_target(rewards, T.rewards, LOC.finish_craft)
+            png_fn = f'img/_drops/rewards-{self.master.quest_name}-{time.strftime("%m%d-%H-%M-%S")}'
+            if craft_dropped and CONFIG.check_drop:
+                info.add_battle(True)
+                logger.warning(f'{info.craft_num}th craft dropped!!!')
+                rewards.save(f'{png_fn}-drop{info.craft_num}.png')
+                if info.craft_num in CONFIG.enhance_craft_nums:
+                    send_mail(f'NEED Enhancement! {info.craft_num}th craft dropped!!!')
+                    logger.warning('need to change party or enhance crafts. Exit.')
+                    exit()
+                else:
+                    send_mail(f'{info.craft_num}th craft dropped!!!')
+            else:
+                info.add_battle(False)
+                rewards.save(f"{png_fn}.png")
+            dt = timer.lapse()
+            CONFIG.count_battle()
+            logger.info(f'--- Battle {finished}/{actual_num} finished, time = {int(dt // 60)} min {int(dt % 60)} sec.'
+                        + f' (total {info.battle_num})')
+            # ready to restart a battle
+            click(LOC.finish_next)
+            while True:
+                shot = screenshot()
+                if search_target(shot.crop(LOC.quest_outer), T.quest.crop(LOC.quest))[0] > THR:
+                    break
+                elif is_match_target(shot, T.restart_quest, LOC.restart_quest_yes):
+                    click(LOC.restart_quest_yes)
+                    logger.debug('restart the same battle')
+                    break
+                elif is_match_target(shot, T.apply_friend, LOC.apply_friend):
+                    click(LOC.apply_friend_deny)
+                    logger.debug('not to apply friend')
+                time.sleep(0.5)
+            # noinspection PyStatementEffect
+            label.g
+        CONFIG.task_finished = True
+        logger.info(f'>>>>> All {finished} battles "{self.master.quest_name}" finished. <<<<<')

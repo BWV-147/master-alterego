@@ -3,6 +3,9 @@ import os
 
 
 class Config:
+    img_net = None
+    loc_net = None
+
     def __init__(self):
         # base config
         self.id = None
@@ -16,6 +19,7 @@ class Config:
 
         # battle specific
         self.battle_num = 1  # auto decrease
+        self.max_finished_battles = 1000
         self.apple = -1
         # if crash_num in list, send_mail to remind crafts enhancing, default 5 bonus(self 4 + friend 1)
         # 5 bonus: (7, 8, 11, 12, 15, 16, 20)
@@ -23,8 +27,8 @@ class Config:
         self.enhance_craft_nums = (7, 8, 11, 12, 15, 16, 20)
         self.jump_battle = False  # goto decoration in Battle.battle_func
         self.jump_start = False  # goto decoration in Battle.start
-        self.img_net = None  # img & loc of network error, especially for jp server.
-        self.loc_net = None  # TODO: this two params should not be stored
+        # self.img_net = None  # img & loc of network error, especially for jp server.
+        # self.loc_net = None  # TODO: this two params should not be stored
 
         # gacha specific
         self.gacha_num = 1  # auto decrease

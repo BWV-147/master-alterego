@@ -32,6 +32,8 @@
           <option value="battle.label" />
           <option value="battle.goto" />
           <option value="cv2.cvtColor" />
+          <option value="util.master.goto" />
+          <option value="util.master.label" />
         </list>
       </option>
     </inspection_tool>
