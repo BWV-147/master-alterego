@@ -3,8 +3,9 @@ import os
 
 
 class Config:
-    img_net = None
+    img_net = None  # class vars won't be saved
     loc_net = None
+    temp = {}  # save temp vars at runtime
 
     def __init__(self):
         # base config
@@ -52,7 +53,7 @@ class Config:
         else:
             print(f'config file "{fp}" not exists!')
             self.save(fp)
-            print(f'Created the empty config file "{fp}". Please fill out it.')
+            print(f'Created the default config file "{fp}". Please check it.')
 
     def save(self, fp='config.json'):
         json.dump(self.__dict__, open(fp, 'w', encoding='utf8'), ensure_ascii=False, indent=2, skipkeys=True,

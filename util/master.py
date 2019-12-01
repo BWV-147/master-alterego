@@ -79,11 +79,12 @@ class Master:
             elif page_no == 2:
                 break
 
+    # noinspection DuplicatedCode
     def choose_support(self, match_svt=True, match_ce=False, match_ce_max=False, match_skills=None, img=None,
                        switch_classes=None):
         # type:(bool,bool,bool,List[int],Image.Image,Sequence)->None
         """
-        choose support servant. default match the region of 3 svt_skills, additional craft-essences
+        choose support from the first two supports, no dragging scrollbar.
         :param match_svt:
         :param match_ce: whether match CE, please set to False if jp server since CE could be filtered in jp server
         :param match_ce_max: whether match CE max star
@@ -157,6 +158,82 @@ class Master:
                 break
             else:
                 time.sleep(0.2)
+
+    # noinspection DuplicatedCode
+    def choose_support_drag(self, match_svt=True, match_ce=False, match_ce_max=False, match_skills=None, img=None,
+                            switch_classes=None):
+        # type:(bool,bool,bool,bool,Image.Image,Sequence)->None
+        """
+        choose support from the whole support list, drag scrollbar to show all supports.
+        :param match_svt:
+        :param match_ce: whether match CE, please set to False if jp server since CE could be filtered in jp server
+        :param match_ce_max: whether match CE max star
+        :param match_skills: all skills to match
+        :param img: support page img
+        :param switch_classes: e.g. (0,5,...) means switch between ALL and CASTER.
+                        ALL=0, Saber-Berserker=1-7, extra=8, Mixed=9. if empty, set (-1,), click Regions.safe_area
+        """
+        T = self.T
+        LOC = self.LOC
+        import pyautogui
+        logger.debug('choosing support (drag mode)...')
+        support_page = self.T.support if img is None else img
+        if switch_classes is None:
+            switch_classes = (-1,)
+        wait_which_target(support_page, self.LOC.support_refresh)
+        refresh_times = 0
+
+        def _is_match_offset(_shot, old_loc, _offset):
+            return is_match_target(_shot.crop(np.add(old_loc, [0, _offset, 0, _offset])), T.support.crop(old_loc))
+
+        while True:
+            time.sleep(0.5)
+            for icon in switch_classes:
+                if icon == -1:
+                    # click(self.LOC.safe_area)
+                    time.sleep(0.2)
+                    pass
+                else:
+                    click(self.LOC.support_class_icons[icon])
+                    logger.debug(f'switch support class to No.{icon}.')
+                # drag scrollbar ,start=(1857, 270), dy=111, end=(1857, 1047)
+                pyautogui.moveTo(*LOC.support_scrollbar_start)
+                drag_num = 5
+                dy_mouse = (LOC.support_scrollbar_end[1] - LOC.support_scrollbar_start[1]) // drag_num
+                for drag_no in range(drag_num):
+                    shot = screenshot()
+                    y_peaks = search_peaks(shot.crop(LOC.support_team_icon_column),
+                                           T.support.crop(LOC.support_team_icon))
+                    for y_peak in y_peaks:
+                        y_offset = y_peak - (LOC.support_team_icon[1] - LOC.support_team_icon_column[1])
+                        flag_ce = not match_ce or _is_match_offset(shot, LOC.support_ce[0], y_offset)
+                        flag_ce_max = not match_ce_max or _is_match_offset(shot, LOC.support_ce_max[0], y_offset)
+                        flag_svt = not match_svt or _is_match_offset(shot, LOC.support_skill[0], y_offset)
+                        flag_skills = not match_skills or False not in [_is_match_offset(shot, loc, y_offset) for loc in
+                                                                        LOC.support_skills[0]]
+                        if flag_ce and flag_ce_max and flag_svt and flag_skills:
+                            click((LOC.width / 2, LOC.support_team_icon_column[1] + y_peak))
+                            while True:
+                                page_no = wait_which_target([self.T.team, self.T.wave1a],
+                                                            [self.LOC.team_cloth, self.LOC.master_skill])
+                                if page_no == 0:
+                                    # print('click start please\r', end='\r')
+                                    logger.debug('entering battle')
+                                    # click(self.LOC.team_start_action, lapse=2)
+                                    time.sleep(5)
+                                    return
+                                elif page_no == 1:
+                                    return
+                    time.sleep(0.2)
+                    pyautogui.dragRel(0, dy_mouse, 0.2)
+            # refresh support
+            refresh_times += 1
+            logger.debug(f'refresh support {refresh_times} times')
+            if refresh_times == 40:
+                send_mail(body='refresh support more than 40 times.', subject='refresh support more than 40 times')
+            wait_which_target(support_page, self.LOC.support_refresh, at=True)
+            wait_which_target(self.T.support_confirm, self.LOC.support_confirm_title, clicking=self.LOC.support_refresh)
+            click(self.LOC.support_refresh_confirm, lapse=2)
 
     def svt_skill_full(self, before, after, who, skill, friend=None, enemy=None):
         # type: (Image.Image,Image.Image,int,int,int,int)->None
@@ -617,3 +694,68 @@ class BattleBase:
             label.g
         CONFIG.task_finished = True
         logger.info(f'>>>>> All {finished} battles "{self.master.quest_name}" finished. <<<<<')
+
+    @with_goto
+    def battle_template(self, support=True):
+        """
+        template procedure of a battle.
+        """
+        master = self.master
+        T = self.master.T
+        LOC = self.master.LOC
+        if not master.quest_name:
+            master.quest_name = 'no battle'
+        master.svt_names = ['X', 'Y', 'Z']
+        master.set_card_weights([2, 3, 1])
+        # ----  NP     Quick    Arts   Buster ----
+        # master.set_card_templates([
+        #     [(1, 6), (3, 3), (2, 3), (1, 2)],
+        #     [(3, 7), (1, 4), (1, 1), (2, 4)],
+        #     [(1, 0), (2, 1), (2, 2), (1, 3)],
+        # ])
+        if CONFIG.jump_battle:
+            CONFIG.jump_battle = False
+            logger.warning('goto label.h')
+            # noinspection PyStatementEffect
+            goto.h
+
+        # noinspection PyStatementEffect
+        label.h
+        wait_which_target(T.support, LOC.support_refresh)
+        if support:
+            master.choose_support_drag(match_svt=True, match_ce=True, match_ce_max=True, match_skills=True,
+                                       switch_classes=(-1,))
+        else:
+            logger.debug('please choose support manually!')
+        time.sleep(2)
+        # wave 1
+        wait_which_target(T.wave1a, LOC.enemies[0])
+        logger.debug(f'Quest {master.quest_name} started...')
+        wait_which_target(T.wave1a, LOC.master_skill)
+        logger.debug('wave 1...')
+        master.set_waves(T.wave1a, T.wave1b)
+        master.svt_skill(1, 1)
+        master.attack([6, 1, 2])
+        # master.auto_attack(nps=6)
+
+        # wave 2
+        wait_which_target(T.wave2a, LOC.enemies[0])
+        wait_which_target(T.wave2a, LOC.master_skill)
+        logger.debug('wave 2...')
+        master.set_waves(T.wave2a, T.wave2b)
+        master.svt_skill(1, 3)
+        click(LOC.enemies[1])
+        chosen_cards = master.auto_attack(nps=6, no_play_card=True)
+        master.play_cards([chosen_cards[i] for i in (2, 0, 1)])
+        # master.attack([6, 1, 2])
+        # master.auto_attack(nps=7)
+
+        # wave 3
+        wait_which_target(T.wave3a, LOC.enemies[1])
+        wait_which_target(T.wave3a, LOC.master_skill)
+        logger.debug('wave 3...')
+        master.set_waves(T.wave3a, T.wave3b)
+        # master.attack([6, 1, 2])
+        master.auto_attack(nps=7)
+        master.xjbd(T.kizuna, LOC.kizuna, mode='dmg', allow_unknown=True)
+        return

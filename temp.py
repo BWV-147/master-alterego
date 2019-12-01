@@ -26,10 +26,11 @@ def generate(base):
 generate('')
 
 # %%
-base_path = 'img/test'  # 'img/gacha'
+base_path = 'img/template-jp'  # 'img/gacha'
 
 
 def capture(fn: str):
+    time.sleep(1)
     full_fp = os.path.join(base_path, fn + '.png')
     if os.path.exists(full_fp):
         print(f'"{full_fp}" exists, replace it.')

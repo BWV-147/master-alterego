@@ -4,7 +4,6 @@ from util.supervisor import supervise_log_time
 
 # main entrance
 def battle_with_check(battle: Battle, check=True):
-    # TODO?: add start server before start battle, if is not listening. the port
     CONFIG.load_config()
     CONFIG.task_finished = False
     CONFIG.log_file = 'logs/log.full.log'
@@ -14,23 +13,23 @@ def battle_with_check(battle: Battle, check=True):
     user_id = CONFIG.id
     if user_id.lower() == 'dell':
         if check:
-            thread = threading.Thread(target=battle.start, name='feather',
-                                      kwargs={"battle_func": battle.christmas_final,
-                                              "folder": 'img/christmas-final',
+            thread = threading.Thread(target=battle.start, name='test',
+                                      kwargs={"battle_func": battle.battle_template,
+                                              "folder": 'img/template-jp',
                                               "battle_num": CONFIG.battle_num,
                                               "max_finished_battles": CONFIG.max_finished_battles,
                                               "apple": CONFIG.apple,
                                               "auto_choose_support": True},
                                       daemon=True)
-            supervise_log_time(thread, 90, mail=True, interval=3)
+            supervise_log_time(thread, 90, mail=False, interval=3)
         else:
-            battle.start(battle_func=battle.no_battle, folder='img/template-jp', apple=CONFIG.apple,
+            battle.start(battle_func=battle.battle_template, folder='img/template-jp', apple=CONFIG.apple,
                          battle_num=CONFIG.battle_num, max_finished_battles=CONFIG.max_finished_battles,
                          auto_choose_support=True)
     elif user_id.lower() == 'msi':
         if check:
             thread = threading.Thread(target=battle.start, name='no_battle',
-                                      kwargs={"battle_func": battle.no_battle,
+                                      kwargs={"battle_func": battle.battle_template,
                                               "folder": 'img/template-jp',
                                               "battle_num": CONFIG.battle_num,
                                               "max_finished_battles": CONFIG.max_finished_battles,
@@ -39,7 +38,7 @@ def battle_with_check(battle: Battle, check=True):
                                       daemon=True)
             supervise_log_time(thread, 200, mail=True, interval=3)
         else:
-            battle.start(battle_func=battle.no_battle, folder='img/template-jp', apple=CONFIG.apple,
+            battle.start(battle_func=battle.battle_template, folder='img/template-jp', apple=CONFIG.apple,
                          battle_num=CONFIG.battle_num, max_finished_battles=CONFIG.max_finished_battles,
                          auto_choose_support=True)
     else:

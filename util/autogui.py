@@ -8,6 +8,7 @@ from skimage.metrics import structural_similarity as sk_compare_ssim
 
 from util.dataset import *
 from util.gui import *
+from util.config import Config
 
 
 def screenshot(region: Sequence = None, filepath: str = None, monitor=CONFIG.monitor) -> Image.Image:
@@ -88,7 +89,7 @@ def compare_regions(img, target, regions=None, threshold=THR, at=None):
 
 
 # 匹配第几个target
-def match_which_target(img, targets, regions, threshold=THR, at=None):
+def match_which_target(img, targets, regions=None, threshold=THR, at=None):
     # type:(Image.Image,Union[Image.Image,Sequence[Image.Image]],Sequence,float,Union[bool,Sequence])->int
     """
     compare img with multi targets, click `at` if matches.
@@ -96,12 +97,16 @@ def match_which_target(img, targets, regions, threshold=THR, at=None):
     """
     if isinstance(targets, Image.Image):
         targets = [targets]
+    if regions is None:
+        regions = [None for _ in targets]
     if isinstance(regions[0], (int, float)):
         regions = [regions]
     assert len(targets) == len(regions), (targets, regions)
     res = -1
     for i in range(len(targets)):
         sim = cal_sim(img, targets[i], regions[i])
+        if Config.temp.get('print_sim') is True:
+            print(f'sim={sim}')
         if sim > threshold:
             res = i
             break
@@ -113,7 +118,7 @@ def match_which_target(img, targets, regions, threshold=THR, at=None):
     return res
 
 
-def is_match_target(img, target, region, threshold=THR, at=None):
+def is_match_target(img, target, region=None, threshold=THR, at=None):
     # type:(Image.Image,Image.Image,Sequence,float,Union[bool,Sequence])->bool
     return match_which_target(img, target, region, threshold, at) >= 0
 

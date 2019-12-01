@@ -1,13 +1,9 @@
 # Alterego Master
-BB の AI です。
+ぐだ子の分身、クラスはオルターエゴでち。
  
 > **Environment setup**
- - Set High DPI: automatically, no need mow
- - pypiwin32: need to restart Pycharm to resolve it.
- - PyUserInput, pyautogui
- - pyhook: [download](https://www.lfd.uci.edu/~gohlke/pythonlibs/#pyhook)<br/>
+ - Python 3.7 on Windows
 
 > TODO
- - support selection slide
  - zihuiti mode
  
