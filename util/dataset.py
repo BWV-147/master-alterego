@@ -1,7 +1,6 @@
 """Data definition, constants
 Coordination: using PIL coordination, (x,y), (left,top,right,bottom), e.g. (0,0,1920-1,1080-1)
 """
-import json
 
 from PIL import Image
 
@@ -22,8 +21,7 @@ class Regions:
 
     # ---------- gacha part ----------
     # in gacha
-    gacha_point = (600, 622)
-    gacha_logo = (78, 222, 191, 315)
+    gacha_point = (600, 650)
     gacha_tab = (1009, 188, 1213, 228)
     gacha_10_initial = (483, 630, 800, 774)
     gacha_reset_action = (1546, 337, 1863, 394)
@@ -31,17 +29,20 @@ class Regions:
     gacha_reset_finish = (800, 811, 1113, 878)
     gacha_empty = (285, 631, 524, 780)  # used when no ticket left
     # move to mailbox
-    box_full_confirm = (1112, 822, 1463, 873)
+    mailbox_full_confirm = (1112, 822, 1463, 873)
 
     # in mailbox
-    box_back = (49, 34, 242, 100)
-    box_get_action = (1509, 535, 1810, 582)
-    box_get_all_action = (1524, 302, 1805, 354)  # WARNING: don't click
+    mailbox_back = (49, 34, 242, 100)
+    mailbox_get_action = (1509, 535, 1810, 582)
+    mailbox_get_all_action = (1524, 302, 1805, 354)  # WARNING: don't click
     # box_items = [(1272, 400), (1272, 600), (1272, 800), (1272, 980)]
-    box_items = [(1231, 365, 1314, 447), (1231, 558, 1314, 640), (1231, 751, 1314, 833), (1231, 944, 1314, 1026)]
-    box_check_column = (1231, 264, 1314, 1079)
-    box_drag_start = (1070, 914)
-    box_drag_end = (1070, 84)
+    mailbox_items = [(1231, 365, 1314, 447), (1231, 558, 1314, 640), (1231, 751, 1314, 833), (1231, 944, 1314, 1026)]
+    mailbox_first_checkbox = (1231, 365, 1314, 447)
+    mailbox_first_icon = (162, 350, 300, 435)
+    mailbox_first_xn = (507, 295, 574, 329)
+    mailbox_check_column = (1231, 264, 1314, 1079)
+    mailbox_drag_start = (1070, 914)
+    mailbox_drag_end = (1070, 250)
     box_history = (365, 30, 522, 102)
     # from mailbox move to bag/enhancement
     bag_full_sell_action = (471, 689, 565, 740)
@@ -84,6 +85,7 @@ class Regions:
                            (925, 175, 973, 209), (1026, 175, 1074, 209)]  # All, 7 common class, extra, mix
     support_scrollbar_start = (1857, 270)
     support_scrollbar_end = (1857, 1047)
+    support_scrollbar_head = (1843, 274, 1973, 296)
     support_ce = ((72, 489, 316, 537), (72, 791, 316, 838))  # 礼装位置
     support_ce_max = ((273, 524, 303, 552), (273, 825, 303, 854))  # 礼装满破的星星
     support_skill = ((1252, 463, 1577, 548), (1252, 764, 1577, 847))  # 技能整体外轮廓
@@ -103,7 +105,7 @@ class Regions:
     wave = (1261, 78, 1281, 106)
     enemies_all = (0, 0, 1080, 128)
     enemies = ((0, 0, 120, 130), (360, 0, 480, 130), (720, 0, 840, 130))  # skill_to_enemies
-
+    dying_clicking_point = (960, 360)
     skills = [
         [(61, 823, 121, 908), (202, 823, 262, 908), (343, 823, 403, 908)],
         [(539, 823, 599, 908), (680, 823, 740, 908), (821, 823, 881, 908)],
@@ -314,7 +316,7 @@ class ImageTemplates:
     def wave3b(self):
         return self.get('wave3b')
 
-    # gacha
+    # ================ gacha ================
     @property
     def gacha_initial(self):
         return self.get('gacha_initial')
@@ -332,16 +334,20 @@ class ImageTemplates:
         return self.get('gacha_reset_finish')
 
     @property
-    def box_full_alert(self):
-        return self.get('box_full_alert')
+    def mailbox_full_alert(self):
+        return self.get('mailbox_full_alert')
 
     @property
-    def box_selected(self):
-        return self.get('box_selected')
+    def mailbox_unselected1(self):
+        return self.get('mailbox_unselected1')
 
     @property
-    def box_unselected(self):
-        return self.get('box_unselected')
+    def mailbox_unselected2(self):
+        return self.get('mailbox_unselected2')
+
+    @property
+    def mailbox_selected(self):
+        return self.get('mailbox_selected')
 
     @property
     def bag_full_alert(self):
@@ -370,47 +376,6 @@ class ImageTemplates:
     @property
     def shop_event_banner_list(self):
         return self.get('shop_event_banner_list')
-
-
-class StatInfo:
-
-    def __init__(self, fp: str = None):
-        self.fp = fp if fp is not None else 'record.json'
-        self.craft_num = 0
-        self.battle_num = 0
-        self.history = []
-        self.durations = []
-        self.load()
-
-    def add_battle(self, craft_dropped: bool = False):
-        self.battle_num += 1
-        # self.durations.append((self.battle_no, duration))
-        if craft_dropped:
-            self.craft_num += 1
-            self.history.append((self.craft_num, self.battle_num))
-        self.save()
-
-    def save(self):
-        directory, filename = os.path.split(self.fp)
-        if filename == '':
-            print(f'invalid filename{self.fp}')
-        if directory != '' and not os.path.exists(directory):
-            os.makedirs(directory)
-        json.dump(self, open(self.fp, 'w'), indent=2, default=lambda x: x.__dict__)
-
-    def load(self):
-        if os.path.exists(self.fp):
-            data = json.load(open(self.fp, 'r'))
-            self.craft_num = data.get('craft_num', 0)
-            self.battle_num = data.get('battle_num', 0)
-            self.history = data.get('history', [])
-            self.durations = data.get('durations', [])
-        else:
-            print(f'StatInfo file {self.fp}  not exist, skip loading')
-
-    def __repr__(self):
-        data = json.dumps(self, ensure_ascii=False, default=lambda x: x.__dict__)
-        return f'{self.__class__.__name__}() {data}'
 
 
 # %% local test functions

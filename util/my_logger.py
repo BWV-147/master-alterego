@@ -4,7 +4,7 @@ import threading
 import time
 from logging.handlers import RotatingFileHandler
 
-from util.config import CONFIG
+from util.config import BaseConfig
 
 NO_LOG_TIME = 'NO_LOG_TIME'
 
@@ -29,12 +29,14 @@ def get_logger(name='log', level=logging.INFO, save=True):
     if name in logging.Logger.manager.loggerDict:
         return logging.getLogger(name)
     # creat a new logger
-    log_path = 'logs/'
+    log_dir = 'logs/'
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
     _logger = logging.getLogger(name)
     _logger.setLevel(logging.DEBUG)
 
     def log_func():
-        CONFIG.log_time = time.time()
+        BaseConfig.log_time = time.time()
 
     log_filter = LogFilter(func=log_func)
     _logger.addFilter(log_filter)
@@ -50,14 +52,14 @@ def get_logger(name='log', level=logging.INFO, save=True):
     _logger.addHandler(console)
 
     if save:
-        fh = RotatingFileHandler(os.path.join(log_path, f'{name}.log'),
+        fh = RotatingFileHandler(os.path.join(log_dir, f'{name}.log'),
                                  encoding='utf8', maxBytes=1024 * 1024, backupCount=3)
         fh.setFormatter(formatter)
         fh.setLevel(level)
         _logger.addHandler(fh)
 
         if level > logging.DEBUG:
-            full_fh = RotatingFileHandler(os.path.join(log_path, f'{name}.full.log'),
+            full_fh = RotatingFileHandler(os.path.join(log_dir, f'{name}.full.log'),
                                           encoding='utf8', maxBytes=1024 * 1024, backupCount=3)
             full_fh.setFormatter(formatter)
             full_fh.setLevel(logging.DEBUG)

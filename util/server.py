@@ -1,6 +1,8 @@
+import html
 import io
 import math
 import os
+import re
 import sys
 import time
 
@@ -10,6 +12,11 @@ from flask import Flask, request, Response
 PROJECT_NAME = 'master-alterego'
 project_dir = os.path.join(os.getcwd().split(sep=PROJECT_NAME)[0], PROJECT_NAME)
 print(f'Project dir: {project_dir}')
+os.chdir(project_dir)
+print(f'cwd: {os.getcwd()}\n')
+
+# change cwd before import custom packages
+from util.autogui import screenshot
 
 app = Flask(__name__, static_folder=os.path.join(project_dir, 'img'), static_url_path='/static')
 
@@ -21,8 +28,17 @@ def index():
 
 @app.route('/pages')
 def pages():
-    page_names = ['logs', 'drops']
+    page_names = ['logs', 'drops', 'screenshot']
     return '\n'.join([f'<li><a href="/{p}">{p}</a></li>' for p in page_names])
+
+
+@app.route('/screenshot')
+def get_screenshot():
+    img: Image.Image = screenshot()
+    img_file = io.BytesIO()
+    img.resize((1920 // 2, 1080 // 2)).save(img_file, format='jpeg', quality=40)
+    resp = Response(img_file.getvalue(), mimetype="image/jpeg")
+    return resp
 
 
 @app.route('/logs')
@@ -54,7 +70,7 @@ def show_log(log_name):
             end = -page * size
             if end == 0:
                 end = None
-            records = [f'<p>{r}</p>' for r in all_log[start:end]]
+            records = [f'<p>{html.escape(r)}</p>' for r in all_log[start:end]]
         page_link_html = '&nbsp;&nbsp;'.join(
             [f'<a href="/log/{log_name}?page={i}&size={size}">{i}</a>' for i in range(min(page_num, 20))])
         resp = f'Back to <a href="/logs">logs</a><br>' \
@@ -77,7 +93,7 @@ def drops():
     lines = []
     img_files = os.listdir(os.path.join(project_dir, drops_dir))
     img_files = [f for f in img_files if os.path.isfile(os.path.join(project_dir, drops_dir, f))]
-    img_files.sort(reverse=True)
+    img_files.sort(key=lambda f: (re.findall(r'-([\d\-]+)-', f) or [''])[0], reverse=True)
     page_num = math.ceil(len(img_files) / size)
     page = min(page_num - 1, page)
     page_links = [f'&nbsp<a href="/drops?page={i}&size={size}">{i}</a>&nbsp;' for i in range(page_num)]
@@ -104,10 +120,10 @@ def drops():
 def show_drop_img(img_name):
     print(f'access drop img: {img_name}')
     drop_dir = 'img/_drops'
-    img: Image.Image = Image.open(os.path.join(project_dir, drop_dir, img_name))
-    img_file = io.BytesIO()
-    img.resize((1920 // 2, 1080 // 2)).save(img_file, format='jpeg', quality=40)
     try:
+        img: Image.Image = Image.open(os.path.join(project_dir, drop_dir, img_name))
+        img_file = io.BytesIO()
+        img.resize((1920 // 2, 1080 // 2)).save(img_file, format='jpeg', quality=40)
         resp = Response(img_file.getvalue(), mimetype="image/jpeg")
         return resp
     except Exception as e:
@@ -127,7 +143,6 @@ def last_crash():
 
 
 if __name__ == '__main__':
-    print(sys.argv)
     if len(sys.argv) > 1 and str(sys.argv[1]).isdigit():
         port = int(sys.argv[1])
     else:

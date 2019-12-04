@@ -1,28 +1,37 @@
 import ctypes
 import random
+from pprint import pprint
 
 import pyautogui
+from mss import mss
 
 from util.base import *
+from util.config import *
 
 
 def check_sys_admin(admin=True):
-    # set dpi awareness & check admin permission
-    # useless in Python Console of Pycharm
-    print('HINT: make sure "Config.offset_x/y" is set properly')
+    # check admin permission & set process dpi awareness
+    # please run cmd/powershell or Pycharm as administrator.
     # SetProcessDpiAwareness: see
     # https://docs.microsoft.com/zh-cn/windows/win32/api/shellscalingapi/ne-shellscalingapi-process_dpi_awareness
     print('set process dpi awareness = PROCESS_PER_MONITOR_DPI_AWARE')
     ctypes.windll.shcore.SetProcessDpiAwareness(2)
-    if admin:
-        if ctypes.windll.shell32.IsUserAnAdmin() == 0:
+    if ctypes.windll.shell32.IsUserAnAdmin() == 0:
+        if admin:
             print('Please run cmd/Pycharm as admin to click inside programs with admin permission(e.g. MuMu).')
             # To run a new process as admin, no effect in Pycharm's Python Console mode.
             # print('applying admin permission in a new process, and no effect when in console mode.')
             # ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, __file__, None, 1)
-            raise PermissionError('Run as admin')
+            raise PermissionError('Please run as administrator!')
         else:
-            print('already admin')
+            print('Running without admin permission.\n'
+                  'Operations (e.g. click) with admin programs will take no effects!')
+    else:
+        print('already admin')
+    sct = mss()
+    print('** Monitors information **')
+    pprint(sct.monitors)
+    print('WARNING: make sure "config.monitor/offset_x/y" is set properly')
 
 
 # %% win32: mouse & screen pixel
@@ -49,8 +58,8 @@ def click(xy: Sequence = None, lapse=0.5, r=2):
             x, y = ((xy[0] + xy[2]) / 2, (xy[1] + xy[3]) / 2)
         else:
             raise ValueError(f'xy=${xy}: len(xy) should be 2 or 4.')
-        x += random.randint(-r, r) + CONFIG.offset_x
-        y += random.randint(-r, r) + CONFIG.offset_y
+        x += random.randint(-r, r) + config.offset_x
+        y += random.randint(-r, r) + config.offset_y
         move_mouse(x, y)
         # print('click (%d, %d)' % (x, y))
     pyautogui.click()

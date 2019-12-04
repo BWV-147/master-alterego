@@ -1,41 +1,29 @@
 # %%
-from pprint import pprint
-
 from util.master import *
 
-sct = mss()
-pprint(sct.monitors)
-
+check_sys_admin()
 
 # %%
-def generate(base):
-    filenames = os.listdir(base)
-    for filename in filenames:
-        filepath = os.path.join(base, filename)
-        if os.path.isfile(filepath) and filename.endswith('.png'):
-            key = filename[:-4]
-            s = f"""# %%\ncapture('{key}')"""
-            s2 = f"""
-    @property
-    def {key}(self):
-        return self.get('{key}')"""
-            print(s2)
+# base_path = 'img/xmas-von2'
 
 
-# %%
-generate('')
-
-# %%
-base_path = 'img/template-jp'  # 'img/gacha'
+base_path = 'img/gacha-jp'
 
 
 def capture(fn: str):
     time.sleep(1)
     full_fp = os.path.join(base_path, fn + '.png')
     if os.path.exists(full_fp):
-        print(f'"{full_fp}" exists, replace it.')
+        print(f'! Replace: "{full_fp}"')
+    else:
+        print(f'   Saved : "{full_fp}" saved')
     screenshot().save(full_fp)
 
+
+# %%
+quest_name = 'xmas-von2'
+png_fn = f'img/_drops/rewards-{quest_name}-{time.strftime("%m%d-%H-%M-%S")}'
+screenshot().save(f'{png_fn}.png')
 
 # %% ------------- battle part --------------
 capture('quest')
@@ -59,8 +47,13 @@ capture('cards1')
 capture('wave2a')
 # %%
 capture('wave2b')
-# %%
+# %% --- order change ----
 capture('order_change')
+# %%
+capture('wave2c')
+# %%
+capture('wave2d')
+# --- end order change ---
 # %%
 capture('cards2')
 # %%
@@ -94,10 +87,6 @@ capture('cards7')
 capture('cards8')
 # %%
 capture('cards9')
-# %%
-capture('wave2c')
-# %%
-capture('wave2d')
 
 # %% -------------- gacha part --------------
 capture('gacha_initial')
@@ -108,11 +97,13 @@ capture('gacha_reset_confirm')
 # %%
 capture('gacha_reset_finish')
 # %%
-capture('box_full_alert')
+capture('mailbox_full_alert')
+# %% sliver card ×1
+capture('mailbox_unselected1')
+# %% sliver card ×2
+capture('mailbox_unselected2')
 # %%
-capture('box_unselected')
-# %%
-capture('box_selected')
+capture('mailbox_selected')
 # %%
 capture('bag_full_alert')
 # %%
@@ -125,6 +116,8 @@ capture('bag_sell_confirm')
 capture('bag_sell_finish')
 # %%
 capture('shop')
+# %%
+capture('shop_event_banner_list')
 
 # %% temp
 

@@ -1,17 +1,15 @@
 """Image processing and computation"""
 import cv2
 import numpy as np
-from mss import mss
 from scipy.signal import find_peaks
 from skimage.feature import match_template as sk_match_template
 from skimage.metrics import structural_similarity as sk_compare_ssim
 
 from util.dataset import *
 from util.gui import *
-from util.config import Config
 
 
-def screenshot(region: Sequence = None, filepath: str = None, monitor=CONFIG.monitor) -> Image.Image:
+def screenshot(region: Sequence = None, filepath: str = None, monitor=config.monitor) -> Image.Image:
     """
     take screenshot of multi-monitors. set python.exe and pythonw.exe high dpi first!(see README.md)
     :param region: region inside monitor
@@ -105,7 +103,7 @@ def match_which_target(img, targets, regions=None, threshold=THR, at=None):
     res = -1
     for i in range(len(targets)):
         sim = cal_sim(img, targets[i], regions[i])
-        if Config.temp.get('print_sim') is True:
+        if BaseConfig.temp.get('print_sim') is True:
             print(f'sim={sim}')
         if sim > threshold:
             res = i

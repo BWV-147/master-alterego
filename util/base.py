@@ -1,6 +1,6 @@
-import time
 # noinspection PyUnresolvedReferences
 from typing import List, Tuple, Union, Dict, Callable, Sequence
+
 from util.my_logger import *
 
 
@@ -11,6 +11,12 @@ def convert_to_list(items):
         return list(items)
     else:
         return [items]
+
+
+def terminate_cur_child_thread():
+    if threading.current_thread().name != 'MainThread':
+        BaseConfig.task_finished = True
+        # how to stop?
 
 
 class Timer:

@@ -16,14 +16,14 @@ def supervise_log_time(thread: threading.Thread, secs: float = 60, mail=False, i
     assert thread is not None, thread
 
     def _overtime():
-        return time.time() - CONFIG.log_time > secs
+        return time.time() - BaseConfig.log_time > secs
 
     logger.info(f'start supervising thread {thread.name}...')
     thread.start()
     while not thread.is_alive():
         time.sleep(0.01)
     logger.info(f'Thread-{thread.ident}({thread.name}) started...')
-    CONFIG.log_time = time.time()
+    BaseConfig.log_time = time.time()
     # from here, every logging should have arg: NO_LOG_TIME, otherwise endless loop.
     while True:
         # every case: stop or continue
@@ -32,7 +32,7 @@ def supervise_log_time(thread: threading.Thread, secs: float = 60, mail=False, i
             time.sleep(interval)
             continue
         # case 2: thread finished normally - stop supervision
-        if not thread.is_alive() and CONFIG.task_finished:
+        if not thread.is_alive() and BaseConfig.task_finished:
             # thread finished
             logger.debug(f'Thread-{thread.ident}({thread.name}) finished. Stop supervising.')
             if mail:
@@ -41,12 +41,12 @@ def supervise_log_time(thread: threading.Thread, secs: float = 60, mail=False, i
 
         # something wrong
         # case 3: network error - click "retry" and continue
-        if CONFIG.img_net is not None and CONFIG.loc_net is not None:
+        if config.img_net is not None and config.loc_net is not None:
             shot = screenshot()
-            if is_match_target(shot, CONFIG.img_net, CONFIG.loc_net[0]) and \
-                    is_match_target(shot, CONFIG.img_net, CONFIG.loc_net[1]):
+            if is_match_target(shot, config.img_net, config.loc_net[0]) and \
+                    is_match_target(shot, config.img_net, config.loc_net[1]):
                 logger.warning('Network error! click "retry" button', NO_LOG_TIME)
-                click(CONFIG.loc_net[1], lapse=5)
+                click(config.loc_net[1], lapse=5)
                 continue
         # case 4: unrecognized error - waiting user to handle (in 30 secs)
         loops = 15
@@ -65,7 +65,7 @@ def supervise_log_time(thread: threading.Thread, secs: float = 60, mail=False, i
             else:
                 # case 4.2: wrong! kill thread and stop
                 err_msg = f'Thread-{thread.ident}({thread.name}):' \
-                          f' Time run out! lapse={time.time() - CONFIG.log_time:.2f}(>{secs}) secs.'
+                          f' Time run out! lapse={time.time() - BaseConfig.log_time:.2f}(>{secs}) secs.'
                 print(err_msg)
                 if mail:
                     subject = f'[{thread.name}]something went wrong!'
@@ -102,8 +102,8 @@ def send_mail(body, subject=None, receiver=None):
     if threading.current_thread().name != 'MainThread':
         subject = f'[{threading.current_thread().name}]{subject}'
     subject = f'{time.strftime("[%H:%M]")}{subject}'
-    if CONFIG.log_file is not None and os.path.exists(CONFIG.log_file):
-        with open(CONFIG.log_file, encoding='utf8') as fd:
+    if config.log_file is not None and os.path.exists(config.log_file):
+        with open(config.log_file, encoding='utf8') as fd:
             lines = fd.readlines()
             n = len(lines)
             recent_records = lines[n + 1 - min(10, n):n + 1]
@@ -111,7 +111,7 @@ def send_mail(body, subject=None, receiver=None):
 <b>{body}</b><br>
 Computer name: <b>{socket.getfqdn(socket.gethostname())}</b><br>
 ----------------------------------<br>
-<b>Recent log({CONFIG.log_file})</b>:<br>
+<b>Recent log({config.log_file})</b>:<br>
 {'<br>'.join(recent_records)}<br>
 ----------------------------------<br>
 <b>Screenshot before shutdown</b>:<br>
@@ -119,17 +119,17 @@ Computer name: <b>{socket.getfqdn(socket.gethostname())}</b><br>
 """
     from util.autogui import screenshot
     crash_fp = 'img/crash.jpg'
-    screenshot(monitor=CONFIG.monitor).resize((1920 // 2, 1080 // 2)).save(crash_fp, format='jpeg', quality=40)
+    screenshot(monitor=config.monitor).resize((1920 // 2, 1080 // 2)).save(crash_fp, format='jpeg', quality=40)
     print(f'\n--------- Email --------------\n'
           f'subject: "{subject}"'
           f'body:\n{body}'
           f'----------------------------\n')
     if receiver is None:
-        receiver = CONFIG.receiver
-    if None in (receiver, CONFIG.sender, CONFIG.password):
+        receiver = config.receiver
+    if None in (receiver, config.sender, config.password):
         print(f'----Email account info needs to update.-----\n'
               f'receiver: {receiver}\n'
-              f'sender:{CONFIG.sender}\n'
+              f'sender:{config.sender}\n'
               f'password:{"*****"}'
               f'----------------------------\n')
         return
@@ -137,7 +137,7 @@ Computer name: <b>{socket.getfqdn(socket.gethostname())}</b><br>
     # Email object
     msg = MIMEMultipart()
     msg['Subject'] = subject
-    msg['From'] = formataddr([CONFIG.sender_name, CONFIG.sender])
+    msg['From'] = formataddr([config.sender_name, config.sender])
     msg['To'] = receiver
     msg.attach(MIMEText(body, 'html', 'utf-8'))
     with open(crash_fp, 'rb') as fd:
@@ -149,11 +149,11 @@ Computer name: <b>{socket.getfqdn(socket.gethostname())}</b><br>
     while retry_time < 5:
         retry_time += 1
         try:
-            server = smtplib.SMTP_SSL(CONFIG.server_host, CONFIG.server_port)  # 邮件服务器及端口号
+            server = smtplib.SMTP_SSL(config.server_host, config.server_port)  # 邮件服务器及端口号
             # server.set_debuglevel(1)
             try:
-                server.login(CONFIG.sender, CONFIG.password)
-                result = server.sendmail(CONFIG.sender, receiver, msg.as_string())
+                server.login(config.sender, config.password)
+                result = server.sendmail(config.sender, receiver, msg.as_string())
                 if result == {}:
                     logger.warning(f'send success', NO_LOG_TIME)
                 else:
@@ -164,7 +164,7 @@ Computer name: <b>{socket.getfqdn(socket.gethostname())}</b><br>
                 logger.warning(f'send error, error_type={type(e)},\ne={e}', NO_LOG_TIME)
                 server.quit()
         except Exception as e:
-            logger.warning(f'connect server "{(CONFIG.server_host, CONFIG.server_port)}" failed,'
+            logger.warning(f'connect server "{(config.server_host, config.server_port)}" failed,'
                            f' error_type={type(e)},\ne={e}', NO_LOG_TIME)
             logger.info(f'retry sending mail after 5 sec...({retry_time}/5 times)', NO_LOG_TIME)
         time.sleep(5)

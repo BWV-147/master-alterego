@@ -6,7 +6,7 @@ additional, Card class included.
 from goto import with_goto
 
 from util.autogui import *
-from util.config import Config
+from util.config import BaseConfig
 from util.supervisor import send_mail
 
 
@@ -56,42 +56,51 @@ class Master:
             self.set_card_templates(cards_loc)
 
     # procedures
-    def eat_apple(self, apple=-1):
-        if apple == -1:
-            CONFIG.task_finished = True
-            logger.debug("don't eat apple, all battles finished. Existing...")
-            exit()
-        if apple not in (0, 1, 2, 3):
-            logger.debug('invalid apple')
-            return
-        if apple == 0:  # 不舍得吃彩苹果
-            apple = 3
-        # wait_which_target(self.T.apple_page, self.LOC.apple_page)
-        while True:
-            shot = screenshot()
-            page_no = match_which_target(shot, [self.T.apple_page, self.T.apple_confirm, self.T.support],
-                                         [self.LOC.apples[apple], self.LOC.apple_confirm, self.LOC.support_refresh])
-            if page_no == 0:
-                logger.debug(f"eating {['Colorful', 'Gold', 'Silver', 'Cropper'][apple]} apple...")
-                click(self.LOC.apples[apple], lapse=1)
-            elif page_no == 1:
-                click(self.LOC.apple_confirm, lapse=1)
-            elif page_no == 2:
-                break
+    def eat_apple(self, apples=None):
+        apples = convert_to_list(apples)
+        if config.stop_around_3am:
+            t = time.localtime()
+            if t.tm_hour == 2 and t.tm_min > 45:
+                logger.info('Around 3am, stop eating apples and battles.')
+                BaseConfig.task_finished = True
+                return False
+        if len(apples) > 0:
+            for apple in apples:
+                if apple not in (0, 1, 2, 3):
+                    break
+                if apple == 0:  # 不舍得吃彩苹果
+                    apple = 3
+                if is_match_target(screenshot(), self.T.apple_page, self.LOC.apples[apple]):
+                    eaten = False
+                    while True:
+                        shot = screenshot()
+                        page_no = match_which_target(shot, [self.T.apple_page, self.T.apple_confirm, self.T.support],
+                                                     [self.LOC.apples[apple], self.LOC.apple_confirm,
+                                                      self.LOC.support_refresh])
+                        if page_no == 0:
+                            if not eaten:
+                                logger.debug(f"eating {['Colorful', 'Gold', 'Silver', 'Cropper'][apple]} apple...")
+                            eaten = True
+                            click(self.LOC.apples[apple], lapse=1)
+                        elif page_no == 1:
+                            click(self.LOC.apple_confirm, lapse=1)
+                        elif page_no == 2:
+                            break
+                    return True
 
-    # noinspection DuplicatedCode
+                    # noinspection DuplicatedCode
+
+        logger.info(f'apples={apples}, don\'t eat apple or no left apples, task finish.')
+        BaseConfig.task_finished = True
+        return False
+
     def choose_support(self, match_svt=True, match_ce=False, match_ce_max=False, match_skills=None, img=None,
                        switch_classes=None):
         # type:(bool,bool,bool,List[int],Image.Image,Sequence)->None
         """
-        choose support from the first two supports, no dragging scrollbar.
-        :param match_svt:
-        :param match_ce: whether match CE, please set to False if jp server since CE could be filtered in jp server
-        :param match_ce_max: whether match CE max star
-        :param match_skills: skills to match, a list of int value (1,2,3)
-        :param img: support page img
-        :param switch_classes: e.g. (0,5,...) means switch between ALL and CASTER.
-                        ALL=0, Saber-Berserker=1-7, extra=8, Mixed=9. if empty, set (-1,), click Regions.safe_area
+        Choose support from the *first two* supports, no dragging scrollbar.
+        The two supports in template(T.support) should be the same.
+        Args: see self.choose_support_drag
         """
         logger.debug('choosing support...')
         support_page = self.T.support if img is None else img
@@ -164,11 +173,11 @@ class Master:
                             switch_classes=None):
         # type:(bool,bool,bool,bool,Image.Image,Sequence)->None
         """
-        choose support from the whole support list, drag scrollbar to show all supports.
-        :param match_svt:
+        Choose the *first* support in T.support from the whole support list, drag scrollbar to show all supports.
+        :param match_svt: match the whole rect of 3 skills
         :param match_ce: whether match CE, please set to False if jp server since CE could be filtered in jp server
         :param match_ce_max: whether match CE max star
-        :param match_skills: all skills to match
+        :param match_skills: match every skill icon
         :param img: support page img
         :param switch_classes: e.g. (0,5,...) means switch between ALL and CASTER.
                         ALL=0, Saber-Berserker=1-7, extra=8, Mixed=9. if empty, set (-1,), click Regions.safe_area
@@ -198,7 +207,7 @@ class Master:
                     logger.debug(f'switch support class to No.{icon}.')
                 # drag scrollbar ,start=(1857, 270), dy=111, end=(1857, 1047)
                 pyautogui.moveTo(*LOC.support_scrollbar_start)
-                drag_num = 5
+                drag_num = 5 if is_match_target(screenshot(), T.support, LOC.support_scrollbar_head, 0.8) else 1
                 dy_mouse = (LOC.support_scrollbar_end[1] - LOC.support_scrollbar_start[1]) // drag_num
                 for drag_no in range(drag_num):
                     shot = screenshot()
@@ -216,11 +225,13 @@ class Master:
                             while True:
                                 page_no = wait_which_target([self.T.team, self.T.wave1a],
                                                             [self.LOC.team_cloth, self.LOC.master_skill])
+                                time.sleep(0.3)
                                 if page_no == 0:
                                     # print('click start please\r', end='\r')
                                     logger.debug('entering battle')
-                                    # click(self.LOC.team_start_action, lapse=2)
-                                    time.sleep(5)
+                                    click(self.LOC.team_start_action)
+                                    click(self.LOC.team_start_action, lapse=2)
+                                    time.sleep(2)
                                     return
                                 elif page_no == 1:
                                     return
@@ -275,8 +286,8 @@ class Master:
         self.svt_skill_full(self.wave_a, self.wave_b, who, skill, friend, enemy)
         return self
 
-    def master_skill(self, before, skill, friend=None, enemy=None, order_change=None, order_change_img=None):
-        # type:(Image.Image,int,int,int,Tuple[int,int],Image.Image)->Master
+    def master_skill(self, skill, friend=None, enemy=None, order_change=None, order_change_img=None):
+        # type:(int,int,int,Tuple[int,int],Image.Image)->Master
         """
         Master skill, especially order_change = (svt1:1~3,svt2:4~6) if not None
         """
@@ -291,6 +302,7 @@ class Master:
             else f' order change {order_change}' if order_change else ''
         logger.debug(f'Master skill {skill}{s}.')
 
+        before = self.wave_a
         region = self.LOC.master_skills[skill - 1]
         if enemy is not None:
             click(self.LOC.enemies[enemy - 1])
@@ -367,17 +379,19 @@ class Master:
                 self.play_cards(locs_or_cards)
                 break
 
-    def play_cards(self, locs_or_cards: Union[List[Card], List[int]]):
+    def play_cards(self, cards: Union[List[Card], List[int]]):
         """
-        :param locs_or_cards: list of locs or cards
+        :param cards: list of locs or cards
         :return:
         """
-        # assert len(locs_or_cards) >= 3, locs_or_cards
-        if len(locs_or_cards) < 3:
-            print(f'warning! Less then 3 cards to play: {self.str_cards(locs_or_cards)}')
-            # time.sleep(1)
-        logger.debug(f'Attack cards: {self.str_cards(locs_or_cards)}')
-        locs: List[int] = [c.loc if isinstance(c, Card) else c for c in locs_or_cards]
+        cards_str_list = self.str_cards(cards)
+        if len(cards) < 3:
+            print(f'warning! Less then 3 cards to play: {cards_str_list}')
+        if isinstance(cards[0], Card) and len(cards) >= 3 and cards[0].svt == cards[1].svt == cards[2].svt:
+            cards_str_list.append('Extra')
+
+        logger.debug(f'Attack cards: {cards_str_list}')
+        locs: List[int] = [c.loc if isinstance(c, Card) else c for c in cards]
         for loc in locs:
             # print(f'click card {loc}')
             click(self.LOC.cards[loc - 1])
@@ -523,17 +537,17 @@ class Master:
         logger.debug(f'chosen cards: {self.str_cards(chosen_cards)}')
         return chosen_cards
 
-    def str_cards(self, cards: Union[List[Card], Dict[int, Card], List[int]]):
+    def str_cards(self, cards: Union[List[Card], Dict[int, Card], List[int]]) -> List[Union[str, int]]:
         if isinstance(cards, dict):
             cards: List[Card] = list(cards.values())
             cards.sort(key=lambda c: c.loc)
         elif isinstance(cards[0], int):
-            return str(cards)
+            return cards
         s = []
         # print('ready to print cards:', cards)
         for card in cards:
             s.append(self.svt_names[card.svt - 1] + '-' + '宝QAB'[card.color])
-        return str(s)
+        return s
 
     # set battle data in self.set_battle_data()
     def set_card_templates(self, locs: List):
@@ -562,7 +576,7 @@ class Master:
         :param color_weight: used when weight size is <6*1
         """
         self.weights = {}
-        if isinstance(weights[0], int):
+        if isinstance(weights[0], (int, float)):
             wq, wa, wb = color_weight.find('Q') + 1, color_weight.find('A') + 1, color_weight.find('B') + 1
             assert wq > 0 and wa > 0 and wb > 0, color_weight
             for i, w in enumerate(weights):
@@ -579,6 +593,161 @@ class Master:
 class BattleBase:
     def __init__(self):
         self.master = Master()
+
+    @with_goto
+    def start(self, battle_func, battle_num, apples=None):
+        T = self.master.T
+        LOC = self.master.LOC
+        timer = Timer()
+        battle_func(True)
+        BaseConfig.img_net = T.net_error
+        BaseConfig.loc_net = LOC.net_error
+        BaseConfig.task_finished = False
+        finished_num = 0
+        actual_max_num = min(battle_num, config.max_finished_battles - config.finished_battles)
+        while finished_num < actual_max_num:
+            finished_num += 1
+            logger.info(f'>>>>> Battle "{self.master.quest_name}" No.{finished_num}/{actual_max_num} <<<<<')
+            if config.jump_start:
+                config.jump_start = False
+                logger.warning('in start: goto label.g')
+                # noinspection PyStatementEffect
+                goto.g
+            if not config.jump_battle:
+                while True:
+                    shot = screenshot()
+                    res = search_target(shot.crop(LOC.quest_outer), T.quest.crop(LOC.quest))
+                    if res[0] > THR:
+                        click(LOC.quest_c)
+                    elif is_match_target(shot, T.apple_page, LOC.apple_page):
+                        if self.master.eat_apple(apples) is False:
+                            return
+                    elif is_match_target(shot, T.bag_full_alert, LOC.bag_full_sell_action):
+                        # usually used in hunting events.
+                        logger.info('bag full, to sell...')
+                        click(LOC.bag_full_sell_action)
+                        self.sell(1)
+                        break
+                    elif is_match_target(shot, T.support, LOC.support_refresh):
+                        break
+                    time.sleep(0.5)
+            battle_func()
+            wait_which_target(T.rewards, LOC.finish_qp, clicking=LOC.finish_qp, lapse=0.5)
+            click(LOC.rewards_show_num, lapse=1)
+            # check reward_page has CE dropped or not
+            dt = timer.lapse()
+            logger.info(f'--- Battle {finished_num}/{actual_max_num} finished,'
+                        f' time = {int(dt // 60)} min {int(dt % 60)} sec.'
+                        f' (total {config.finished_battles})')
+            rewards = screenshot()
+            craft_dropped = is_match_target(rewards, T.rewards, LOC.finish_craft)
+            png_fn = f'img/_drops/rewards-{self.master.quest_name}-{time.strftime("%m%d-%H%M")}'
+            if craft_dropped and config.check_drop:
+                config.count_battle(True)
+                logger.warning(f'{config.craft_num}th craft dropped!!!')
+                rewards.save(f'{png_fn}-drop{config.craft_num}.png')
+                if config.craft_num in config.enhance_craft_nums:
+                    send_mail(f'NEED Enhancement! {config.craft_num}th craft dropped!!!')
+                    logger.warning('need to change party or enhance crafts. Exit.')
+                    BaseConfig.task_finished = True
+                    return
+                else:
+                    send_mail(f'{config.craft_num}th craft dropped!!!')
+            else:
+                config.count_battle(False)
+                rewards.save(f"{png_fn}.png")
+            # ready to restart a battle
+            click(LOC.finish_next)
+            while True:
+                shot = screenshot()
+                if search_target(shot.crop(LOC.quest_outer), T.quest.crop(LOC.quest))[0] > THR:
+                    break
+                elif is_match_target(shot, T.restart_quest, LOC.restart_quest_yes):
+                    click(LOC.restart_quest_yes)
+                    logger.debug('restart the same battle')
+                    break
+                elif is_match_target(shot, T.apply_friend, LOC.apply_friend):
+                    click(LOC.apply_friend_deny)
+                    logger.debug('not to apply friend')
+                time.sleep(0.5)
+            # noinspection PyStatementEffect
+            label.g
+        BaseConfig.task_finished = True
+        logger.info(f'>>>>> All {finished_num} battles "{self.master.quest_name}" finished. <<<<<')
+        if config.mail:
+            send_mail(f'All {finished_num} battles "{self.master.quest_name}" finished')
+
+    @with_goto
+    def battle_template(self, pre_process=False):
+        """
+        template procedure of a battle.
+        """
+        master = self.master
+        T = master.T
+        LOC = master.LOC
+
+        # pre-processing: only configure base info
+        master.quest_name = 'template'
+        T.read_templates('img/template-jp')
+        master.svt_names = ['X', 'Y', 'Z']
+        if pre_process:
+            return
+
+        # battle part
+        master.set_card_weights([2, 3, 1])
+        # ----  NP     Quick    Arts   Buster ----
+        # master.set_card_templates([
+        #     [(1, 6), (3, 3), (2, 3), (1, 2)],
+        #     [(3, 7), (1, 4), (1, 1), (2, 4)],
+        #     [(1, 0), (2, 1), (2, 2), (1, 3)],
+        # ])
+        if config.jump_battle:
+            config.jump_battle = False
+            logger.warning('goto label.h')
+            # noinspection PyStatementEffect
+            goto.h
+
+        # noinspection PyStatementEffect
+        label.h
+        wait_which_target(T.support, LOC.support_refresh)
+        support = True
+        if support:
+            master.choose_support_drag(match_svt=True, match_ce=True, match_ce_max=True, match_skills=True,
+                                       switch_classes=(-1,))
+        else:
+            logger.debug('please choose support manually!')
+        time.sleep(2)
+        # wave 1
+        wait_which_target(T.wave1a, LOC.enemies[0])
+        logger.debug(f'Quest {master.quest_name} started...')
+        wait_which_target(T.wave1a, LOC.master_skill)
+        logger.debug('wave 1...')
+        master.set_waves(T.wave1a, T.wave1b)
+        master.svt_skill(1, 1)
+        master.attack([6, 1, 2])
+        # master.auto_attack(nps=6)
+
+        # wave 2
+        wait_which_target(T.wave2a, LOC.enemies[0])
+        wait_which_target(T.wave2a, LOC.master_skill)
+        logger.debug('wave 2...')
+        master.set_waves(T.wave2a, T.wave2b)
+        master.svt_skill(1, 3)
+        # master.attack([6, 1, 2])
+        click(LOC.enemies[1])
+        chosen_cards = master.auto_attack(nps=6, no_play_card=True)
+        master.play_cards([chosen_cards[i] for i in (2, 0, 1)])
+        # master.auto_attack(nps=7)
+
+        # wave 3
+        wait_which_target(T.wave3a, LOC.enemies[1])
+        wait_which_target(T.wave3a, LOC.master_skill)
+        logger.debug('wave 3...')
+        master.set_waves(T.wave3a, T.wave3b)
+        # master.attack([6, 1, 2])
+        master.auto_attack(nps=7)
+        master.xjbd(T.kizuna, LOC.kizuna, mode='dmg', allow_unknown=True)
+        return
 
     def sell(self, num=100):
         """
@@ -612,150 +781,4 @@ class BattleBase:
         wait_which_target(T.quest, LOC.quest_master_avatar)
         click(LOC.quest_c)
         logger.debug('from shop back to supporting')
-        return
-
-    @with_goto
-    def start(self, battle_func, folder, battle_num=10, max_finished_battles=1000, apple=-1, auto_choose_support=True):
-        T = self.master.T
-        LOC = self.master.LOC
-        timer = Timer()
-        T.read_templates(folder)
-        Config.img_net = T.net_error
-        Config.loc_net = LOC.net_error
-        CONFIG.task_finished = False
-        finished = 0
-        info = StatInfo()
-        actual_num = min(battle_num, max_finished_battles - info.battle_num)
-        while finished < actual_num:
-            finished += 1
-            logger.info(f'>>>>> Battle "{self.master.quest_name}" No.{finished}/{actual_num} <<<<<')
-            if CONFIG.jump_start:
-                CONFIG.jump_start = False
-                logger.warning('outer: goto label.g')
-                # noinspection PyStatementEffect
-                goto.g
-            if not CONFIG.jump_battle:
-                while True:
-                    shot = screenshot()
-                    res = search_target(shot.crop(LOC.quest_outer), T.quest.crop(LOC.quest))
-                    # print(f'res={res}')
-                    if res[0] > THR:
-                        click(LOC.quest_c)
-                    elif is_match_target(shot, T.apple_page, LOC.apple_page):
-                        self.master.eat_apple(apple)
-                    elif is_match_target(shot, T.bag_full_alert, LOC.bag_full_sell_action):
-                        logger.debug('bag full, to sell...')
-                        click(LOC.bag_full_sell_action)
-                        self.sell(1)
-                        break
-                    elif is_match_target(shot, T.support, LOC.support_refresh):
-                        break
-                    time.sleep(0.5)
-            battle_func(auto_choose_support)
-            wait_which_target(T.rewards, LOC.finish_qp, clicking=LOC.finish_qp, lapse=0.5)
-            click(LOC.rewards_show_num, lapse=1)
-            # check reward_page has CE dropped or not
-            rewards = screenshot()
-            logger.info('battle finished, checking rewards.')
-            craft_dropped = is_match_target(rewards, T.rewards, LOC.finish_craft)
-            png_fn = f'img/_drops/rewards-{self.master.quest_name}-{time.strftime("%m%d-%H-%M-%S")}'
-            if craft_dropped and CONFIG.check_drop:
-                info.add_battle(True)
-                logger.warning(f'{info.craft_num}th craft dropped!!!')
-                rewards.save(f'{png_fn}-drop{info.craft_num}.png')
-                if info.craft_num in CONFIG.enhance_craft_nums:
-                    send_mail(f'NEED Enhancement! {info.craft_num}th craft dropped!!!')
-                    logger.warning('need to change party or enhance crafts. Exit.')
-                    exit()
-                else:
-                    send_mail(f'{info.craft_num}th craft dropped!!!')
-            else:
-                info.add_battle(False)
-                rewards.save(f"{png_fn}.png")
-            dt = timer.lapse()
-            CONFIG.count_battle()
-            logger.info(f'--- Battle {finished}/{actual_num} finished, time = {int(dt // 60)} min {int(dt % 60)} sec.'
-                        + f' (total {info.battle_num})')
-            # ready to restart a battle
-            click(LOC.finish_next)
-            while True:
-                shot = screenshot()
-                if search_target(shot.crop(LOC.quest_outer), T.quest.crop(LOC.quest))[0] > THR:
-                    break
-                elif is_match_target(shot, T.restart_quest, LOC.restart_quest_yes):
-                    click(LOC.restart_quest_yes)
-                    logger.debug('restart the same battle')
-                    break
-                elif is_match_target(shot, T.apply_friend, LOC.apply_friend):
-                    click(LOC.apply_friend_deny)
-                    logger.debug('not to apply friend')
-                time.sleep(0.5)
-            # noinspection PyStatementEffect
-            label.g
-        CONFIG.task_finished = True
-        logger.info(f'>>>>> All {finished} battles "{self.master.quest_name}" finished. <<<<<')
-
-    @with_goto
-    def battle_template(self, support=True):
-        """
-        template procedure of a battle.
-        """
-        master = self.master
-        T = self.master.T
-        LOC = self.master.LOC
-        if not master.quest_name:
-            master.quest_name = 'no battle'
-        master.svt_names = ['X', 'Y', 'Z']
-        master.set_card_weights([2, 3, 1])
-        # ----  NP     Quick    Arts   Buster ----
-        # master.set_card_templates([
-        #     [(1, 6), (3, 3), (2, 3), (1, 2)],
-        #     [(3, 7), (1, 4), (1, 1), (2, 4)],
-        #     [(1, 0), (2, 1), (2, 2), (1, 3)],
-        # ])
-        if CONFIG.jump_battle:
-            CONFIG.jump_battle = False
-            logger.warning('goto label.h')
-            # noinspection PyStatementEffect
-            goto.h
-
-        # noinspection PyStatementEffect
-        label.h
-        wait_which_target(T.support, LOC.support_refresh)
-        if support:
-            master.choose_support_drag(match_svt=True, match_ce=True, match_ce_max=True, match_skills=True,
-                                       switch_classes=(-1,))
-        else:
-            logger.debug('please choose support manually!')
-        time.sleep(2)
-        # wave 1
-        wait_which_target(T.wave1a, LOC.enemies[0])
-        logger.debug(f'Quest {master.quest_name} started...')
-        wait_which_target(T.wave1a, LOC.master_skill)
-        logger.debug('wave 1...')
-        master.set_waves(T.wave1a, T.wave1b)
-        master.svt_skill(1, 1)
-        master.attack([6, 1, 2])
-        # master.auto_attack(nps=6)
-
-        # wave 2
-        wait_which_target(T.wave2a, LOC.enemies[0])
-        wait_which_target(T.wave2a, LOC.master_skill)
-        logger.debug('wave 2...')
-        master.set_waves(T.wave2a, T.wave2b)
-        master.svt_skill(1, 3)
-        click(LOC.enemies[1])
-        chosen_cards = master.auto_attack(nps=6, no_play_card=True)
-        master.play_cards([chosen_cards[i] for i in (2, 0, 1)])
-        # master.attack([6, 1, 2])
-        # master.auto_attack(nps=7)
-
-        # wave 3
-        wait_which_target(T.wave3a, LOC.enemies[1])
-        wait_which_target(T.wave3a, LOC.master_skill)
-        logger.debug('wave 3...')
-        master.set_waves(T.wave3a, T.wave3b)
-        # master.attack([6, 1, 2])
-        master.auto_attack(nps=7)
-        master.xjbd(T.kizuna, LOC.kizuna, mode='dmg', allow_unknown=True)
         return
