@@ -4,14 +4,14 @@ from util.supervisor import supervise_log_time
 
 # main entrance
 def battle_with_check(battle: Battle, check=True, conf=None):
-    check_sys_admin()
     config.load_config(conf)
+    check_sys_admin()
     BaseConfig.task_finished = False
     config.log_file = 'logs/log.full.log'
     logger.info('start battle...')
     time.sleep(2)
     if config.id == 'dell':
-        battle_func = battle.xmas_von2
+        battle_func = battle.xmas_von
         t_name: str = battle_func.__name__.replace('_', '-').capitalize()
         if check:
             thread = threading.Thread(target=battle.start, name=t_name,

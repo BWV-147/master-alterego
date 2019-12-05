@@ -93,14 +93,14 @@ def drops():
     lines = []
     img_files = os.listdir(os.path.join(project_dir, drops_dir))
     img_files = [f for f in img_files if os.path.isfile(os.path.join(project_dir, drops_dir, f))]
-    img_files.sort(key=lambda f: (re.findall(r'-([\d\-]+)-', f) or [''])[0], reverse=True)
+    img_files.sort(key=lambda f: (re.findall(r'-([\d\-]+)[^\-\d]', f) or [''])[0], reverse=True)
     page_num = math.ceil(len(img_files) / size)
     page = min(page_num - 1, page)
     page_links = [f'&nbsp<a href="/drops?page={i}&size={size}">{i}</a>&nbsp;' for i in range(page_num)]
     page_link_html = f'&nbsp<a href="/drops?drop=1">drop</a>&nbsp;{" ".join(page_links)}'
     if filter_drop:
         start = 0
-        lines = [f'<li><a href="/drop/{f}">{f}</a></li>' for f in img_files if '-drop' in f]
+        lines = [f'<li><a href="/drop/{f}">{f}</a></li>' for f in img_files if 'drop' in f]
     else:
         start = page * size
         end = min((page + 1) * size, len(img_files))
@@ -142,9 +142,13 @@ def last_crash():
         return 'No dump image found.'
 
 
+def run_server(port=8080):
+    app.run(host='::', port=port)
+
+
 if __name__ == '__main__':
     if len(sys.argv) > 1 and str(sys.argv[1]).isdigit():
-        port = int(sys.argv[1])
+        _port = int(sys.argv[1])
     else:
-        port = 8080
-    app.run(host='::', port=port)
+        _port = 8080
+    run_server(_port)

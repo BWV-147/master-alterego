@@ -2,7 +2,6 @@
 *.png
 *.jpg
 *.log.*
-record.json
 record.md
 /config*.json
 !**/.gitkeep

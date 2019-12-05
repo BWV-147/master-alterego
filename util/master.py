@@ -37,23 +37,16 @@ class Master:
 
     def __init__(self, quest='', names=None):
         self.quest_name = quest
-        self.svt_names = names if names is not None else ['A', 'B', 'C', 'D', 'E', 'F']
+        self._party_members = None  # original party members, don't change, parse_cards used
+        self.realtime_party = None  # shown realtime members, order change/stella should change it
+        self.set_party_members(names)
         self.T = ImageTemplates()
         self.LOC = Regions()
         self.templates = {}
         self.weights: dict = {}
         self.wave_a = None
         self.wave_b = None
-
-    def set_battle_data(self, coord=None, names=None, weights=None, cards_loc=None):
-        if coord:
-            self.LOC.relocate(coord)
-        if names:
-            self.svt_names = names
-        if weights:
-            self.set_card_weights(weights)
-        if cards_loc:
-            self.set_card_templates(cards_loc)
+        self.show_svt_name = False
 
     # procedures
     def eat_apple(self, apples=None):
@@ -199,13 +192,10 @@ class Master:
             time.sleep(0.5)
             for icon in switch_classes:
                 if icon == -1:
-                    # click(self.LOC.safe_area)
                     time.sleep(0.2)
-                    pass
                 else:
-                    click(self.LOC.support_class_icons[icon])
+                    click(self.LOC.support_class_icons[icon], 0.2)
                     logger.debug(f'switch support class to No.{icon}.')
-                # drag scrollbar ,start=(1857, 270), dy=111, end=(1857, 1047)
                 pyautogui.moveTo(*LOC.support_scrollbar_start)
                 drag_num = 5 if is_match_target(screenshot(), T.support, LOC.support_scrollbar_head, 0.8) else 1
                 dy_mouse = (LOC.support_scrollbar_end[1] - LOC.support_scrollbar_start[1]) // drag_num
@@ -235,8 +225,9 @@ class Master:
                                     return
                                 elif page_no == 1:
                                     return
-                    time.sleep(0.2)
-                    pyautogui.dragRel(0, dy_mouse, 0.2)
+                    if drag_no < drag_num - 1:
+                        time.sleep(0.2)
+                        pyautogui.dragRel(0, dy_mouse, 0.2)
             # refresh support
             refresh_times += 1
             logger.debug(f'refresh support {refresh_times} times')
@@ -245,6 +236,12 @@ class Master:
             wait_which_target(support_page, self.LOC.support_refresh, at=True)
             wait_which_target(self.T.support_confirm, self.LOC.support_confirm_title, clicking=self.LOC.support_refresh)
             click(self.LOC.support_refresh_confirm, lapse=2)
+
+    def get_pos_name(self, pos: int):
+        assert pos > 0
+        if not self.show_svt_name or pos > len(self.realtime_party):
+            return f'{pos}'
+        return self.realtime_party[pos - 1]
 
     def svt_skill_full(self, before, after, who, skill, friend=None, enemy=None):
         # type: (Image.Image,Image.Image,int,int,int,int)->None
@@ -261,9 +258,9 @@ class Master:
         # validation
         valid1, valid2 = (1, 2, 3), (1, 2, 3, None)
         assert who in valid1 and skill in valid1 and friend in valid2 and enemy in valid2, (who, skill, friend, enemy)
-        s = f'to friend {friend}' if friend \
-            else f'to enemy {enemy}' if enemy else ''
-        logger.debug('Servant skill %s-%d %s.' % (who, skill, s))
+        s = f' to friend {self.get_pos_name(friend)}' if friend \
+            else f' to enemy {enemy}' if enemy else ''
+        logger.debug(f'Servant skill: {self.get_pos_name(who)}-{skill}{s}.')
 
         # start
         if enemy is not None:
@@ -298,9 +295,14 @@ class Master:
             assert skill == 3 and (order_change_img is not None or order_change is not None), \
                 ('order_change', skill, order_change_img)
         # assert (friend, enemy, order_change).count(None) <= 2, (friend, enemy, order_change)
-        s = f' to friend {friend}' if friend else f' to enemy {enemy}' if enemy \
-            else f' order change {order_change}' if order_change else ''
+        s = f' to friend {self.get_pos_name(friend)}' if friend else f' to enemy {enemy}' if enemy \
+            else f' order change {[self.get_pos_name(i) for i in order_change]}' if order_change else ''
         logger.debug(f'Master skill {skill}{s}.')
+        if order_change and self.show_svt_name:
+            _temp = self.realtime_party[order_change[1] - 1]
+            self.realtime_party[order_change[1] - 1] = self.realtime_party[order_change[0] - 1]
+            self.realtime_party[order_change[0] - 1] = _temp
+            logger.debug(f'After order change: {self.realtime_party}')
 
         before = self.wave_a
         region = self.LOC.master_skills[skill - 1]
@@ -406,6 +408,8 @@ class Master:
             shot = screenshot()
             if compare_regions(shot, target, regions):
                 # this part must before elif part
+                if cur_turn > 0:
+                    logger.info(f'xjbd {cur_turn} turns')
                 return cur_turn
             elif compare_regions(shot, self.T.wave1a, self.LOC.master_skill):
                 cur_turn += 1
@@ -429,10 +433,8 @@ class Master:
         recognize the cards of current screenshot
         :param img:
         :param nps: which servants' np **MUST** be found. you'd better not set it.
-        :return: location-card(svt*10+color) pair dictionary
+        :returns cards and np_cards, location-card(svt*10+color) pair dictionary, np_cards may less then actual
         """
-        # TODO: if xjbd, someone is dead, should allow unrecognized cards(card code could be -1).
-        # assert self.templates != {}, 'Please set cards templates first!!!'
         if self.templates == {}:
             return {}, {}
         nps = convert_to_list(nps)
@@ -546,8 +548,12 @@ class Master:
         s = []
         # print('ready to print cards:', cards)
         for card in cards:
-            s.append(self.svt_names[card.svt - 1] + '-' + '宝QAB'[card.color])
+            s.append(self._party_members[card.svt - 1] + '-' + '宝QAB'[card.color])
         return s
+
+    def set_party_members(self, svt_names: List[str] = None):
+        self._party_members = list(svt_names or ('A', 'B', 'C', 'D', 'E', 'F'))
+        self.realtime_party = list(self._party_members)
 
     # set battle data in self.set_battle_data()
     def set_card_templates(self, locs: List):
@@ -556,18 +562,19 @@ class Master:
         :param locs: locations(tmpl:1~3, card:1~5 6~8) of  [svt1:[np, Q, A, B], svt2:...], loc=-1 if no card
         """
         self.templates = {}
-        templs: List[Image.Image] = self.T.cards
-        for svt, svt_loc in enumerate(locs):
-            for color, loc in enumerate(svt_loc):
-                if isinstance(loc[0], int):
-                    loc = [loc, ]
-                for loc_i in loc:
-                    if 0 < loc_i[1] <= 8:
-                        card_id = (svt + 1) * 10 + color
-                        if card_id not in self.templates:
-                            self.templates[card_id] = []
-                        self.templates[card_id].append(
-                            templs[loc_i[0] - 1].crop(self.LOC.cards[loc_i[1] - 1]))
+        templates: List[Image.Image] = self.T.cards
+        for svt_loc, card_locs in enumerate(locs):
+            if card_locs:
+                for color, loc in enumerate(card_locs):
+                    if isinstance(loc[0], int):
+                        loc = [loc, ]
+                    for loc_i in loc:
+                        if 0 < loc_i[1] <= 8:
+                            card_id = (svt_loc + 1) * 10 + color
+                            if card_id not in self.templates:
+                                self.templates[card_id] = []
+                            self.templates[card_id].append(
+                                templates[loc_i[0] - 1].crop(self.LOC.cards[loc_i[1] - 1]))
 
     def set_card_weights(self, weights: List, color_weight: str = 'QAB'):
         """
@@ -689,11 +696,8 @@ class BattleBase:
         # pre-processing: only configure base info
         master.quest_name = 'template'
         T.read_templates('img/template-jp')
-        master.svt_names = ['X', 'Y', 'Z']
-        if pre_process:
-            return
-
-        # battle part
+        master.set_party_members(['X', 'Y', 'Z'])
+        master.show_svt_name = True
         master.set_card_weights([2, 3, 1])
         # ----  NP     Quick    Arts   Buster ----
         # master.set_card_templates([
@@ -701,12 +705,19 @@ class BattleBase:
         #     [(3, 7), (1, 4), (1, 1), (2, 4)],
         #     [(1, 0), (2, 1), (2, 2), (1, 3)],
         # ])
+        if pre_process:
+            return
+
+        # battle part
         if config.jump_battle:
             config.jump_battle = False
             logger.warning('goto label.h')
             # noinspection PyStatementEffect
             goto.h
 
+        # # noinspection PyStatementEffect
+        # label.h  # make sure master.set_waves(a,b) is called
+        # master.set_waves(T.waveXa, T.waveXb)
         # noinspection PyStatementEffect
         label.h
         wait_which_target(T.support, LOC.support_refresh)

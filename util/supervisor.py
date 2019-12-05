@@ -120,14 +120,15 @@ Computer name: <b>{socket.getfqdn(socket.gethostname())}</b><br>
     from util.autogui import screenshot
     crash_fp = 'img/crash.jpg'
     screenshot(monitor=config.monitor).resize((1920 // 2, 1080 // 2)).save(crash_fp, format='jpeg', quality=40)
-    print(f'\n--------- Email --------------\n'
-          f'subject: "{subject}"'
-          f'body:\n{body}'
-          f'----------------------------\n')
+    logger.info(f'\n--------- Email --------------\n'
+                f'subject: "{subject}"\n'
+                f'receiver: {receiver}\n'
+                f'body:\n{body}\n'
+                f'------------------------------\n')
     if receiver is None:
         receiver = config.receiver
     if None in (receiver, config.sender, config.password):
-        print(f'----Email account info needs to update.-----\n'
+        print(f'----Email account info needs to be updated.-----\n'
               f'receiver: {receiver}\n'
               f'sender:{config.sender}\n'
               f'password:{"*****"}'

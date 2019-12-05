@@ -4,8 +4,8 @@ from util.supervisor import supervise_log_time
 
 # main entrance
 def gacha_with_check(gacha: Gacha, check=True):
-    check_sys_admin()
     config.load_config()
+    check_sys_admin()
     BaseConfig.task_finished = False
     config.log_file = 'logs/gacha.full.log'
     gacha_logger.info('start gacha...')

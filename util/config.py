@@ -22,6 +22,7 @@ class BaseConfig:
         # ================= battle part =================
         # battle params
         self.battle_num = 1  # max battle num once running, auto decrease
+        self.finished_battles = 0  # all finished battles sum, auto increase, don't edit
         self.max_finished_battles = 1000  # stop if finished_battles >= max_finished_battles
         self.check_drop = True  # check craft dropped or not, if True, make sure rewards.png contains the dropped craft.
         self.apples = []  # invalid: stop, 0-colorful, 1-gold, 2-sliver, 3-cropper
@@ -29,8 +30,6 @@ class BaseConfig:
         self.jump_battle = False  # goto decoration in Battle.battle_func
         self.jump_start = False  # goto decoration in Battle.start
 
-        # counter - auto increase/decrease
-        self.finished_battles = 0  # all finished battles sum, auto increase
         self.craft_num = 0
         self.craft_history = {}
 
