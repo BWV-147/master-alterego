@@ -7,6 +7,7 @@ class BaseConfig:
     loc_net = None
     log_time = 0  # record the time of last logging.info/debug..., set NO_LOG_TIME outside battle progress
     task_finished = False  # all battles finished, set to True before child process exist.
+    log_file = None  # filename of logger when send_mail review the recent logs
     temp = {}  # save temp vars at runtime
 
     def __init__(self, fp=None):
@@ -16,11 +17,11 @@ class BaseConfig:
         self.monitor = 1  # >=1, check mss().monitors to see monitor info, 0 is total size
         self.offset_x = 0  # xy offset for mouse click event, relative to MAIN monitor's origin
         self.offset_y = 0
-        self.log_file = None  # filename of logger when send_mail review the recent logs
         self.mail = False  # whether to send_mail
 
         # ================= battle part =================
         # battle params
+        self.battle_func = None
         self.battle_num = 1  # max battle num once running, auto decrease
         self.finished_battles = 0  # all finished battles sum, auto increase, don't edit
         self.max_finished_battles = 1000  # stop if finished_battles >= max_finished_battles
@@ -39,10 +40,12 @@ class BaseConfig:
         self.enhance_craft_nums = (7, 8, 11, 12, 15, 16, 20)
 
         # ================= gacha part =================
+        self.gacha_dir = None
+        self.gacha_start_func = 'draw'  # draw->clean->sell
         self.gacha_num = 10  # gacha num running once, auto decrease
-        self.total_gacha_num = 1  # auto increase
-        self.mailbox_clean_num = 100  # < max_num - 10 - retained_num
-        self.do_sell = False
+        self.total_gacha_num = 1  # auto increase， don't edit
+        self.clean_num = 100  # < max_num - 10 - retained_num
+        self.sell_times = 0  # sell times, if >0, sell. if =0: don't sell. if <0: manual mode
         self.event_banner_no = 0  # values: 0,1,2. Move from shop -> banner list -> event shop
 
         # ================= Email part =================
@@ -54,7 +57,7 @@ class BaseConfig:
         self.server_host = None
         self.server_port = None
 
-        # load
+        # load config
         if fp:
             self.load_config()
 
@@ -65,7 +68,6 @@ class BaseConfig:
             for k, v in data.items():
                 if k in self.__dict__:
                     self.__dict__[k] = v
-            print(f'loaded config "{fp}"')
         else:
             print(f'config file "{fp}" not exists!')
             self.save(fp)

@@ -146,10 +146,23 @@ def wait_which_target(targets, regions, threshold=THR, lapse=0.1, at=None, click
         shot = screenshot()
         res = match_which_target(shot, targets, regions, threshold, at)
         if res >= 0:
+            time.sleep(lapse)
             return res
         if clicking is not None:
             click(clicking, lapse=interval)
-        time.sleep(lapse)
+
+
+def wait_targets(target, regions, threshold=THR, lapse=0.1, clicking=None, interval=0.5):
+    if not isinstance(regions[0], Sequence):
+        regions = [regions]
+    while True:
+        shot = screenshot()
+        res = [is_match_target(shot, target, region, threshold) for region in regions]
+        if False not in res:
+            break
+        if clicking is not None:
+            click(clicking, lapse=interval)
+    time.sleep(lapse)
 
 
 # 直到匹配模板

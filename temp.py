@@ -4,10 +4,10 @@ from util.master import *
 check_sys_admin()
 
 # %%
-# base_path = 'img/xmas-von2'
+base_path = 'img/xmas-rescue2'
 
 
-base_path = 'img/gacha-jp'
+# base_path = 'img/gacha-jp'
 
 
 def capture(fn: str):
@@ -21,7 +21,7 @@ def capture(fn: str):
 
 
 # %%
-quest_name = 'xmas-von2'
+quest_name = 'Xmas-von'
 png_fn = f'img/_drops/rewards-{quest_name}-{time.strftime("%m%d-%H%M")}'
 screenshot().save(f'{png_fn}.png')
 

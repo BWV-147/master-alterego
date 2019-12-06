@@ -6,17 +6,6 @@
         <language minSize="58" name="Python" />
       </Languages>
     </inspection_tool>
-    <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="WARNING" enabled_by_default="true">
-      <option name="ignoredPackages">
-        <value>
-          <list size="3">
-            <item index="0" class="java.lang.String" itemvalue="scikit-image" />
-            <item index="1" class="java.lang.String" itemvalue="opencv-python" />
-            <item index="2" class="java.lang.String" itemvalue="pypiwin32" />
-          </list>
-        </value>
-      </option>
-    </inspection_tool>
     <inspection_tool class="PyPep8Inspection" enabled="true" level="WEAK WARNING" enabled_by_default="true">
       <option name="ignoredErrors">
         <list>
@@ -37,10 +26,13 @@
           <option value="battle.label" />
           <option value="battle.goto" />
           <option value="cv2.cvtColor" />
-          <option value="util.master.goto" />
-          <option value="util.master.label" />
+          <option value="battles.goto" />
+          <option value="battles.label" />
+          <option value="util.battle.label" />
+          <option value="util.battle.goto" />
         </list>
       </option>
     </inspection_tool>
+    <inspection_tool class="Pylint" enabled="true" level="WARNING" enabled_by_default="true" />
   </profile>
 </component>

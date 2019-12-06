@@ -39,7 +39,8 @@ class Regions:
     mailbox_items = [(1231, 365, 1314, 447), (1231, 558, 1314, 640), (1231, 751, 1314, 833), (1231, 944, 1314, 1026)]
     mailbox_first_checkbox = (1231, 365, 1314, 447)
     mailbox_first_icon = (162, 350, 300, 435)
-    mailbox_first_xn = (507, 295, 574, 329)
+    mailbox_first_xn = (507, 295, 574, 329)  # x1
+    mailbox_first_xn2 = (564, 295, 584, 329)  # '0' of x10
     mailbox_check_column = (1231, 264, 1314, 1079)
     mailbox_drag_start = (1070, 914)
     mailbox_drag_end = (1070, 250)
@@ -102,7 +103,7 @@ class Regions:
 
     team_start_action = (1655, 973, 1902, 1052)
     team_cloth = (20, 980, 263, 1054)
-    wave = (1261, 78, 1281, 106)
+    wave_num = (1293, 18, 1320, 54)
     enemies_all = (0, 0, 1080, 128)
     enemies = ((0, 0, 120, 130), (360, 0, 480, 130), (720, 0, 840, 130))  # skill_to_enemies
     dying_clicking_point = (960, 360)
@@ -145,9 +146,9 @@ class Regions:
 
     def relocate(self, region):
         """
-        Recursively resize regions. The default size is 1920*1080
-        :param region: 4 length tuple - new region for resize, e.g. (100,100,1800,1000).
-        :return: None.
+        Recursively resize regions. The default size is 1920*1080: region=(0,0,1920-1,1080-1)
+        :param region: region located in screen, (x0,y0,x1,y1): 0 <= x0 < x1 < width, 0 <= y0 < y1 < height
+        :return:
         """
         assert len(region) == 4, region
         for key, value in Regions.__dict__.items():
@@ -186,17 +187,21 @@ class ImageTemplates:
             self.read_templates(directory)
 
     def read_templates(self, directory: str, force=False):
-        old_templs = self.templates
+        old_templates = self.templates
         self.templates = {}
+        flag = False
         for filename in os.listdir(directory):
             if not filename.endswith('.png'):
                 continue
             filepath = os.path.join(directory, filename)
             key = filename[0:len(filename) - 4]
-            if directory == self.directory and force is False and key in old_templs:
-                self.templates[key] = old_templs[key]
+            if directory == self.directory and force is False and key in old_templates:
+                self.templates[key] = old_templates[key]
             else:
+                flag = True
                 self.templates[key] = Image.open(filepath)
+        if flag:
+            logger.debug(f'template images updated: {directory}')
         self.directory = directory
 
     def get(self, attr):

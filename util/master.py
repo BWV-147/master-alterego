@@ -1,10 +1,7 @@
-"""Master class
-
+"""
+Master class
 additional, Card class included.
 """
-# noinspection PyPackageRequirements
-from goto import with_goto
-
 from util.autogui import *
 from util.config import BaseConfig
 from util.supervisor import send_mail
@@ -26,7 +23,6 @@ class Card:
         return f'{self.__class__.__name__}({self.loc}, {self.code})'
 
 
-# noinspection PyMethodMayBeStatic
 class Master:
     """
     1. crop screen to match card's svt&color
@@ -48,7 +44,71 @@ class Master:
         self.wave_b = None
         self.show_svt_name = False
 
-    # procedures
+    # set battle params
+    def set_party_members(self, svt_names: List[str] = None):
+        self._party_members = list(svt_names or ('A', 'B', 'C', 'D', 'E', 'F'))
+        self.realtime_party = list(self._party_members)
+
+    def set_card_templates(self, locs: List):
+        """
+        parse card templates from cards[1~3].png file. regions using inner boundary `self.LOC.cards`
+        :param locs: locations(tmpl:1~3, card:1~5 6~8) of  [svt1:[np, Q, A, B], svt2:...], loc=-1 if no card
+        """
+        self.templates = {}
+        templates: List[Image.Image] = self.T.cards
+        for svt_loc, card_locs in enumerate(locs):
+            if card_locs:
+                for color, loc in enumerate(card_locs):
+                    if isinstance(loc[0], int):
+                        loc = [loc, ]
+                    for loc_i in loc:
+                        if 0 < loc_i[1] <= 8:
+                            card_id = (svt_loc + 1) * 10 + color
+                            if card_id not in self.templates:
+                                self.templates[card_id] = []
+                            self.templates[card_id].append(
+                                templates[loc_i[0] - 1].crop(self.LOC.cards[loc_i[1] - 1]))
+
+    def set_card_weights(self, weights: List, color_weight: str = 'QAB'):
+        """
+        key:svt*10+color, value:weight
+        :param weights: <6*3, M-servants, 3-quick/art/buster; or 6*1.
+        :param color_weight: used when weight size is <6*1
+        """
+        self.weights = {}
+        if isinstance(weights[0], (int, float)):
+            wq, wa, wb = color_weight.find('Q') + 1, color_weight.find('A') + 1, color_weight.find('B') + 1
+            assert wq > 0 and wa > 0 and wb > 0, color_weight
+            for i, w in enumerate(weights):
+                self.weights[(i + 1) * 10 + 1] = w * 10 + wq
+                self.weights[(i + 1) * 10 + 2] = w * 10 + wa
+                self.weights[(i + 1) * 10 + 3] = w * 10 + wb
+        else:
+            for i, ww in enumerate(weights):
+                for j, w in enumerate(ww):
+                    self.weights[(i + 1) * 10 + 1 + j] = w
+
+    def get_svt_name_at(self, pos: int):
+        """realtime party pos, rather than initial party pos."""
+        assert pos > 0
+        if not self.show_svt_name or pos > len(self.realtime_party):
+            return str(pos)
+        return self.realtime_party[pos - 1]
+
+    def str_cards(self, cards: Union[List[Card], Dict[int, Card], List[int]]) -> List[str]:
+        if isinstance(cards, dict):
+            # from parsed cards
+            cards: List[Card] = list(cards.values())
+            cards.sort(key=lambda c: c.loc)
+        s = []
+        for c in cards:
+            if isinstance(cards[0], Card):
+                s.append(self._party_members[c.svt - 1] + '-' + '宝QAB'[c.color])
+            else:
+                s.append(str(c))
+        return s
+
+    # battle procedures
     def eat_apple(self, apples=None):
         apples = convert_to_list(apples)
         if config.stop_around_3am:
@@ -237,12 +297,6 @@ class Master:
             wait_which_target(self.T.support_confirm, self.LOC.support_confirm_title, clicking=self.LOC.support_refresh)
             click(self.LOC.support_refresh_confirm, lapse=2)
 
-    def get_pos_name(self, pos: int):
-        assert pos > 0
-        if not self.show_svt_name or pos > len(self.realtime_party):
-            return f'{pos}'
-        return self.realtime_party[pos - 1]
-
     def svt_skill_full(self, before, after, who, skill, friend=None, enemy=None):
         # type: (Image.Image,Image.Image,int,int,int,int)->None
         """
@@ -258,9 +312,9 @@ class Master:
         # validation
         valid1, valid2 = (1, 2, 3), (1, 2, 3, None)
         assert who in valid1 and skill in valid1 and friend in valid2 and enemy in valid2, (who, skill, friend, enemy)
-        s = f' to friend {self.get_pos_name(friend)}' if friend \
+        s = f' to friend {self.get_svt_name_at(friend)}' if friend \
             else f' to enemy {enemy}' if enemy else ''
-        logger.debug(f'Servant skill: {self.get_pos_name(who)}-{skill}{s}.')
+        logger.debug(f'Servant skill: {self.get_svt_name_at(who)}-{skill}{s}.')
 
         # start
         if enemy is not None:
@@ -275,6 +329,7 @@ class Master:
         wait_which_target(after, region)
 
     def set_waves(self, before: Image.Image, after: Image.Image):
+        """set wave a/b before every wave start, also for order change/stella/jump_battle """
         self.wave_a = before
         self.wave_b = after
         return self
@@ -295,8 +350,8 @@ class Master:
             assert skill == 3 and (order_change_img is not None or order_change is not None), \
                 ('order_change', skill, order_change_img)
         # assert (friend, enemy, order_change).count(None) <= 2, (friend, enemy, order_change)
-        s = f' to friend {self.get_pos_name(friend)}' if friend else f' to enemy {enemy}' if enemy \
-            else f' order change {[self.get_pos_name(i) for i in order_change]}' if order_change else ''
+        s = f' to friend {self.get_svt_name_at(friend)}' if friend else f' to enemy {enemy}' if enemy \
+            else f' order change {[self.get_svt_name_at(i) for i in order_change]}' if order_change else ''
         logger.debug(f'Master skill {skill}{s}.')
         if order_change and self.show_svt_name:
             _temp = self.realtime_party[order_change[1] - 1]
@@ -367,37 +422,9 @@ class Master:
             else:
                 chosen_cards = self.choose_cards(cards, np_cards, nps, mode=mode)
                 break
-        if no_play_card is True:
-            return chosen_cards
-        else:
+        if no_play_card is False:
             self.play_cards(chosen_cards)
-
-    def attack(self, locs_or_cards: Union[List[Card], List[int]]):
-        assert len(locs_or_cards) >= 3, locs_or_cards
-        while True:
-            click(self.LOC.attack, lapse=0.2)
-            if compare_regions(screenshot(), self.T.cards1, self.LOC.cards_back):
-                time.sleep(1)
-                self.play_cards(locs_or_cards)
-                break
-
-    def play_cards(self, cards: Union[List[Card], List[int]]):
-        """
-        :param cards: list of locs or cards
-        :return:
-        """
-        cards_str_list = self.str_cards(cards)
-        if len(cards) < 3:
-            print(f'warning! Less then 3 cards to play: {cards_str_list}')
-        if isinstance(cards[0], Card) and len(cards) >= 3 and cards[0].svt == cards[1].svt == cards[2].svt:
-            cards_str_list.append('Extra')
-
-        logger.debug(f'Attack cards: {cards_str_list}')
-        locs: List[int] = [c.loc if isinstance(c, Card) else c for c in cards]
-        for loc in locs:
-            # print(f'click card {loc}')
-            click(self.LOC.cards[loc - 1])
-            time.sleep(0.2)
+        return chosen_cards
 
     def xjbd(self, target, regions, mode='dmg', turns=100, allow_unknown=False, nps=None):
         # type:(Union[Image.Image,Sequence[Image.Image]],Sequence,str,int,bool,Union[int,Sequence])->int
@@ -409,7 +436,7 @@ class Master:
             if compare_regions(shot, target, regions):
                 # this part must before elif part
                 if cur_turn > 0:
-                    logger.info(f'xjbd {cur_turn} turns')
+                    logger.info(f'xjbd total {cur_turn} turns')
                 return cur_turn
             elif compare_regions(shot, self.T.wave1a, self.LOC.master_skill):
                 cur_turn += 1
@@ -427,7 +454,16 @@ class Master:
             else:
                 continue
 
-    # assistant functions
+    # usually assist for methods above
+    def attack(self, locs_or_cards: Union[List[Card], List[int]]):
+        assert len(locs_or_cards) >= 3, locs_or_cards
+        while True:
+            click(self.LOC.attack, lapse=0.2)
+            if compare_regions(screenshot(), self.T.cards1, self.LOC.cards_back):
+                time.sleep(1)
+                self.play_cards(locs_or_cards)
+                break
+
     def parse_cards(self, img: Image.Image, nps: List[int] = None) -> Tuple[Dict[int, Card], Dict[int, Card]]:
         """
         recognize the cards of current screenshot
@@ -503,7 +539,7 @@ class Master:
         """
         nps = convert_to_list(nps)
         chosen_nps = [np_cards.get(_np, Card(_np, (_np - 5) * 10)) for _np in nps]
-        s_cards = sorted(cards.values(), key=lambda o: self.weights.get(o.code, 0))
+        s_cards = sorted(cards.values(), key=lambda c: self.weights.get(c.code, 0))
 
         if mode == 'dmg':
             if not chosen_nps:
@@ -517,19 +553,13 @@ class Master:
                 chosen_cards = chosen_nps
         elif mode == 'alter':
             s_cards.reverse()
-            for i in (1, 2, 3, 4):
-                if s_cards[i].svt != s_cards[0].svt:
-                    popped = s_cards.pop(i)
-                    s_cards.insert(1, popped)
-            for i in (2, 3, 4):
-                if s_cards[i].svt != s_cards[1].svt:
-                    popped = s_cards.pop(i)
-                    s_cards.insert(2, popped)
-            if not chosen_nps:
-                chosen_cards = s_cards[0:3]
-            else:
-                chosen_nps.extend(s_cards)
-                chosen_cards = chosen_nps[0:3]
+            chosen_cards = [s_cards.pop(0)]
+            for i in range(2):
+                for j, c in enumerate(s_cards):
+                    if c.svt != chosen_cards[-1].svt:
+                        chosen_cards.append(s_cards.pop(j))
+                        break
+            chosen_cards = (chosen_nps + chosen_cards + s_cards)[0:3]
         elif mode == 'np':
             # TODO: gain np mode
             chosen_nps.extend(s_cards)
@@ -539,257 +569,20 @@ class Master:
         logger.debug(f'chosen cards: {self.str_cards(chosen_cards)}')
         return chosen_cards
 
-    def str_cards(self, cards: Union[List[Card], Dict[int, Card], List[int]]) -> List[Union[str, int]]:
-        if isinstance(cards, dict):
-            cards: List[Card] = list(cards.values())
-            cards.sort(key=lambda c: c.loc)
-        elif isinstance(cards[0], int):
-            return cards
-        s = []
-        # print('ready to print cards:', cards)
-        for card in cards:
-            s.append(self._party_members[card.svt - 1] + '-' + '宝QAB'[card.color])
-        return s
-
-    def set_party_members(self, svt_names: List[str] = None):
-        self._party_members = list(svt_names or ('A', 'B', 'C', 'D', 'E', 'F'))
-        self.realtime_party = list(self._party_members)
-
-    # set battle data in self.set_battle_data()
-    def set_card_templates(self, locs: List):
+    def play_cards(self, cards: Union[List[Card], List[int]]):
         """
-        parse card templates from cards[1~3].png file. regions using inner boundary `self.LOC.cards`
-        :param locs: locations(tmpl:1~3, card:1~5 6~8) of  [svt1:[np, Q, A, B], svt2:...], loc=-1 if no card
+        :param cards: list of locs or cards
+        :return:
         """
-        self.templates = {}
-        templates: List[Image.Image] = self.T.cards
-        for svt_loc, card_locs in enumerate(locs):
-            if card_locs:
-                for color, loc in enumerate(card_locs):
-                    if isinstance(loc[0], int):
-                        loc = [loc, ]
-                    for loc_i in loc:
-                        if 0 < loc_i[1] <= 8:
-                            card_id = (svt_loc + 1) * 10 + color
-                            if card_id not in self.templates:
-                                self.templates[card_id] = []
-                            self.templates[card_id].append(
-                                templates[loc_i[0] - 1].crop(self.LOC.cards[loc_i[1] - 1]))
+        cards_str_list = self.str_cards(cards)
+        if len(cards) < 3:
+            print(f'warning! Less then 3 cards to play: {cards_str_list}')
+        if isinstance(cards[0], Card) and len(cards) >= 3 and cards[0].svt == cards[1].svt == cards[2].svt:
+            cards_str_list.append('Extra')
 
-    def set_card_weights(self, weights: List, color_weight: str = 'QAB'):
-        """
-        key:svt*10+color, value:weight
-        :param weights: <6*3, M-servants, 3-quick/art/buster; or 6*1.
-        :param color_weight: used when weight size is <6*1
-        """
-        self.weights = {}
-        if isinstance(weights[0], (int, float)):
-            wq, wa, wb = color_weight.find('Q') + 1, color_weight.find('A') + 1, color_weight.find('B') + 1
-            assert wq > 0 and wa > 0 and wb > 0, color_weight
-            for i, w in enumerate(weights):
-                self.weights[(i + 1) * 10 + 1] = w * 10 + wq
-                self.weights[(i + 1) * 10 + 2] = w * 10 + wa
-                self.weights[(i + 1) * 10 + 3] = w * 10 + wb
-        else:
-            for i, ww in enumerate(weights):
-                for j, w in enumerate(ww):
-                    self.weights[(i + 1) * 10 + 1 + j] = w
-
-
-# noinspection PyPep8Naming,DuplicatedCode
-class BattleBase:
-    def __init__(self):
-        self.master = Master()
-
-    @with_goto
-    def start(self, battle_func, battle_num, apples=None):
-        T = self.master.T
-        LOC = self.master.LOC
-        timer = Timer()
-        battle_func(True)
-        BaseConfig.img_net = T.net_error
-        BaseConfig.loc_net = LOC.net_error
-        BaseConfig.task_finished = False
-        finished_num = 0
-        actual_max_num = min(battle_num, config.max_finished_battles - config.finished_battles)
-        while finished_num < actual_max_num:
-            finished_num += 1
-            logger.info(f'>>>>> Battle "{self.master.quest_name}" No.{finished_num}/{actual_max_num} <<<<<')
-            if config.jump_start:
-                config.jump_start = False
-                logger.warning('in start: goto label.g')
-                # noinspection PyStatementEffect
-                goto.g
-            if not config.jump_battle:
-                while True:
-                    shot = screenshot()
-                    res = search_target(shot.crop(LOC.quest_outer), T.quest.crop(LOC.quest))
-                    if res[0] > THR:
-                        click(LOC.quest_c)
-                    elif is_match_target(shot, T.apple_page, LOC.apple_page):
-                        if self.master.eat_apple(apples) is False:
-                            return
-                    elif is_match_target(shot, T.bag_full_alert, LOC.bag_full_sell_action):
-                        # usually used in hunting events.
-                        logger.info('bag full, to sell...')
-                        click(LOC.bag_full_sell_action)
-                        self.sell(1)
-                        break
-                    elif is_match_target(shot, T.support, LOC.support_refresh):
-                        break
-                    time.sleep(0.5)
-            battle_func()
-            wait_which_target(T.rewards, LOC.finish_qp, clicking=LOC.finish_qp, lapse=0.5)
-            click(LOC.rewards_show_num, lapse=1)
-            # check reward_page has CE dropped or not
-            dt = timer.lapse()
-            logger.info(f'--- Battle {finished_num}/{actual_max_num} finished,'
-                        f' time = {int(dt // 60)} min {int(dt % 60)} sec.'
-                        f' (total {config.finished_battles})')
-            rewards = screenshot()
-            craft_dropped = is_match_target(rewards, T.rewards, LOC.finish_craft)
-            png_fn = f'img/_drops/rewards-{self.master.quest_name}-{time.strftime("%m%d-%H%M")}'
-            if craft_dropped and config.check_drop:
-                config.count_battle(True)
-                logger.warning(f'{config.craft_num}th craft dropped!!!')
-                rewards.save(f'{png_fn}-drop{config.craft_num}.png')
-                if config.craft_num in config.enhance_craft_nums:
-                    send_mail(f'NEED Enhancement! {config.craft_num}th craft dropped!!!')
-                    logger.warning('need to change party or enhance crafts. Exit.')
-                    BaseConfig.task_finished = True
-                    return
-                else:
-                    send_mail(f'{config.craft_num}th craft dropped!!!')
-            else:
-                config.count_battle(False)
-                rewards.save(f"{png_fn}.png")
-            # ready to restart a battle
-            click(LOC.finish_next)
-            while True:
-                shot = screenshot()
-                if search_target(shot.crop(LOC.quest_outer), T.quest.crop(LOC.quest))[0] > THR:
-                    break
-                elif is_match_target(shot, T.restart_quest, LOC.restart_quest_yes):
-                    click(LOC.restart_quest_yes)
-                    logger.debug('restart the same battle')
-                    break
-                elif is_match_target(shot, T.apply_friend, LOC.apply_friend):
-                    click(LOC.apply_friend_deny)
-                    logger.debug('not to apply friend')
-                time.sleep(0.5)
-            # noinspection PyStatementEffect
-            label.g
-        BaseConfig.task_finished = True
-        logger.info(f'>>>>> All {finished_num} battles "{self.master.quest_name}" finished. <<<<<')
-        if config.mail:
-            send_mail(f'All {finished_num} battles "{self.master.quest_name}" finished')
-
-    @with_goto
-    def battle_template(self, pre_process=False):
-        """
-        template procedure of a battle.
-        """
-        master = self.master
-        T = master.T
-        LOC = master.LOC
-
-        # pre-processing: only configure base info
-        master.quest_name = 'template'
-        T.read_templates('img/template-jp')
-        master.set_party_members(['X', 'Y', 'Z'])
-        master.show_svt_name = True
-        master.set_card_weights([2, 3, 1])
-        # ----  NP     Quick    Arts   Buster ----
-        # master.set_card_templates([
-        #     [(1, 6), (3, 3), (2, 3), (1, 2)],
-        #     [(3, 7), (1, 4), (1, 1), (2, 4)],
-        #     [(1, 0), (2, 1), (2, 2), (1, 3)],
-        # ])
-        if pre_process:
-            return
-
-        # battle part
-        if config.jump_battle:
-            config.jump_battle = False
-            logger.warning('goto label.h')
-            # noinspection PyStatementEffect
-            goto.h
-
-        # # noinspection PyStatementEffect
-        # label.h  # make sure master.set_waves(a,b) is called
-        # master.set_waves(T.waveXa, T.waveXb)
-        # noinspection PyStatementEffect
-        label.h
-        wait_which_target(T.support, LOC.support_refresh)
-        support = True
-        if support:
-            master.choose_support_drag(match_svt=True, match_ce=True, match_ce_max=True, match_skills=True,
-                                       switch_classes=(-1,))
-        else:
-            logger.debug('please choose support manually!')
-        time.sleep(2)
-        # wave 1
-        wait_which_target(T.wave1a, LOC.enemies[0])
-        logger.debug(f'Quest {master.quest_name} started...')
-        wait_which_target(T.wave1a, LOC.master_skill)
-        logger.debug('wave 1...')
-        master.set_waves(T.wave1a, T.wave1b)
-        master.svt_skill(1, 1)
-        master.attack([6, 1, 2])
-        # master.auto_attack(nps=6)
-
-        # wave 2
-        wait_which_target(T.wave2a, LOC.enemies[0])
-        wait_which_target(T.wave2a, LOC.master_skill)
-        logger.debug('wave 2...')
-        master.set_waves(T.wave2a, T.wave2b)
-        master.svt_skill(1, 3)
-        # master.attack([6, 1, 2])
-        click(LOC.enemies[1])
-        chosen_cards = master.auto_attack(nps=6, no_play_card=True)
-        master.play_cards([chosen_cards[i] for i in (2, 0, 1)])
-        # master.auto_attack(nps=7)
-
-        # wave 3
-        wait_which_target(T.wave3a, LOC.enemies[1])
-        wait_which_target(T.wave3a, LOC.master_skill)
-        logger.debug('wave 3...')
-        master.set_waves(T.wave3a, T.wave3b)
-        # master.attack([6, 1, 2])
-        master.auto_attack(nps=7)
-        master.xjbd(T.kizuna, LOC.kizuna, mode='dmg', allow_unknown=True)
-        return
-
-    def sell(self, num=100):
-        """
-        Called when bag full before entering quest, usually hunting events. Back to supporting finally.
-        :param num: selling times. 100~=ALL
-        """
-        T = self.master.T
-        LOC = self.master.LOC
-        logger.info('shop: selling...')
-        print('Make sure the bag **FILTER** only shows "Experience Cards"/"Zhong Huo"!')
-        no = 0
-        while True:
-            wait_which_target(T.bag_unselected, LOC.bag_sell_action)
-            drag(LOC.bag_select_start, LOC.bag_select_end, duration=1, down_time=1, up_time=4)
-            page_no = wait_which_target([T.bag_selected, T.bag_unselected], [LOC.bag_sell_action, LOC.bag_sell_action])
-            if page_no == 0:
-                no += 1
-                logger.debug(f'sell {no} times.')
-                click(LOC.bag_sell_action)
-                wait_which_target(T.bag_sell_confirm, LOC.bag_sell_confirm, at=True)
-                wait_which_target(T.bag_sell_finish, LOC.bag_sell_finish, at=True)
-                if no >= num:
-                    break
-            elif page_no == 1:
-                logger.debug('all items are sold.')
-                break
-        wait_which_target(T.bag_unselected, LOC.bag_sell_action)
-        click(LOC.bag_back)
-        wait_which_target(T.shop, LOC.shop_event_item_exchange)
-        click(LOC.bag_back)
-        wait_which_target(T.quest, LOC.quest_master_avatar)
-        click(LOC.quest_c)
-        logger.debug('from shop back to supporting')
-        return
+        logger.debug(f'Attack cards: {cards_str_list}')
+        locs: List[int] = [c.loc if isinstance(c, Card) else c for c in cards]
+        for loc in locs:
+            # print(f'click card {loc}')
+            click(self.LOC.cards[loc - 1])
+            time.sleep(0.2)

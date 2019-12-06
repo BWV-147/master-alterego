@@ -108,12 +108,11 @@ def drops():
             f = img_files[i]
             if not f.startswith('.'):
                 lines.append(f'<li><a href="/drop/{f}">{f}</a></li>')
-    html = f'Back to <a href="/pages">pages</a><br>' \
+    return f'Back to <a href="/pages">pages</a><br>' \
            f'Page: {"drops" if filter_drop else page}<br>' \
            f'{page_link_html}<hr>' \
            f'<ol start="{start}">{chr(10).join(lines)}</ol>' \
            f'<hr>{page_link_html}'
-    return html
 
 
 @app.route('/drop/<img_name>')
