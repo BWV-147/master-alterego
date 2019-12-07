@@ -161,7 +161,7 @@ class Battle(BattleBase):
     def xmas_rescue2(self, pre_process=False):
         """
         bond: 615*1.25+50=818 point
-        阵容: Alter(80NP)-Saber(50NP)-小麻雀-support-X-X
+        阵容: 章西女王(80NP)-Saber(50NP)-小麻雀-support-X-X
         T1: xjbd
         """
         master = self.master
@@ -172,13 +172,14 @@ class Battle(BattleBase):
         master.quest_name = 'Xmas-rescue2'
         T.read_templates('img/xmas-rescue2')
         # LOC.relocate((0, 0, 1920 - 1, 1080 - 1))
-        master.set_party_members(['Alter', 'Saber', '小麻雀'])
-        master.set_card_weights([1, 1, 1])
+        master.set_party_members(['章西', 'Saber', '小麻雀'])
+        master.set_card_weights([1.01, 1.03, 1.02])
+        master.show_svt_name = True
         # ----  NP     Quick    Arts   Buster ----
         master.set_card_templates([
-            [(1, 6), (1, 5), (1, 2), (2, 3)],
-            [(1, 7), (2, 1), (1, 3), (2, 5)],
-            [(1, 0), (2, 2), (3, 2), (1, 1)],
+            [(1, 6), (2, 4), (2, 5), (2, 3)],
+            [(1, 7), (3, 4), (3, 2), (2, 1)],
+            [(1, 0), (1, 2), (1, 4), (1, 1)],
         ])
         if pre_process:
             return
@@ -205,27 +206,26 @@ class Battle(BattleBase):
         master.set_waves(T.wave1a, T.wave1b)
         master.svt_skill(3, 3)
         master.svt_skill(2, 3)
-        master.svt_skill(1, 2)
-        wait_targets(T.wave1a, [LOC.wave_num, LOC.master_skill])
-        click(LOC.skills[0][2])
+        master.svt_skill(1, 1)
         master.xjbd(T.wave2a, LOC.wave_num, mode='alter')
 
         # wave 2
         wait_targets(T.wave2a, [LOC.wave_num, LOC.master_skill])
         logger.debug('wave 2...')
         master.set_waves(T.wave2a, T.wave2b)
-        master.set_card_weights([2, 1, 3])
+        master.set_card_weights([1, 1, 3], 'BQA')
         # master.attack([6, 1, 2])
-        master.auto_attack(nps=6)
+        master.auto_attack(nps=6, mode='xjbd')
 
         # wave 3
         wait_targets(T.wave3a, [LOC.wave_num, LOC.master_skill])
         logger.debug('wave 3...')
         master.set_waves(T.wave3a, T.wave3b)
+        master.set_card_weights([1, 3, 1])
         master.svt_skill(2, 1)
         master.svt_skill(2, 2)
-        # master.svt_skill(3, 2)
-        master.master_skill(2, 2)
+        master.svt_skill(3, 2)
+        # master.master_skill(2, 2)
         wait_which_target(T.wave3a, LOC.master_skill)
         master.auto_attack(nps=7)
         master.xjbd(T.kizuna, LOC.kizuna, mode='dmg', allow_unknown=True)
@@ -445,6 +445,9 @@ class Battle(BattleBase):
                                        switch_classes=(5, 0))
         else:
             logger.debug('please choose support manually!')
+        # noinspection PyStatementEffect
+        label.h
+
         # wave 1
         wait_targets(T.wave1a, [LOC.wave_num, LOC.master_skill])
         logger.debug('wave 1...')
@@ -453,9 +456,8 @@ class Battle(BattleBase):
         master.svt_skill(1, 2)
         master.svt_skill(1, 1, 2)
         master.attack([8, 1, 2])
-        master.realtime_party = ['CBA(s)', '狂兰', '陈宫', 'CBA']
-        # noinspection PyStatementEffect
-        label.h
+        master.realtime_party = ['CBA', '狂兰', '陈宫', '???']
+
         # wave 2
         wait_targets(T.wave2a, [LOC.wave_num, LOC.master_skill])
         logger.debug('wave 2...')
@@ -476,5 +478,90 @@ class Battle(BattleBase):
         master.svt_skill(3, 3, 2)
         master.master_skill(1, 2)
         master.auto_attack(nps=7)
+        master.xjbd(T.kizuna, LOC.kizuna, mode='dmg', allow_unknown=True)
+        return
+
+    @with_goto
+    def xmas_chen2(self, pre_process=False):
+        """
+        阵容: 孔明(s)-陈宫(100轨迹)-lily(礼装+自充>=50NP即可)-孔明-小麻雀-X
+        T1:
+        """
+        master = self.master
+        T = master.T
+        LOC = master.LOC
+
+        # pre-processing: only configure base info
+        master.quest_name = 'Xmas-chen2'
+        T.read_templates('img/xmas-chen2')
+        # LOC.relocate((0, 0, 1920 - 1, 1080 - 1))
+        master.set_party_members(['孔明(s)', '陈宫', 'lily', '孔明', '小麻雀'])
+        master.show_svt_name = True
+        master.set_card_weights([0, 1.5, 3, 0, 2])
+        # ----  NP     Quick    Arts   Buster ----
+        master.set_card_templates([
+            [],
+            [(1, 7), (1, 4), (3, 1), (2, 1)],
+            [(2, 8), (1, 3), (1, 2), (2, 4)],
+            [(1, 0), (6, 1), (4, 2), (4, 1)],
+            [(1, 0), (8, 2), (9, 2), (8, 4)],
+        ])
+        if pre_process:
+            return
+
+        # battle part
+        if config.jump_battle:
+            config.jump_battle = False
+            logger.warning('goto label.h')
+            # noinspection PyStatementEffect
+            goto.h
+
+        # # noinspection PyStatementEffect
+        # label.h  # make sure master.set_waves(a,b) is called
+        # master.set_waves(T.waveXa, T.waveXb)
+        wait_which_target(T.support, LOC.support_refresh)
+        support = True
+        if support:
+            master.choose_support_drag(match_svt=True, match_ce=False, match_ce_max=False, match_skills=True,
+                                       switch_classes=(5, 0))
+        else:
+            logger.debug('please choose support manually!')
+        # noinspection PyStatementEffect
+        label.h
+
+        # wave 1
+        wait_targets(T.wave1a, [LOC.wave_num, LOC.master_skill])
+        logger.debug('wave 1...')
+        master.set_waves(T.wave1a, T.wave1b)
+        master.svt_skill(1, 2)
+        master.svt_skill(1, 3)
+        master.svt_skill(1, 1, 2)
+        master.attack([7, 1, 2])
+        master.realtime_party = ['孔明', '陈宫', 'lily', '小麻雀']
+
+        # wave 2
+        wait_targets(T.wave2a, [LOC.wave_num, LOC.master_skill], clicking=LOC.dying_clicking_point)
+        logger.debug('wave 2...')
+        master.set_waves(T.wave2a, T.wave2b)
+        master.svt_skill(1, 2)
+        master.svt_skill(1, 3)
+        master.svt_skill(1, 1, 2)
+        master.svt_skill(2, 2)
+        master.svt_skill(3, 1)
+        master.master_skill(2, 2)
+        master.auto_attack(nps=7)
+        master.realtime_party = ['小麻雀', '陈宫', 'lily']
+        wait_targets(T.wave2a, LOC.master_skill, clicking=LOC.dying_clicking_point)
+        master.xjbd(T.wave3a, [LOC.wave_num, LOC.master_skill])
+
+        # wave 3
+        wait_targets(T.wave3a, [LOC.wave_num, LOC.master_skill])
+        logger.debug('wave 3...')
+        master.set_waves(T.wave3a, T.wave3b)
+        master.svt_skill(1, 2)
+        master.svt_skill(1, 3)
+        master.svt_skill(2, 3, 3)
+        master.svt_skill(3, 2)
+        master.auto_attack(nps=8)
         master.xjbd(T.kizuna, LOC.kizuna, mode='dmg', allow_unknown=True)
         return

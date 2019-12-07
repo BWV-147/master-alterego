@@ -49,6 +49,7 @@ def supervise_log_time(thread: threading.Thread, secs: float = 60, mail=False, i
                     is_match_target(shot, config.img_net, config.loc_net[1]):
                 logger.warning('Network error! click "retry" button', NO_LOG_TIME)
                 click(config.loc_net[1], lapse=3)
+                BaseConfig.log_time += 30
                 continue
         # case 4: unrecognized error - waiting user to handle (in 2*loops seconds)
         logger.warning(f'Something wrong, please solve it, or it will be force stopped... {loops}', NO_LOG_TIME)

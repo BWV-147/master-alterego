@@ -95,18 +95,23 @@ class Master:
             return str(pos)
         return self.realtime_party[pos - 1]
 
-    def str_cards(self, cards: Union[List[Card], Dict[int, Card], List[int]]) -> List[str]:
+    def str_cards(self, cards):
+        # type: (Union[List[Union[int, Card]], Union[int, Card], Dict[int, Card]])->Union[str,List[str]]
         if isinstance(cards, dict):
             # from parsed cards
             cards: List[Card] = list(cards.values())
-            cards.sort(key=lambda c: c.loc)
-        s = []
-        for c in cards:
-            if isinstance(cards[0], Card):
-                s.append(self._party_members[c.svt - 1] + '-' + '宝QAB'[c.color])
+            cards.sort(key=lambda _c: _c.loc)
+
+        def _str_card(_c):
+            if isinstance(_c, Card):
+                return self._party_members[_c.svt - 1] + '-' + '宝QAB'[_c.color]
             else:
-                s.append(str(c))
-        return s
+                return str(_c)
+
+        if not isinstance(cards, Sequence):
+            return _str_card(cards)
+        else:
+            return [_str_card(c) for c in cards]
 
     # battle procedures
     def eat_apple(self, apples=None):
@@ -397,10 +402,6 @@ class Master:
         :return: Optional, chosen_cards
         """
         t0 = time.time()
-        if mode == 'xjbd':
-            # xjbd without nps
-            self.attack([1, 2, 3])
-            return
         while not compare_regions(screenshot(), self.T.cards1, self.LOC.cards_back):
             click(self.LOC.attack, lapse=0.2)  # self.LOC.attack should be not covered by self.LOC.cards_back
             time.sleep(0.2)
@@ -428,7 +429,7 @@ class Master:
 
     def xjbd(self, target, regions, mode='dmg', turns=100, allow_unknown=False, nps=None):
         # type:(Union[Image.Image,Sequence[Image.Image]],Sequence,str,int,bool,Union[int,Sequence])->int
-        if isinstance(regions[0], (int, float)):
+        if not isinstance(regions[0], Sequence):
             regions = [regions]
         cur_turn = 0
         while cur_turn < turns:
@@ -525,7 +526,8 @@ class Master:
         if not set(nps).issubset(set(np_cards.keys())):
             # print(f'nobel phantasm not recognized:{nps} not in {list(np_cards.keys())}\r', end='')
             return {}, {}
-        logger.debug(f'Parsed: cards={self.str_cards(cards)}, np_cards={self.str_cards(np_cards)}')
+        logger.debug(f'Parsed: {[f"{self.str_cards(c)}:{self.weights.get(c.code, -1)}" for c in cards.values()]},'
+                     f' np_cards={self.str_cards(np_cards)}')
         return cards, np_cards
 
     def choose_cards(self, cards, np_cards, nps=None, mode='dmg'):
@@ -537,35 +539,38 @@ class Master:
         :param mode: dmg,np
         :return: locations of chosen cards
         """
+        mode = mode.lower()
         nps = convert_to_list(nps)
         chosen_nps = [np_cards.get(_np, Card(_np, (_np - 5) * 10)) for _np in nps]
-        s_cards = sorted(cards.values(), key=lambda c: self.weights.get(c.code, 0))
-
-        if mode == 'dmg':
-            if not chosen_nps:
-                for i in (-3, -2, -1, 1, 0):
-                    if s_cards[i].color == Card.BUSTER:
-                        s_cards[i], s_cards[-3] = s_cards[-3], s_cards[i]
-                        break
-                chosen_cards = s_cards[-3:]
-            else:
-                chosen_nps.extend(s_cards[2 + len(chosen_nps):5])
-                chosen_cards = chosen_nps
-        elif mode == 'alter':
-            s_cards.reverse()
-            chosen_cards = [s_cards.pop(0)]
-            for i in range(2):
-                for j, c in enumerate(s_cards):
-                    if c.svt != chosen_cards[-1].svt:
-                        chosen_cards.append(s_cards.pop(j))
-                        break
-            chosen_cards = (chosen_nps + chosen_cards + s_cards)[0:3]
-        elif mode == 'np':
-            # TODO: gain np mode
-            chosen_nps.extend(s_cards)
-            chosen_cards = chosen_nps
+        if mode == 'xjbd':
+            s_cards = sorted(cards.values(), key=lambda _c: _c.loc)
+            chosen_cards = s_cards[0:3]
         else:
-            raise KeyError(f'Invalid mode "{mode}"')
+            s_cards = sorted(cards.values(), key=lambda _c: self.weights.get(_c.code, 0))
+            if mode == 'dmg':
+                if not chosen_nps:
+                    for i in (-3, -2, -1, 1, 0):
+                        if s_cards[i].color == Card.BUSTER:
+                            s_cards[i], s_cards[-3] = s_cards[-3], s_cards[i]
+                            break
+                    chosen_cards = s_cards[-3:]
+                else:
+                    chosen_cards = s_cards[-3 + len(chosen_nps):]
+            elif mode == 'alter':
+                s_cards.reverse()
+                chosen_cards = [s_cards.pop(0)]
+                for i in range(2):
+                    for j, c in enumerate(s_cards):
+                        if c.svt != chosen_cards[-1].svt:
+                            chosen_cards.append(s_cards.pop(j))
+                            break
+                chosen_cards = (chosen_cards + s_cards)[0:3]
+            elif mode == 'np':
+                # TODO: gain np mode
+                chosen_cards = s_cards
+            else:
+                raise KeyError(f'Invalid mode "{mode}"')
+        chosen_cards = (chosen_nps + chosen_cards)[0:3]
         logger.debug(f'chosen cards: {self.str_cards(chosen_cards)}')
         return chosen_cards
 

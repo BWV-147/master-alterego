@@ -21,9 +21,8 @@ def capture(fn: str):
 
 
 # %%
-quest_name = 'Xmas-von'
-png_fn = f'img/_drops/rewards-{quest_name}-{time.strftime("%m%d-%H%M")}'
-screenshot().save(f'{png_fn}.png')
+quest_name = 'Xmas-chen2'
+screenshot().save(f'img/_drops/rewards-{quest_name}-{time.strftime("%m%d-%H%M")}.png')
 
 # %% ------------- battle part --------------
 capture('quest')

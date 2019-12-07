@@ -45,6 +45,7 @@ class BaseConfig:
         self.gacha_num = 10  # gacha num running once, auto decrease
         self.total_gacha_num = 1  # auto increase， don't edit
         self.clean_num = 100  # < max_num - 10 - retained_num
+        self.clean_drag_times = 20  # max drag times during clean mailbox
         self.sell_times = 0  # sell times, if >0, sell. if =0: don't sell. if <0: manual mode
         self.event_banner_no = 0  # values: 0,1,2. Move from shop -> banner list -> event shop
 

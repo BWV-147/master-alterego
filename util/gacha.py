@@ -88,19 +88,25 @@ class Gacha:
         if num < 0:
             logger.warning('please clean mailbox manually and return to gacha page!')
             BaseConfig.log_time = time.time() + 120  # 2min for manual operation
-        drag_num = 20
+        drag_num = config.clean_drag_times
 
         def _is_match_offset(_shot, template, old_loc, _offset):
             return is_match_target(_shot.crop(np.add(old_loc, [0, _offset, 0, _offset])), template.crop(old_loc))
 
         no = 0
+        skipped_drag_num = 0
         while no < num:
             page_no = wait_which_target([T.mailbox_unselected1, T.bag_full_alert],
                                         [LOC.mailbox_get_all_action, LOC.bag_full_sell_action])
             if page_no == 0:
                 gacha_logger.info('check mailbox items...')
                 drag_no = 0
-                item_checked = False
+                if skipped_drag_num > drag_num * 0.4:  # not item_checked:
+                    logger.debug(f'no item available, stop cleaning.')
+                    wait_which_target(T.mailbox_unselected1, LOC.mailbox_get_all_action)
+                    click(self.LOC.mailbox_back)
+                    gacha_logger.info('from mailbox back to gacha')
+                    return
                 while drag_no < drag_num and no < num:
                     drag_no += 1
                     time.sleep(0.2)
@@ -116,22 +122,20 @@ class Gacha:
                                         and _is_match_offset(shot, mailbox_unselect, LOC.mailbox_first_xn2, y_offset)):
                                 click(np.add(LOC.mailbox_first_checkbox, [0, y_offset] * 2), lapse=0.01)
                                 no += 1
-                                item_checked = True
-                            if no % 10 == 0:
-                                gacha_logger.debug(f'got items {no}/{num}...')
-                            if no == num:
-                                gacha_logger.info(f'got all items {no}/{num}...')
-                                break
+                                skipped_drag_num = 0
+                                if no % 10 == 0:
+                                    gacha_logger.debug(f'got items {no}/{num}...')
+                                if no == num:
+                                    gacha_logger.info(f'got all items {no}/{num}...')
+                                    break
                         if no >= num:
                             break
                     if no < num:
                         drag(start=LOC.mailbox_drag_start, end=LOC.mailbox_drag_end,
                              duration=0.5, down_time=0.1, up_time=0.3, lapse=0.1)
+                        skipped_drag_num += 1
                 gacha_logger.info('get mailbox items.')
-                if not item_checked:
-                    logger.debug(f'no item got in {drag_num} times of drag, stop cleaning.')
-                    break
-                wait_which_target(T.mailbox_selected, LOC.mailbox_get_action)
+                # wait_which_target(T.mailbox_selected, LOC.mailbox_get_action)
                 click(LOC.mailbox_get_action, lapse=1)
                 click(LOC.mailbox_get_action, lapse=1)
             elif page_no == 1:
@@ -139,9 +143,6 @@ class Gacha:
                 click(LOC.bag_full_sell_action)
                 self.sell(config.sell_times)
                 return
-        wait_which_target(T.mailbox_unselected1, LOC.mailbox_get_all_action)
-        click(self.LOC.mailbox_back)
-        gacha_logger.info('from mailbox back to gacha')
 
     def sell(self, num=100):
         """
