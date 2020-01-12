@@ -142,7 +142,7 @@ def last_crash():
 
 
 def run_server(port=8080):
-    app.run(host='::', port=port)
+    app.run(port=port)
 
 
 if __name__ == '__main__':

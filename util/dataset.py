@@ -175,6 +175,9 @@ class Regions:
         else:
             print(f'skip key(type:{type(pt)}) for resize')
 
+    def gen_empty_img(self, color=(255, 0, 0)):
+        return Image.new('RGB', (self.width, self.height), color)
+
 
 class ImageTemplates:
     directory: str
@@ -204,14 +207,16 @@ class ImageTemplates:
             logger.debug(f'template images updated: {directory}')
         self.directory = directory
 
-    def get(self, attr):
-        # type:(Union[str, Sequence[str]])-> Union[Image.Image, Sequence[Image.Image], Dict[str, Image.Image]]
+    def get(self, attr, k=None):
+        # type:(Union[str, Sequence[str]],Image.Image)-> Union[Image.Image, Sequence[Image.Image], Dict]
         if attr is None:
             return self.templates.copy()
         elif isinstance(attr, (list, tuple)):
             return [self.templates[k] for k in attr]
         elif attr in self.templates:
             return self.templates[attr]
+        elif k is not None:
+            return k
         else:
             raise KeyError(f'Templates has no key "{attr}"')
 

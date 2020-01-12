@@ -111,7 +111,7 @@ class Master:
         if not isinstance(cards, Sequence):
             return _str_card(cards)
         else:
-            return [_str_card(c) for c in cards]
+            return [('optional: ' if i >= 3 else '') + _str_card(c) for i, c in enumerate(cards)]
 
     # battle procedures
     def eat_apple(self, apples=None):
@@ -277,6 +277,7 @@ class Master:
                                                                         LOC.support_skills[0]]
                         if flag_ce and flag_ce_max and flag_svt and flag_skills:
                             click((LOC.width / 2, LOC.support_team_icon_column[1] + y_peak))
+                            logger.debug('found support.')
                             while True:
                                 page_no = wait_which_target([self.T.team, self.T.wave1a],
                                                             [self.LOC.team_cloth, self.LOC.master_skill])
@@ -307,7 +308,7 @@ class Master:
         """
         Release servant skill to <self/all friends/all enemies>.
         :param before: image before the skill released.
-        :param after: image after the skill released.
+        :param after: image after the skill released. if null, not to check.
         :param who: who to release the skill.value in [left=1,mid=2,right=3], the same below.
         :param skill: which skill to release.
         :param friend: which friend
@@ -331,9 +332,10 @@ class Master:
             # TODO: match select target shot, same as master_skill
             time.sleep(0.5)
             click(self.LOC.skill_to_target[friend - 1])
-        wait_which_target(after, region)
+        if after is not None:
+            wait_which_target(after, region)
 
-    def set_waves(self, before: Image.Image, after: Image.Image):
+    def set_waves(self, before: Image.Image, after: Image.Image = None):
         """set wave a/b before every wave start, also for order change/stella/jump_battle """
         self.wave_a = before
         self.wave_b = after
@@ -416,7 +418,7 @@ class Master:
                     chosen_cards = convert_to_list(nps)
                     chosen_cards.extend([1, 2, 3])
                     logger.debug('unrecognized cards, choose [1,2,3]')
-                    chosen_cards = chosen_cards[0:3]
+                    # chosen_cards = chosen_cards[0:3]
                     break
                 else:
                     continue
@@ -443,14 +445,7 @@ class Master:
                 cur_turn += 1
                 logger.debug(f'xjbd: turn {cur_turn}/{turns}.')
                 time.sleep(1)
-                if nps is not None:
-                    nps = convert_to_list(nps)
-                    while not compare_regions(screenshot(), self.T.cards1, self.LOC.cards_back):
-                        # self.LOC.attack should be not covered by self.LOC.cards_back
-                        click(self.LOC.attack, lapse=0.2)
-                        time.sleep(0.2)
-                    self.play_cards(nps)
-                self.auto_attack(mode=mode, allow_unknown=allow_unknown)
+                self.auto_attack(mode=mode, nps=nps, allow_unknown=allow_unknown)
                 # self.attack([1, 2, 3])
             else:
                 continue
@@ -526,7 +521,9 @@ class Master:
         if not set(nps).issubset(set(np_cards.keys())):
             # print(f'nobel phantasm not recognized:{nps} not in {list(np_cards.keys())}\r', end='')
             return {}, {}
-        logger.debug(f'Parsed: {[f"{self.str_cards(c)}:{self.weights.get(c.code, -1)}" for c in cards.values()]},'
+        # logger.debug(f'Parsed: {[f"{self.str_cards(c)}:{self.weights.get(c.code, -1)}" for c in cards.values()]},'
+        #              f' np_cards={self.str_cards(np_cards)}')
+        logger.debug(f'Parsed: {[f"{self.str_cards(c)}" for c in cards.values()]},'
                      f' np_cards={self.str_cards(np_cards)}')
         return cards, np_cards
 
@@ -548,14 +545,11 @@ class Master:
         else:
             s_cards = sorted(cards.values(), key=lambda _c: self.weights.get(_c.code, 0))
             if mode == 'dmg':
-                if not chosen_nps:
-                    for i in (-3, -2, -1, 1, 0):
-                        if s_cards[i].color == Card.BUSTER:
-                            s_cards[i], s_cards[-3] = s_cards[-3], s_cards[i]
-                            break
-                    chosen_cards = s_cards[-3:]
-                else:
-                    chosen_cards = s_cards[-3 + len(chosen_nps):]
+                for i in (-3, -2, -1, 1, 0):
+                    if s_cards[i].color == Card.BUSTER:
+                        s_cards[i], s_cards[-3] = s_cards[-3], s_cards[i]
+                        break
+                chosen_cards = s_cards[-3:]
             elif mode == 'alter':
                 s_cards.reverse()
                 chosen_cards = [s_cards.pop(0)]
@@ -570,7 +564,7 @@ class Master:
                 chosen_cards = s_cards
             else:
                 raise KeyError(f'Invalid mode "{mode}"')
-        chosen_cards = (chosen_nps + chosen_cards)[0:3]
+        chosen_cards = chosen_nps + chosen_cards[0:3]
         logger.debug(f'chosen cards: {self.str_cards(chosen_cards)}')
         return chosen_cards
 

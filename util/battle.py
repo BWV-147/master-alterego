@@ -37,12 +37,17 @@ class BattleBase:
                     elif is_match_target(shot, T.apple_page, LOC.apple_page):
                         if self.master.eat_apple(apples) is False:
                             return
-                    elif is_match_target(shot, T.bag_full_alert, LOC.bag_full_sell_action):
+                    elif is_match_target(shot, T.get('bag_full_alert', LOC.gen_empty_img()), LOC.bag_full_sell_action):
                         # usually used in hunting events.
                         logger.info('bag full, to sell...')
                         click(LOC.bag_full_sell_action)
                         self.sell(1)
-                        break
+                    elif is_match_target(shot, T.restart_quest, LOC.restart_quest_yes):
+                        click(LOC.restart_quest_yes)
+                        logger.debug('restart the same battle')
+                    elif is_match_target(shot, T.apply_friend, LOC.apply_friend):
+                        click(LOC.apply_friend_deny)
+                        logger.debug('not to apply friend')
                     elif is_match_target(shot, T.support, LOC.support_refresh):
                         break
                     time.sleep(0.5)
