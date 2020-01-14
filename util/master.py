@@ -14,13 +14,24 @@ class Card:
     BUSTER = 3
 
     def __init__(self, loc, code):
+        # loc: 1~5, 6~8
         self.loc = loc
         self.code = code
+        # svt: 1~3,4~6
         self.svt = code // 10
+        # color: 0-np, 1-quick, 2-arts, 3-buster
         self.color = code % 10
 
     def __repr__(self):
         return f'{self.__class__.__name__}({self.loc}, {self.code})'
+
+    @staticmethod
+    def has_card(cards: List, svt: int, color: int):
+        num = 0
+        for card in cards:
+            if isinstance(card, Card) and card.svt == svt and card.color == color:
+                num += 1
+        return num
 
 
 class Master:
@@ -326,7 +337,11 @@ class Master:
         if enemy is not None:
             click(self.LOC.enemies[enemy - 1])
         region = self.LOC.skills[who - 1][skill - 1]
-        wait_which_target(before, region, at=True)
+        # wait_which_target(self.T.wave1a, self.LOC.master_skill)
+        wait_which_target(before, region)
+        while is_match_target(screenshot(), before, region):
+            # some times need to
+            click(region)
         if friend is not None:
             # it should also match the saved screenshot, but...
             # TODO: match select target shot, same as master_skill
@@ -430,23 +445,25 @@ class Master:
         return chosen_cards
 
     def xjbd(self, target, regions, mode='dmg', turns=100, allow_unknown=False, nps=None):
-        # type:(Union[Image.Image,Sequence[Image.Image]],Sequence,str,int,bool,Union[int,Sequence])->int
+        # type:(Union[Image.Image,Sequence[Image.Image]],Sequence,str,int,bool,Union[int,Sequence])->List[List]
         if not isinstance(regions[0], Sequence):
             regions = [regions]
         cur_turn = 0
+        turn_cards = []
         while cur_turn < turns:
             shot = screenshot()
             if compare_regions(shot, target, regions):
                 # this part must before elif part
                 if cur_turn > 0:
                     logger.info(f'xjbd total {cur_turn} turns')
-                return cur_turn
+                return turn_cards
             elif compare_regions(shot, self.T.wave1a, self.LOC.master_skill):
                 cur_turn += 1
                 logger.debug(f'xjbd: turn {cur_turn}/{turns}.')
                 time.sleep(1)
-                self.auto_attack(mode=mode, nps=nps, allow_unknown=allow_unknown)
+                chosen_cards = self.auto_attack(mode=mode, nps=nps, allow_unknown=allow_unknown)
                 # self.attack([1, 2, 3])
+                turn_cards.append(chosen_cards)
             else:
                 continue
 
@@ -545,11 +562,14 @@ class Master:
         else:
             s_cards = sorted(cards.values(), key=lambda _c: self.weights.get(_c.code, 0))
             if mode == 'dmg':
-                for i in (-3, -2, -1, 1, 0):
-                    if s_cards[i].color == Card.BUSTER:
-                        s_cards[i], s_cards[-3] = s_cards[-3], s_cards[i]
-                        break
-                chosen_cards = s_cards[-3:]
+                if len(chosen_nps) > 0:
+                    chosen_cards = s_cards[-1:-4:-1]
+                else:
+                    for i in (-3, -2, -1, 1, 0):
+                        if s_cards[i].color == Card.BUSTER:
+                            s_cards[i], s_cards[-3] = s_cards[-3], s_cards[i]
+                            break
+                    chosen_cards = s_cards[-3:]
             elif mode == 'alter':
                 s_cards.reverse()
                 chosen_cards = [s_cards.pop(0)]

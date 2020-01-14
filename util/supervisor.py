@@ -92,7 +92,7 @@ def kill_thread(thread: threading.Thread):
     logger.critical(f'Thread-{thread.ident}({thread.name}) have been killed!')
 
 
-def send_mail(body, subject=None, receiver=None):
+def send_mail(body, subject=None, receiver=None, attach_shot=True):
     if subject is None:
         subject = f'{body[0:50]}...' if len(body) > 50 else body
     if threading.current_thread().name != 'MainThread':
@@ -110,8 +110,8 @@ Computer name: <b>{socket.getfqdn(socket.gethostname())}</b><br>
 <b>Recent log({BaseConfig.log_file})</b>:<br>
 {'<br>'.join(recent_records)}<br>
 ----------------------------------<br>
-<b>Screenshot before shutdown</b>:<br>
-<img width="80%" src="cid:screenshot"></br> 
+{'<b>Screenshot before shutdown</b>:<br>' +
+ '<img width="80%" src="cid:screenshot"></br>' if attach_shot else ''}
 """
     from util.autogui import screenshot
     crash_fp = 'img/crash.jpg'
@@ -137,10 +137,11 @@ Computer name: <b>{socket.getfqdn(socket.gethostname())}</b><br>
     msg['From'] = formataddr((config.sender_name, config.sender))
     msg['To'] = receiver
     msg.attach(MIMEText(body, 'html', 'utf-8'))
-    with open(crash_fp, 'rb') as fd:
-        m1 = MIMEImage(fd.read())
-        m1.add_header('Content-ID', '<screenshot>')
-        msg.attach(m1)
+    if attach_shot:
+        with open(crash_fp, 'rb') as fd:
+            m1 = MIMEImage(fd.read())
+            m1.add_header('Content-ID', '<screenshot>')
+            msg.attach(m1)
     # send
     retry_time = 0
     while retry_time < 5:

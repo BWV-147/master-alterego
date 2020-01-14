@@ -5,28 +5,30 @@ from util.battle import *
 # noinspection PyPep8Naming,DuplicatedCode
 class Battle(BattleBase):
     @with_goto
-    def a_rider(self, pre_process=False):
+    def a_archer(self, pre_process=False):
         """
-        阵容: 杀师匠-大龙娘-羽蛇神-X-X
-        xjb打，给大龙娘凑宝具
+        阵容: 幼贞-艾蕾-孔明-X-X，减CD服
         """
         master = self.master
         T = master.T
         LOC = master.LOC
 
         # pre-processing: only configure base info
-        master.quest_name = 'A-Rider'
-        T.read_templates('img/a-rider')
+        master.quest_name = 'A-Archer'
+        T.read_templates('img/a-archer')
         # LOC.relocate((0, 0, 1920 - 1, 1080 - 1))
-        master.set_party_members(['杀师匠', '大龙娘', '羽蛇神', '羽蛇神R'])
+        master.set_party_members(['幼贞', '艾蕾', '孔明'])
         master.show_svt_name = True
-        master.set_card_weights([1.0, 1.1, 0.81, 0.80])
+
+        # w_np: 幼贞 np first; w_dmg: damage first
+        w_np = [[22, 25, 21], [10, 15, 20], [1, 2, 3]]
+        w_dmg = [[19, 21, 22], [10, 15, 20], [1, 2, 3]]
+        master.set_card_weights(w_np)
         # ---- NP     Quick   Arts   Buster ----
         master.set_card_templates([
-            [(1, 0), (2, 1), (1, 2), (3, 4)],
-            [(4, 7), (1, 4), (2, 4), (1, 3)],
-            [(1, 0), (2, 3), (1, 1), (1, 5)],
-            [(1, 0), (5, 3), (5, 4), (5, 2)]
+            [(5, 6), (2, 4), (3, 1), (1, 1)],
+            [(4, 7), (1, 5), (2, 1), (3, 4)],
+            [(1, 0), (2, 3), (1, 2), (3, 2)]
         ])
         if pre_process:
             return
@@ -44,42 +46,84 @@ class Battle(BattleBase):
         wait_which_target(T.support, LOC.support_refresh)
         support = True
         if support:
-            master.choose_support_drag(match_svt=False, match_ce=False, match_ce_max=False, match_skills=False,
-                                       switch_classes=(6, 9))
+            master.choose_support_drag(match_svt=True, match_ce=False, match_ce_max=False, match_skills=True,
+                                       switch_classes=(0, 5))
         else:
             logger.debug('please choose support manually in 60s!')
 
+        # noinspection PyStatementEffect
+        label.h
         cur_turn = 1
         # wave 1
         wait_targets(T.wave1a, [LOC.wave_num, LOC.master_skill])
         logger.debug('wave 1...')
-        master.set_waves(T.wave1a)
-        master.svt_skill(2, 1)
-        master.svt_skill(3, 1)
-        cur_turn += master.xjbd(T.wave2a, [LOC.wave_num, LOC.master_skill], 'alter')
+        master.set_waves(T.wave1a, T.wave1b)
+        master.svt_skill(1, 2)
+        master.svt_skill(3, 2)
+        master.svt_skill(3, 3)
+        master.svt_skill(3, 1, 2)
+        master.master_skill(3, 3)
 
-        # wave 2
-        wait_targets(T.wave2a, [LOC.wave_num, LOC.master_skill])
-        logger.debug('wave 2...')
-        master.set_waves(T.wave2a)
-        click(LOC.enemies[0])
-        cur_turn += master.xjbd(T.wave3a, [LOC.wave_num, LOC.master_skill], mode='alter')
+        # wave 1
+        wait_targets(T.wave1a, [LOC.wave_num, LOC.master_skill])
+        logger.debug('wave 1...')
+        master.set_waves(T.wave1a, T.wave1b)
+        # end label .h
 
-        # noinspection PyStatementEffect
-        label.h
-        # wave 3
-        wait_targets(T.wave3a, [LOC.wave_num, LOC.master_skill])
-        logger.debug('wave 3...')
-        master.set_waves(T.wave3a)
-        master.svt_skill(2, 3, enemy=1)
-        click(LOC.enemies[-1])
-        if cur_turn < 8:
-            master.xjbd(T.kizuna, LOC.kizuna, turns=8 - cur_turn)
-        wait_which_target(T.wave3a, LOC.master_skill)
-        master.svt_skill(3, 1)
-        master.svt_skill(2, 1, enemy=1)
+        cards_t1 = master.auto_attack(mode='alter')
+        cur_turn += 1
+        if Card.has_card(cards_t1, 1, 2) > 0:
+            # T1 幼贞蓝爆+10NP，自由打
+            master.set_card_weights(w_dmg)
+            xjbd1_cards = master.xjbd(T.wave2a, [LOC.wave_num, LOC.master_skill], 'alter')
+            cur_turn += len(xjbd1_cards)
+            # wave 2
+            logger.debug('wave 2...')
+            master.set_waves(T.wave2a, T.wave2b)
+            click(LOC.enemies[0])
+            master.svt_skill(2, 3)
+        else:
+            # T1没蓝爆，则开艾蕾全体黄金律
+            master.svt_skill_full(T.wave2a, T.wave2b, 2, 3)
+            xjbd1_cards = master.xjbd(T.wave2a, [LOC.wave_num, LOC.master_skill], 'alter')
+            click(LOC.enemies[0])
+            master.set_waves(T.wave2a, T.wave2b)
+            cur_turn += len(xjbd1_cards)
+            possible_cards = []
+            for i, t_cards in enumerate(xjbd1_cards):
+                if i < len(xjbd1_cards) - 1:
+                    possible_cards = possible_cards + t_cards
+                else:
+                    possible_cards.append(t_cards[0])
+            if Card.has_card(possible_cards, 1, 2) > 0:
+                # 至wave2有蓝卡，则正常打
+                pass
+            else:
+                # 至wave2无蓝卡(wave1 <3t)，盯着奇美拉打完前3T必有蓝卡
+                master.xjbd(T.wave3a, [LOC.wave_num, LOC.master_skill], turns=4 - cur_turn)
+                cur_turn = 4
+        master.set_card_weights(w_dmg)
         master.svt_skill(2, 2)
-        master.master_skill(2, 2)
-        master.xjbd(T.kizuna, LOC.kizuna, turns=1, nps=7, allow_unknown=True)
-        master.xjbd(T.kizuna, LOC.kizuna, allow_unknown=True, mode='alter')
+        master.auto_attack(nps=7)
+        cur_turn += 1
+        xjbd2_cards = master.xjbd(T.wave3a, [LOC.wave_num, LOC.master_skill])
+        cur_turn += len(xjbd2_cards)
+
+        # wave 3
+        logger.debug('wave 3...')
+        master.set_waves(T.wave3a, T.wave3b)
+        click(LOC.enemies[1])
+        if cur_turn < 5:
+            # 确保T5孔明技能冷却
+            master.xjbd(T.kizuna, LOC.kizuna, turns=5 - cur_turn)
+            cur_turn = 5
+        master.svt_skill(1, 3)
+        master.svt_skill_full(T.wave1a, T.wave1b, 3, 2)
+        master.svt_skill_full(T.wave1a, T.wave1b, 3, 3)
+        master.svt_skill_full(T.wave1a, T.wave1b, 3, 1, 1)
+        master.auto_attack(nps=6)
+        cur_turn += 1
+        xjbd4_cards = master.xjbd(T.kizuna, LOC.kizuna, allow_unknown=True)
+        cur_turn += len(xjbd4_cards)
+        logger.info(f'Battle finished in {cur_turn - 1} turns.')
         return

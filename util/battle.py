@@ -78,6 +78,8 @@ class BattleBase:
                 rewards.save(f"{png_fn}.png")
             # ready to restart a battle
             click(LOC.finish_next)
+            if finished_num % 30 == 0:
+                send_mail(f'Progress: {finished_num}/{actual_max_num} battles finished.', attach_shot=False)
             while True:
                 shot = screenshot()
                 if search_target(shot.crop(LOC.quest_outer), T.quest.crop(LOC.quest))[0] > THR:

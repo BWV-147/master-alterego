@@ -121,6 +121,13 @@ capture('shop')
 # %%
 capture('shop_event_banner_list')
 
-# %% temp
+# %% debug during battle
+from battles import *
 
-# end
+_battle: Battle = globals()['my_battle']
+master = _battle.master
+T = master.T
+LOC = master.LOC
+# start debugging
+print(master.quest_name)
+# end debug
