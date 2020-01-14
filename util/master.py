@@ -253,7 +253,6 @@ class Master:
         """
         T = self.T
         LOC = self.LOC
-        import pyautogui
         logger.debug('choosing support (drag mode)...')
         support_page = self.T.support if img is None else img
         if switch_classes is None:
@@ -265,12 +264,12 @@ class Master:
             return is_match_target(_shot.crop(np.add(old_loc, [0, _offset, 0, _offset])), T.support.crop(old_loc))
 
         while True:
-            time.sleep(0.5)
+            wait_which_target(support_page, self.LOC.support_refresh, lapse=0.5)
             for icon in switch_classes:
                 if icon == -1:
                     time.sleep(0.2)
                 else:
-                    click(self.LOC.support_class_icons[icon], 0.2)
+                    click(self.LOC.support_class_icons[icon], 0.5)
                     logger.debug(f'switch support class to No.{icon}.')
                 pyautogui.moveTo(*LOC.support_scrollbar_start)
                 drag_num = 5 if is_match_target(screenshot(), T.support, LOC.support_scrollbar_head, 0.8) else 1
@@ -312,7 +311,7 @@ class Master:
                 send_mail(body='refresh support more than 40 times.', subject='refresh support more than 40 times')
             wait_which_target(support_page, self.LOC.support_refresh, at=True)
             wait_which_target(self.T.support_confirm, self.LOC.support_confirm_title, clicking=self.LOC.support_refresh)
-            click(self.LOC.support_refresh_confirm, lapse=2)
+            click(self.LOC.support_refresh_confirm, lapse=1)
 
     def svt_skill_full(self, before, after, who, skill, friend=None, enemy=None):
         # type: (Image.Image,Image.Image,int,int,int,int)->None
@@ -563,7 +562,7 @@ class Master:
             s_cards = sorted(cards.values(), key=lambda _c: self.weights.get(_c.code, 0))
             if mode == 'dmg':
                 if len(chosen_nps) > 0:
-                    chosen_cards = s_cards[-1:-4:-1]
+                    chosen_cards = [s_cards[i] for i in (-2, -1, -3)]
                 else:
                     for i in (-3, -2, -1, 1, 0):
                         if s_cards[i].color == Card.BUSTER:

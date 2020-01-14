@@ -6,7 +6,7 @@ from util.master import *
 check_sys_admin()
 
 # %%
-base_path = 'img/gacha'  # 'img/gacha-jp'
+base_path = 'img/a-archer'  # 'img/gacha-jp'
 
 
 def capture(fn: str):
@@ -124,7 +124,9 @@ capture('shop_event_banner_list')
 # %% debug during battle
 from battles import *
 
-_battle: Battle = globals()['my_battle']
+# _battle: Battle = globals()['my_battle']
+_battle = Battle()
+_battle.battle_template(True)
 master = _battle.master
 T = master.T
 LOC = master.LOC
