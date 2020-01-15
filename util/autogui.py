@@ -1,6 +1,9 @@
 """Image processing and computation"""
+import traceback
+
 import cv2
 import numpy as np
+from PIL import ImageGrab
 from scipy.signal import find_peaks
 from skimage.feature import match_template as sk_match_template
 from skimage.metrics import structural_similarity as sk_compare_ssim
@@ -18,12 +21,18 @@ def screenshot(region: Sequence = None, filepath: str = None, monitor=config.mon
     :return: PIL.Image.Image
     """
     try:
-        with mss() as sct:
-            mon = sct.monitors[monitor]
-            shot = sct.grab(mon)
-            _image = Image.frombytes('RGB', (mon['width'], mon['height']), shot.rgb).crop(region)
+        # if monitor is off, mss will raise ScreenShotError("gdi32.GetDIBits() failed.")
+        # but PIL.ImageGrab won't grab the main monitor(? even is off?) if there are more than 2 monitors.
+        if monitor == 1:
+            _image = ImageGrab.grab()
+        else:
+            with mss() as sct:
+                mon = sct.monitors[monitor]
+                shot = sct.grab(mon)
+                _image = Image.frombytes('RGB', (mon['width'], mon['height']), shot.rgb).crop(region)
     except Exception as e:
-        logger.error('grab screenshot failed, return default single color image.\n%s' % e)
+        logger.error('grab screenshot failed, return default single color image.\n%s' % e, NO_LOG_TIME)
+        logger.debug(traceback.format_exc(), NO_LOG_TIME)
         _image = Image.new('RGB', (1920, 1080), (0, 255, 255)).crop(region)
     if filepath is not None:
         _image.save(filepath)

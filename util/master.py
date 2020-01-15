@@ -454,7 +454,7 @@ class Master:
             if compare_regions(shot, target, regions):
                 # this part must before elif part
                 if cur_turn > 0:
-                    logger.info(f'xjbd total {cur_turn} turns')
+                    logger.debug(f'xjbd total {cur_turn} turns')
                 return turn_cards
             elif compare_regions(shot, self.T.wave1a, self.LOC.master_skill):
                 cur_turn += 1

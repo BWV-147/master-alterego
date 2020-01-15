@@ -34,6 +34,7 @@ class Battle(BattleBase):
             [(4, 7), (1, 5), (2, 1), (3, 4)],
             [(1, 0), [(2, 3), (5, 2), (8, 4)], [(1, 2), (4, 1), (8, 3)], [(3, 2), (5, 1), (9, 4)]]
         ])
+        config.img_net = config.loc_net = None
         if pre_process:
             return
 
@@ -67,6 +68,7 @@ class Battle(BattleBase):
         master.svt_skill(3, 3)
         master.svt_skill(3, 1, 2)
         master.master_skill(3, 3)
+        master.set_card_weights(w_np)
         cards_t1 = master.auto_attack(mode='alter')
         cur_turn += 1
         if Card.has_card(cards_t1, 1, 2) > 0:
@@ -81,10 +83,13 @@ class Battle(BattleBase):
             master.svt_skill(2, 3)
         else:
             # T1没蓝爆，则开艾蕾全体黄金律
+            master.set_card_weights(w_np)
             master.svt_skill_full(T.wave2a, T.wave2b, 2, 3)
             xjbd1_cards = master.xjbd(T.wave2a, [LOC.wave_num, LOC.master_skill], 'alter')
             # wave 2
+            logger.debug('wave 2...')
             click(LOC.enemies[0])
+            master.set_card_weights(w_dmg)
             master.set_waves(T.wave2a, T.wave2b)
             cur_turn += len(xjbd1_cards)
             possible_cards = []
@@ -100,7 +105,6 @@ class Battle(BattleBase):
                 # 至wave2无蓝卡(wave1 <3t)，盯着奇美拉打完前3T必有蓝卡
                 master.xjbd(T.wave3a, [LOC.wave_num, LOC.master_skill], turns=4 - cur_turn)
                 cur_turn = 4
-        master.set_card_weights(w_dmg)
         master.svt_skill(2, 2)
         master.auto_attack(nps=7)
         cur_turn += 1
@@ -152,6 +156,7 @@ class Battle(BattleBase):
             [(3, 7), (3, 2), (3, 4), (3, 1)],
             [(1, 0), [(1, 5), (6, 4), (7, 5)], [(1, 4), (4, 3), (7, 2)], [(3, 3), (6, 5), (8, 3)]]
         ])
+        config.img_net = config.loc_net = None
         if pre_process:
             return
 
@@ -184,7 +189,7 @@ class Battle(BattleBase):
         master.svt_skill(3, 3)
         master.svt_skill(3, 1, 2)
         master.master_skill(3, 3)
-
+        master.set_card_weights(w_np)
         cards_t1 = master.auto_attack(mode='alter')
         cur_turn += 1
         if Card.has_card(cards_t1, 1, 2) > 0:
@@ -199,9 +204,13 @@ class Battle(BattleBase):
             master.svt_skill(2, 3)
         else:
             # T1没蓝爆，则开艾蕾全体黄金律
+            master.set_card_weights(w_np)
             master.svt_skill_full(T.wave2a, T.wave2b, 2, 3)
             xjbd1_cards = master.xjbd(T.wave2a, [LOC.wave_num, LOC.master_skill], 'alter')
+            # wave 2
+            logger.debug('wave 2...')
             click(LOC.enemies[0])
+            master.set_card_weights(w_dmg)
             master.set_waves(T.wave2a, T.wave2b)
             cur_turn += len(xjbd1_cards)
             possible_cards = []
@@ -210,6 +219,7 @@ class Battle(BattleBase):
                     possible_cards = possible_cards + t_cards
                 else:
                     possible_cards.append(t_cards[0])
+            print(f'possible cards: {possible_cards}')
             if Card.has_card(possible_cards, 1, 2) > 0:
                 # 至wave2有蓝卡，则正常打
                 pass
@@ -217,7 +227,6 @@ class Battle(BattleBase):
                 # 至wave2无蓝卡(wave1 <3t)，盯着奇美拉打完前3T必有蓝卡
                 master.xjbd(T.wave3a, [LOC.wave_num, LOC.master_skill], turns=4 - cur_turn)
                 cur_turn = 4
-        master.set_card_weights(w_dmg)
         master.svt_skill(2, 2)
         master.auto_attack(nps=7)
         cur_turn += 1
