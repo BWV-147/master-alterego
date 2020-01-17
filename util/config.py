@@ -27,9 +27,9 @@ class BaseConfig:
         self.max_finished_battles = 1000  # stop if finished_battles >= max_finished_battles
         self.check_drop = True  # check craft dropped or not, if True, make sure rewards.png contains the dropped craft.
         self.apples = []  # invalid: stop, 0-colorful, 1-gold, 2-sliver, 3-cropper
-        self.stop_around_3am = True  # JP: re-login at 3am(UTC+08)
         self.jump_battle = False  # goto decoration in Battle.battle_func
         self.jump_start = False  # goto decoration in Battle.start
+        self.stop_around_3am = True  # JP: re-login at 3am(UTC+08)
 
         self.craft_num = 0
         self.craft_history = {}

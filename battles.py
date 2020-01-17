@@ -6,6 +6,7 @@ from util.battle import *
 class Battle(BattleBase):
     """
     采用好友助战(如孔明)时，若涉及其指令卡识别，务必加入三个再临阶段的指令卡
+    ensure the same app version.
     """
 
     @with_goto
@@ -34,7 +35,6 @@ class Battle(BattleBase):
             [(4, 7), (1, 5), (2, 1), (3, 4)],
             [(1, 0), [(2, 3), (5, 2), (8, 4)], [(1, 2), (4, 1), (8, 3)], [(3, 2), (5, 1), (9, 4)]]
         ])
-        config.img_net = config.loc_net = None
         if pre_process:
             return
 
@@ -156,7 +156,6 @@ class Battle(BattleBase):
             [(3, 7), (3, 2), (3, 4), (3, 1)],
             [(1, 0), [(1, 5), (6, 4), (7, 5)], [(1, 4), (4, 3), (7, 2)], [(3, 3), (6, 5), (8, 3)]]
         ])
-        config.img_net = config.loc_net = None
         if pre_process:
             return
 

@@ -22,10 +22,12 @@ def screenshot(region: Sequence = None, filepath: str = None, monitor=config.mon
     """
     try:
         # if monitor is off, mss will raise ScreenShotError("gdi32.GetDIBits() failed.")
-        # but PIL.ImageGrab won't grab the main monitor(? even is off?) if there are more than 2 monitors.
+        # but PIL.ImageGrab only grab the main monitor(? even it is off?) if there are more than 2 monitors.
         if monitor == 1:
+            # so grab main screen through PIL
             _image = ImageGrab.grab()
         else:
+            # grab second screen through mss, ensure the second monitor is *ON*!
             with mss() as sct:
                 mon = sct.monitors[monitor]
                 shot = sct.grab(mon)

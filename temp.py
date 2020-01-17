@@ -124,9 +124,13 @@ capture('shop_event_banner_list')
 # %% debug during battle
 from battles import *
 
-# _battle: Battle = globals()['my_battle']
+config.load_config('data/config.json')
+check_sys_admin()
+BaseConfig.task_finished = False
+BaseConfig.log_file = 'logs/log.full.log'
+# _battle: Battle = globals()['battle']
 _battle = Battle()
-_battle.battle_template(True)
+getattr(_battle, config.battle_func)(True)
 master = _battle.master
 T = master.T
 LOC = master.LOC

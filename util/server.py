@@ -13,6 +13,7 @@ PROJECT_NAME = 'master-alterego'
 project_dir = os.path.join(os.getcwd().split(sep=PROJECT_NAME)[0], PROJECT_NAME)
 print(f'Project dir: {project_dir}')
 os.chdir(project_dir)
+sys.path.append(project_dir)
 print(f'cwd: {os.getcwd()}\n')
 
 # change cwd before import custom packages

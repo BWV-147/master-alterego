@@ -113,9 +113,10 @@ Computer name: <b>{socket.getfqdn(socket.gethostname())}</b><br>
 {'<b>Screenshot before shutdown</b>:<br>' +
  '<img width="80%" src="cid:screenshot"></br>' if attach_shot else ''}
 """
-    from util.autogui import screenshot
     crash_fp = 'img/crash.jpg'
-    screenshot(monitor=config.monitor).resize((1920 // 2, 1080 // 2)).save(crash_fp, format='jpeg', quality=40)
+    shot = screenshot()
+    shot.save('img/crash.png')
+    shot.resize((1920 // 2, 1080 // 2)).save(crash_fp, format='jpeg', quality=40)
     logger.info(f'\n--------- Email --------------\n'
                 f'subject: "{subject}"\n'
                 f'receiver: {receiver}\n'
