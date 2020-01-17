@@ -123,7 +123,7 @@ class BattleBase:
                                               "battle_num": config.battle_num,
                                               "apples": config.apples},
                                       daemon=True)
-            supervise_log_time(thread, 90, mail=config.mail, interval=3)
+            supervise_log_time(thread, 90, interval=3)
         else:
             self.start(battle_func=battle_func, battle_num=config.battle_num, apples=config.apples)
 

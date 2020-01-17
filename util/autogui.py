@@ -1,4 +1,4 @@
-"""Image processing and computation"""
+"""Image related processing"""
 import traceback
 
 import cv2
@@ -12,14 +12,16 @@ from util.dataset import *
 from util.gui import *
 
 
-def screenshot(region: Sequence = None, filepath: str = None, monitor=config.monitor) -> Image.Image:
+def screenshot(region: Sequence = None, filepath: str = None, monitor: int = None) -> Image.Image:
     """
     take screenshot of multi-monitors. set python.exe and pythonw.exe high dpi first!(see README.md)
     :param region: region inside monitor
-    :param filepath:
-    :param monitor: 0-all monitor, 1-first, 2-second monitor
+    :param filepath: if not None, save to `filepath` then return
+    :param monitor: 0-total size of all monitors, 1-main, 2-second monitor
     :return: PIL.Image.Image
     """
+    if monitor is None:
+        monitor = config.monitor
     try:
         # if monitor is off, mss will raise ScreenShotError("gdi32.GetDIBits() failed.")
         # but PIL.ImageGrab only grab the main monitor(? even it is off?) if there are more than 2 monitors.

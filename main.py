@@ -8,7 +8,7 @@ from util.gacha import Gacha
 def start_battle():
     battle = Battle()
     globals()['battle'] = battle
-    battle.start_with_supervisor(check=True, conf='data/config2.json')
+    battle.start_with_supervisor(check=True, conf='data/config.json')
 
 
 def start_gacha():

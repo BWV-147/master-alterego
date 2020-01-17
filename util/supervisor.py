@@ -3,7 +3,6 @@ Basic, standalone functions
 """
 import smtplib
 import socket
-import winsound
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -12,8 +11,12 @@ from email.utils import formataddr
 from util.autogui import *
 
 
-def supervise_log_time(thread: threading.Thread, secs: float = 60, mail=False, interval=10, mute=True):
+def supervise_log_time(thread: threading.Thread, secs=60, mail: bool = None, interval=10, mute: bool = None):
     assert thread is not None, thread
+    if mail is None:
+        mail = config.mail
+    if mute is None:
+        mute = config.mute
 
     def _overtime():
         return time.time() - BaseConfig.log_time > secs
@@ -52,13 +55,16 @@ def supervise_log_time(thread: threading.Thread, secs: float = 60, mail=False, i
                 BaseConfig.log_time += 30
                 continue
         # case 4: unrecognized error - waiting user to handle (in 2*loops seconds)
-        logger.warning(f'Something wrong, please solve it, or it will be force stopped... {loops}', NO_LOG_TIME)
         loops -= 1
-        if mute:
-            time.sleep(2)
+        if loops > 0:
+            print(f'\rSomething wrong, please solve it, or it will be force stopped... {loops}\r', end='')
         else:
-            winsound.Beep(600, 1400)
-            time.sleep(0.6)
+            logger.warning(f'Something wrong, it will be force stopped...', NO_LOG_TIME)
+        if mute:
+            time.sleep(4)
+        else:
+            beep(2)
+            time.sleep(1)
         if loops < 0:
             # not solved! kill thread and stop.
             err_msg = f'Thread-{thread.ident}({thread.name}):' \
@@ -167,3 +173,17 @@ Computer name: <b>{socket.getfqdn(socket.gethostname())}</b><br>
                            f' error_type={type(e)},\ne={e}', NO_LOG_TIME)
             logger.info(f'retry sending mail after 5 sec...({retry_time}/5 times)', NO_LOG_TIME)
         time.sleep(5)
+
+
+def beep(duration: float):
+    """
+    :param duration: duration in seconds
+    """
+    if sys.platform == 'win32':
+        import winsound
+        winsound.Beep(600, int(duration * 1000))
+    else:
+        t0 = time.time()
+        while time.time() - t0 < duration:
+            sys.stdout.write('\a')
+        sys.stdout.flush()

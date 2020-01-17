@@ -7,7 +7,7 @@ import sys
 import time
 
 from PIL import Image
-from flask import Flask, request, Response
+from flask import Flask, request, Response, redirect
 
 PROJECT_NAME = 'master-alterego'
 project_dir = os.path.join(os.getcwd().split(sep=PROJECT_NAME)[0], PROJECT_NAME)
@@ -25,6 +25,11 @@ app = Flask(__name__, static_folder=os.path.join(project_dir, 'img'), static_url
 @app.route('/')
 def index():
     return 'hello world'
+
+
+@app.route('/favicon.ico')
+def favicon():
+    return redirect('https://deliver.commons.nicovideo.jp/thumbnail/nc164546')
 
 
 @app.route('/pages')

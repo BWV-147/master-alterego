@@ -18,6 +18,7 @@ class BaseConfig:
         self.offset_x = 0  # xy offset for mouse click event, relative to MAIN monitor's origin
         self.offset_y = 0
         self.mail = False  # whether to send_mail
+        self.mute = True  # alert or mute if supervisor found errors.
 
         # ================= battle part =================
         # battle params

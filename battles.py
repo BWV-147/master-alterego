@@ -125,6 +125,9 @@ class Battle(BattleBase):
         master.svt_skill_full(T.wave1a, T.wave1b, 3, 1, 1)
         master.auto_attack(nps=6)
         cur_turn += 1
+        # # noinspection PyStatementEffect
+        # label.h
+        # cur_turn = 5
         xjbd4_cards = master.xjbd(T.kizuna, LOC.kizuna, allow_unknown=True)
         cur_turn += len(xjbd4_cards)
         logger.info(f'Battle finished in {cur_turn - 1} turns.')
@@ -247,6 +250,9 @@ class Battle(BattleBase):
         master.svt_skill_full(T.wave1a, T.wave1b, 3, 1, 1)
         master.auto_attack(nps=6)
         cur_turn += 1
+        # # noinspection PyStatementEffect
+        # label.h
+        # cur_turn = 5
         xjbd4_cards = master.xjbd(T.kizuna, LOC.kizuna, allow_unknown=True)
         cur_turn += len(xjbd4_cards)
         logger.info(f'Battle finished in {cur_turn - 1} turns.')
