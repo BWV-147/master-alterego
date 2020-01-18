@@ -8,15 +8,17 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import formataddr
 
+import pygame
+
 from util.autogui import *
 
 
-def supervise_log_time(thread: threading.Thread, secs=60, mail: bool = None, interval=10, mute: bool = None):
+def supervise_log_time(thread: threading.Thread, secs=60, mail: bool = None, interval=10, alert: bool = None):
     assert thread is not None, thread
     if mail is None:
         mail = config.mail
-    if mute is None:
-        mute = config.mute
+    if alert is None:
+        alert = config.alert
 
     def _overtime():
         return time.time() - BaseConfig.log_time > secs
@@ -60,11 +62,10 @@ def supervise_log_time(thread: threading.Thread, secs=60, mail: bool = None, int
             print(f'\rSomething wrong, please solve it, or it will be force stopped... {loops}\r', end='')
         else:
             logger.warning(f'Something wrong, it will be force stopped...', NO_LOG_TIME)
-        if mute:
-            time.sleep(4)
+        if alert:
+            beep(1, 2)
         else:
-            beep(2)
-            time.sleep(1)
+            time.sleep(3)
         if loops < 0:
             # not solved! kill thread and stop.
             err_msg = f'Thread-{thread.ident}({thread.name}):' \
@@ -74,7 +75,11 @@ def supervise_log_time(thread: threading.Thread, secs=60, mail: bool = None, int
                 send_mail(err_msg, subject=f'[{thread.name}]something went wrong!')
             kill_thread(thread)
             print('exit supervisor after killing thread.')
-            return
+            break
+    if alert is True:
+        beep(2, 1, 20)
+    elif isinstance(alert, str):
+        play_ringtone(alert, 5)
 
 
 # inspired by https://github.com/mosquito/crew/blob/master/crew/worker/thread.py
@@ -164,7 +169,7 @@ Computer name: <b>{socket.getfqdn(socket.gethostname())}</b><br>
                 else:
                     logger.warning(f'send failed! Error:\n{result}', NO_LOG_TIME)
                 server.quit()
-                return
+                break
             except Exception as e:
                 logger.warning(f'send error, error_type={type(e)},\ne={e}', NO_LOG_TIME)
                 server.quit()
@@ -175,15 +180,26 @@ Computer name: <b>{socket.getfqdn(socket.gethostname())}</b><br>
         time.sleep(5)
 
 
-def beep(duration: float):
-    """
-    :param duration: duration in seconds
-    """
+def beep(duration: float, interval: float = 1, loops=1):
     if sys.platform == 'win32':
         import winsound
-        winsound.Beep(600, int(duration * 1000))
+        while loops > 0:
+            loops -= 1
+            winsound.Beep(600, int(duration * 1000))
+            time.sleep(interval)
     else:
-        t0 = time.time()
-        while time.time() - t0 < duration:
-            sys.stdout.write('\a')
+        while loops > 0:
+            loops -= 1
+            t0 = time.time()
+            while time.time() - t0 < duration:
+                sys.stdout.write('\a')
+            time.sleep(interval)
         sys.stdout.flush()
+
+
+def play_ringtone(filename, loops=1):
+    pygame.mixer.init()
+    pygame.mixer.music.load(filename)
+    pygame.mixer.music.play(loops)
+    while pygame.mixer.music.get_busy():
+        time.sleep(0.5)

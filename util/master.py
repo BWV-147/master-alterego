@@ -419,10 +419,8 @@ class Master:
         """
         t0 = time.time()
         while not compare_regions(screenshot(), self.T.cards1, self.LOC.cards_back):
-            click(self.LOC.attack, lapse=0.2)  # self.LOC.attack should be not covered by self.LOC.cards_back
-            time.sleep(0.2)
+            click(self.LOC.attack, lapse=0.3)  # self.LOC.attack should be not covered by self.LOC.cards_back
         while True:
-            time.sleep(1)
             cards, np_cards = self.parse_cards(screenshot(), nps=nps if parse_np else None)
             # print('in auto_attack: ', cards, np_cards)
             chosen_cards = []
@@ -440,6 +438,7 @@ class Master:
                 chosen_cards = self.choose_cards(cards, np_cards, nps, mode=mode)
                 break
         if no_play_card is False:
+            time.sleep(0.8)
             self.play_cards(chosen_cards)
         return chosen_cards
 
