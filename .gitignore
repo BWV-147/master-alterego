@@ -1,5 +1,6 @@
 # custom files
 !**/.gitkeep
+data/
 *.png
 *.jpg
 *.log.*

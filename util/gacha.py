@@ -95,13 +95,14 @@ class Gacha:
 
         no = 0
         skipped_drag_num = 0
+        MAX_SKIP_NUM = drag_num * 0.25
         while no < num:
             page_no = wait_which_target([T.mailbox_unselected1, T.bag_full_alert],
                                         [LOC.mailbox_get_all_action, LOC.bag_full_sell_action])
             if page_no == 0:
                 gacha_logger.info('check mailbox items...')
                 drag_no = 0
-                if skipped_drag_num > drag_num * 0.4:  # not item_checked:
+                if skipped_drag_num > MAX_SKIP_NUM:  # not item_checked:
                     logger.debug(f'no item available, stop cleaning.')
                     wait_which_target(T.mailbox_unselected1, LOC.mailbox_get_all_action)
                     click(self.LOC.mailbox_back)
@@ -130,10 +131,13 @@ class Gacha:
                                     break
                         if no >= num:
                             break
+                        time.sleep(0.3)
                     if no < num:
                         drag(start=LOC.mailbox_drag_start, end=LOC.mailbox_drag_end,
                              duration=0.5, down_time=0.1, up_time=0.3, lapse=0.1)
                         skipped_drag_num += 1
+                    if skipped_drag_num > MAX_SKIP_NUM:
+                        break
                 gacha_logger.info('get mailbox items.')
                 # wait_which_target(T.mailbox_selected, LOC.mailbox_get_action)
                 click(LOC.mailbox_get_action, lapse=1)
@@ -153,9 +157,9 @@ class Gacha:
         LOC = self.LOC
         gacha_logger.info('shop: selling...')
         print('Make sure the bag **FILTER** only shows "Experience Cards"/"Zhong Huo"!')
-        if num < 0:
+        if num <= 0:
             logger.warning('please sell items manually and return to gacha page!')
-            BaseConfig.log_time = time.time() + 120  # 2min for manual operation
+            BaseConfig.log_time = time.time() + 240  # 4min for manual operation
         else:
             no = 0
             while True:
@@ -171,10 +175,7 @@ class Gacha:
                     wait_which_target(T.bag_sell_confirm, LOC.bag_sell_confirm, at=True)
                     wait_which_target(T.bag_sell_finish, LOC.bag_sell_finish, at=True)
                 else:
-                    if page_no == 1:
-                        logger.info('all sold, no item left.')
-                    else:
-                        logger.info(f'sell: all {num} times finished.')
+                    logger.info('all sold.')
                     click(LOC.bag_back)
                     wait_which_target(T.shop, LOC.shop_event_item_exchange, at=True)
                     wait_which_target(T.shop_event_banner_list, LOC.shop_event_banner_list[config.event_banner_no],

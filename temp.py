@@ -6,9 +6,10 @@ from util.master import *
 check_sys_admin()
 
 # %%
-base_path = 'img/a-archer'  # 'img/gacha-jp'
+base_path = 'img/gacha-a'  # 'img/gacha-jp'
 
 
+# %%
 def capture(fn: str):
     # pyautogui.hotkey('alt', 'tab')
     time.sleep(1)
@@ -23,7 +24,7 @@ def capture(fn: str):
 
 # %%
 def save_rewards():
-    quest_name = 'Xmas-chen2'
+    quest_name = 'A-Archer'
     screenshot().save(f'img/_drops/rewards-{quest_name}-{time.strftime("%m%d-%H%M")}.png')
 
 

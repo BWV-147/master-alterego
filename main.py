@@ -6,14 +6,12 @@ from util.gacha import Gacha
 
 
 def start_battle():
-    battle = Battle()
-    globals()['battle'] = battle
+    globals()['battle'] = battle = Battle()
     battle.start_with_supervisor(check=True, conf='data/config.json')
 
 
 def start_gacha():
-    gacha = Gacha()
-    globals()['gacha'] = gacha
+    globals()['gacha'] = gacha = Gacha()
     gacha.start_with_supervisor(check=True, conf='data/config.json')
 
 

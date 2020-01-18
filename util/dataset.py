@@ -54,8 +54,11 @@ class Regions:
     bag_select_start = (200, 350)
     bag_select_end = (1416, 1050)
     bag_sell_action = (1600, 975, 1870, 1047)
-    bag_sell_confirm = (1181, 912, 1340, 968)
-    bag_sell_finish = (875, 908, 1045, 966)
+    bag_sell_confirm = (1181, 847, 1340, 906)
+    bag_sell_finish = (900, 845, 1020, 908)
+    # jp version:
+    # bag_sell_confirm = (1181, 912, 1340, 968)
+    # bag_sell_finish = (875, 908, 1045, 966)
 
     # from bag to drawer
     shop_sell = (1352, 465, 1723, 552)

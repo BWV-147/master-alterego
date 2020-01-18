@@ -108,6 +108,10 @@ class Battle(BattleBase):
         master.svt_skill(2, 2)
         master.auto_attack(nps=7)
         cur_turn += 1
+
+        # # noinspection PyStatementEffect
+        # label.h
+        # cur_turn = 5
         xjbd2_cards = master.xjbd(T.wave3a, [LOC.wave_num, LOC.master_skill])
         cur_turn += len(xjbd2_cards)
 

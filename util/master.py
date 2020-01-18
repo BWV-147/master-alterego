@@ -602,5 +602,4 @@ class Master:
         locs: List[int] = [c.loc if isinstance(c, Card) else c for c in cards]
         for loc in locs:
             # print(f'click card {loc}')
-            click(self.LOC.cards[loc - 1])
-            time.sleep(0.2)
+            click(self.LOC.cards[loc - 1], lapse=0.3)
