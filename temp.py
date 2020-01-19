@@ -117,6 +117,8 @@ capture('bag_sell_finish')
 capture('shop')
 # %%
 capture('shop_event_banner_list')
+# %%
+capture('net_error')
 
 # %% debug during battle
 from battles import *

@@ -8,8 +8,6 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import formataddr
 
-import pygame
-
 from util.autogui import *
 
 
@@ -181,28 +179,3 @@ Computer name: <b>{socket.getfqdn(socket.gethostname())}</b><br>
                            f' error_type={type(e)},\ne={e}', NO_LOG_TIME)
             logger.info(f'retry sending mail after 5 sec...({retry_time}/5 times)', NO_LOG_TIME)
         time.sleep(5)
-
-
-def beep(duration: float, interval: float = 1, loops=1):
-    if sys.platform == 'win32':
-        import winsound
-        while loops > 0:
-            loops -= 1
-            winsound.Beep(600, int(duration * 1000))
-            time.sleep(interval)
-    else:
-        while loops > 0:
-            loops -= 1
-            t0 = time.time()
-            while time.time() - t0 < duration:
-                sys.stdout.write('\a')
-            time.sleep(interval)
-        sys.stdout.flush()
-
-
-def play_ringtone(filename, loops=1):
-    pygame.mixer.init()
-    pygame.mixer.music.load(filename)
-    pygame.mixer.music.play(loops)
-    while pygame.mixer.music.get_busy():
-        time.sleep(0.5)

@@ -43,6 +43,15 @@ def screenshot(region: Sequence = None, filepath: str = None, monitor: int = Non
     return _image
 
 
+def get_mean_color(img: Image.Image, region: Sequence):
+    if len(region) == 2:
+        return img.getpixel(region)
+    elif len(region) == 4:
+        return np.mean(list(img.crop(region).getdata()), 0)
+    else:
+        raise KeyError(f'len(region) != 2 or 4. region={region}')
+
+
 def cal_sim(img1: Image.Image, img2: Image.Image, region=None, method='ssim') -> float:
     """
     calculate the similarity of two image at region.

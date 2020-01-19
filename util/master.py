@@ -258,6 +258,8 @@ class Master:
         if switch_classes is None:
             switch_classes = (-1,)
         wait_which_target(support_page, self.LOC.support_refresh)
+        while np.mean(get_mean_color(screenshot(), LOC.loading_line)) > 200:
+            time.sleep(0.2)
         refresh_times = 0
 
         def _is_match_offset(_shot, old_loc, _offset):
@@ -274,11 +276,12 @@ class Master:
                 pyautogui.moveTo(*LOC.support_scrollbar_start)
                 if is_match_target(screenshot(), T.support, LOC.support_scrollbar_head, 0.8) \
                         and np.mean(T.support.getpixel(get_center_coord(LOC.support_scrollbar_head))) > 200:
-                    drag_num = 5
+                    drag_points = 5
+                    dy_mouse = (LOC.support_scrollbar_end[1] - LOC.support_scrollbar_start[1]) // (drag_points - 1)
                 else:
-                    drag_num = 1
-                dy_mouse = (LOC.support_scrollbar_end[1] - LOC.support_scrollbar_start[1]) // drag_num
-                for drag_no in range(drag_num):
+                    drag_points = 1
+                    dy_mouse = 0
+                for drag_point in range(drag_points):
                     shot = screenshot()
                     y_peaks = search_peaks(shot.crop(LOC.support_team_icon_column),
                                            T.support.crop(LOC.support_team_icon))
@@ -305,7 +308,7 @@ class Master:
                                     return
                                 elif page_no == 1:
                                     return
-                    if drag_no < drag_num - 1:
+                    if dy_mouse != 0:
                         time.sleep(0.2)
                         pyautogui.dragRel(0, dy_mouse, 0.2)
             # refresh support

@@ -82,6 +82,7 @@ class Regions:
     apple_confirm = (1195, 802, 1313, 882)
     # support = ((72,489,1617,560), (72,790,1617,860))
     # 2 supports one time，support[svt][skill]
+    loading_line = (10, 1057, 70, 1060)
     support_team_icon = (1637, 320, 1767, 384)
     support_team_icon_column = (1637, 245, 1767, 1000)
     support_class_icons = [(117, 175, 165, 209), (218, 175, 266, 209), (319, 175, 367, 209), (420, 175, 468, 209),

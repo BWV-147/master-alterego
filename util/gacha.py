@@ -14,9 +14,11 @@ class Gacha:
     def pre_process(self, conf=None):
         config.load_config(conf)
         check_sys_admin()
+        self.T.read_templates(config.gacha_dir)
+        BaseConfig.img_net = self.T.net_error
+        BaseConfig.loc_net = self.LOC.net_error
         BaseConfig.task_finished = False
         BaseConfig.log_file = f'logs/{GACHA_LOG_NAME}.full.log'
-        self.T.read_templates(config.gacha_dir)
 
     def start_with_supervisor(self, check=True, conf=None):
         self.pre_process(conf)
@@ -89,6 +91,7 @@ class Gacha:
             logger.warning('please clean mailbox manually and return to gacha page!', NO_LOG_TIME)
             time.sleep(2)
             BaseConfig.log_time = time.time() + MANUAL_OPERATION_TIME  # n min for manual operation
+            self.alert()
             return
         drag_num = config.clean_drag_times
 
@@ -163,6 +166,7 @@ class Gacha:
             gacha_logger.warning('please sell items manually and return to gacha page!', NO_LOG_TIME)
             time.sleep(2)
             BaseConfig.log_time = time.time() + MANUAL_OPERATION_TIME  # min for manual operation
+            self.alert()
         else:
             no = 0
             while True:
@@ -187,3 +191,10 @@ class Gacha:
                     break
         wait_which_target(T.gacha_initial, LOC.gacha_10_initial)
         gacha_logger.info('from shop back to gacha')
+
+    @staticmethod
+    def alert():
+        if config.alert is True:
+            beep(2, 1, 20)
+        elif isinstance(config.alert, str):
+            play_ringtone(config.alert, 5)
