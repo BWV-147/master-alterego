@@ -272,7 +272,11 @@ class Master:
                     click(self.LOC.support_class_icons[icon], 0.5)
                     logger.debug(f'switch support class to No.{icon}.')
                 pyautogui.moveTo(*LOC.support_scrollbar_start)
-                drag_num = 5 if is_match_target(screenshot(), T.support, LOC.support_scrollbar_head, 0.8) else 1
+                if is_match_target(screenshot(), T.support, LOC.support_scrollbar_head, 0.8) \
+                        and np.mean(T.support.getpixel(get_center_coord(LOC.support_scrollbar_head))) > 200:
+                    drag_num = 5
+                else:
+                    drag_num = 1
                 dy_mouse = (LOC.support_scrollbar_end[1] - LOC.support_scrollbar_start[1]) // drag_num
                 for drag_no in range(drag_num):
                     shot = screenshot()
@@ -337,7 +341,7 @@ class Master:
             click(self.LOC.enemies[enemy - 1])
         region = self.LOC.skills[who - 1][skill - 1]
         # wait_which_target(self.T.wave1a, self.LOC.master_skill)
-        wait_which_target(before, region)
+        wait_which_target(before, region, at=True)
         while is_match_target(screenshot(), before, region):
             # some times need to
             click(region)

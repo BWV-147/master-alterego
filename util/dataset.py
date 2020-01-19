@@ -89,7 +89,7 @@ class Regions:
                            (925, 175, 973, 209), (1026, 175, 1074, 209)]  # All, 7 common class, extra, mix
     support_scrollbar_start = (1857, 270)
     support_scrollbar_end = (1857, 1047)
-    support_scrollbar_head = (1843, 274, 1973, 296)
+    support_scrollbar_head = (1843, 274, 1873, 296)
     support_ce = ((72, 489, 316, 537), (72, 791, 316, 838))  # 礼装位置
     support_ce_max = ((273, 524, 303, 552), (273, 825, 303, 854))  # 礼装满破的星星
     support_skill = ((1252, 463, 1577, 548), (1252, 764, 1577, 847))  # 技能整体外轮廓

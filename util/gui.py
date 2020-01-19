@@ -1,7 +1,8 @@
 import ctypes
 import random
-from pprint import pprint
 import sys
+from pprint import pprint
+
 import pyautogui
 from mss import mss
 
@@ -52,12 +53,7 @@ def click(xy: Sequence = None, lapse=0.5, r=2):
     :return:
     """
     if xy is not None:
-        if 2 == len(xy):
-            x, y = xy[:]
-        elif 4 == len(xy):
-            x, y = ((xy[0] + xy[2]) / 2, (xy[1] + xy[3]) / 2)
-        else:
-            raise ValueError(f'xy=${xy}: len(xy) should be 2 or 4.')
+        x, y = get_center_coord(xy)
         x += random.randint(-r, r) + config.offset_x
         y += random.randint(-r, r) + config.offset_y
         pyautogui.moveTo(x, y)

@@ -70,6 +70,7 @@ class BaseConfig:
             for k, v in data.items():
                 if k in self.__dict__:
                     self.__dict__[k] = v
+            print(f'loaded config: {fp}')
         else:
             print(f'config file "{fp}" not exists!')
             self.save(fp)

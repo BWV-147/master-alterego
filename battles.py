@@ -257,3 +257,148 @@ class Battle(BattleBase):
         cur_turn += len(xjbd4_cards)
         logger.info(f'Battle finished in {cur_turn - 1} turns.')
         return
+
+    @with_goto
+    def a_belt(self, pre_process=False):
+        """
+        阵容: 皇女50NP-艾蕾50NP-小太阳75NP-X-X-X
+        """
+        master = self.master
+        T = master.T
+        LOC = master.LOC
+
+        # pre-processing: only configure base info
+        master.quest_name = 'A-Belt'
+        T.read_templates('img/a-belt')
+        # LOC.relocate((0, 0, 1920 - 1, 1080 - 1))
+        master.set_party_members(['皇女', '艾蕾', '小太阳'])
+        master.show_svt_name = True
+
+        master.set_card_weights([1, 2, 2.02])
+        # ---- NP     Quick   Arts   Buster ----
+        master.set_card_templates([
+            [(1, 6), (1, 5), (2, 1), (2, 4)],
+            [(2, 7), (1, 2), (1, 1), (1, 3)],
+            [(3, 8), (1, 4), (2, 3), (3, 1)]
+        ])
+        if pre_process:
+            return
+
+        # battle part
+        if config.jump_battle:
+            config.jump_battle = False
+            logger.warning('goto label.h')
+            # noinspection PyStatementEffect
+            goto.h
+
+        # # noinspection PyStatementEffect
+        # label.h  # make sure master.set_waves(a,b) is called
+        # master.set_waves(T.waveXa, T.waveXb)
+        wait_which_target(T.support, LOC.support_refresh)
+        support = True
+        if support:
+            master.choose_support_drag(match_svt=False, match_ce=False, match_ce_max=False, match_skills=False,
+                                       switch_classes=(9,))
+        else:
+            logger.debug('please choose support manually in 60s!')
+
+        # noinspection PyStatementEffect
+        label.h
+        loc_wave = [LOC.wave_num, LOC.master_skill]
+        # wave 1
+        wait_targets(T.wave1a, loc_wave)
+        logger.debug('wave 1...')
+        master.set_waves(T.wave1a, T.wave1b)
+        master.svt_skill(1, 1)
+        master.svt_skill(1, 3)
+        master.auto_attack(nps=6, mode='alter')
+        master.xjbd(T.wave2a, loc_wave)
+
+        logger.debug('wave 2...')
+        master.set_waves(T.wave2a, T.wave2b)
+        master.svt_skill(1, 2)
+        master.svt_skill(2, 3)
+        master.svt_skill(2, 2)
+        master.auto_attack(nps=7, mode='alter')
+        master.xjbd(T.wave3a, loc_wave)
+
+        logger.debug('wave 3...')
+        master.set_waves(T.wave3a, T.wave3b)
+        master.svt_skill(3, 2)
+        master.svt_skill(3, 3)
+        master.master_skill(2, 3)
+        master.auto_attack(nps=8)
+        master.xjbd(T.kizuna, LOC.kizuna)
+        return
+
+    @with_goto
+    def s_belt(self, pre_process=False):
+        """
+        阵容: 阿福50NP-艾蕾50NP-幼贞80NP-X-X-X
+        """
+        master = self.master
+        T = master.T
+        LOC = master.LOC
+
+        # pre-processing: only configure base info
+        master.quest_name = 'S-Belt'
+        T.read_templates('img/s-belt')
+        # LOC.relocate((0, 0, 1920 - 1, 1080 - 1))
+        master.set_party_members(['阿福', '艾蕾', '幼贞'])
+        master.show_svt_name = True
+
+        master.set_card_weights([1, 2, 2.15])
+        # ---- NP     Quick   Arts   Buster ----
+        master.set_card_templates([
+            [(1, 6), (2, 4), (2, 2), (2, 1)],
+            [(2, 7), (2, 3), (1, 2), (1, 1)],
+            [(3, 8), (1, 4), (3, 4), (3, 5)]
+        ])
+        if pre_process:
+            return
+
+        # battle part
+        if config.jump_battle:
+            config.jump_battle = False
+            logger.warning('goto label.h')
+            # noinspection PyStatementEffect
+            goto.h
+
+        # # noinspection PyStatementEffect
+        # label.h  # make sure master.set_waves(a,b) is called
+        # master.set_waves(T.waveXa, T.waveXb)
+        wait_which_target(T.support, LOC.support_refresh)
+        support = True
+        if support:
+            master.choose_support_drag(match_svt=False, match_ce=False, match_ce_max=False, match_skills=False,
+                                       switch_classes=(9,))
+        else:
+            logger.debug('please choose support manually in 60s!')
+
+        # noinspection PyStatementEffect
+        label.h
+        loc_wave = [LOC.wave_num, LOC.master_skill]
+        # wave 1
+        wait_targets(T.wave1a, loc_wave)
+        logger.debug('wave 1...')
+        master.set_waves(T.wave1a, T.wave1b)
+        master.svt_skill(1, 1)
+        master.svt_skill(1, 3)
+        master.auto_attack(nps=6, mode='alter')
+        master.xjbd(T.wave2a, loc_wave)
+
+        logger.debug('wave 2...')
+        master.set_waves(T.wave2a, T.wave2b)
+        master.svt_skill(2, 3)
+        master.svt_skill(2, 2)
+        master.auto_attack(nps=7, mode='alter')
+        master.xjbd(T.wave3a, loc_wave)
+
+        logger.debug('wave 3...')
+        master.set_waves(T.wave3a, T.wave3b)
+        master.svt_skill(3, 2)
+        master.svt_skill(3, 3)
+        master.master_skill(2, 3)
+        master.auto_attack(nps=8)
+        master.xjbd(T.kizuna, LOC.kizuna)
+        return

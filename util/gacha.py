@@ -86,7 +86,7 @@ class Gacha:
         wait_which_target(T.mailbox_unselected1, LOC.mailbox_get_all_action)
         if num < 0:
             logger.warning('please clean mailbox manually and return to gacha page!')
-            BaseConfig.log_time = time.time() + 120  # 2min for manual operation
+            BaseConfig.log_time = time.time() + 60 * 10  # n min for manual operation
         drag_num = config.clean_drag_times
 
         def _is_match_offset(_shot, template, old_loc, _offset):

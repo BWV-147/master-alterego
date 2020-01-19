@@ -19,6 +19,15 @@ def terminate_cur_child_thread():
         # how to stop?
 
 
+def get_center_coord(xy: Sequence):
+    if 2 == len(xy):
+        return xy
+    elif 4 == len(xy):
+        return (xy[0] + xy[2]) / 2, (xy[1] + xy[3]) / 2
+    else:
+        raise ValueError(f'xy=${xy}: len(xy) should be 2 or 4.')
+
+
 class Timer:
     t1 = 0
     t2 = 0
