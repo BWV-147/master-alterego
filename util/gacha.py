@@ -2,6 +2,7 @@ from util.autogui import *
 from util.supervisor import supervise_log_time
 
 GACHA_LOG_NAME = 'gacha'
+MANUAL_OPERATION_TIME = 60 * 10
 gacha_logger = get_logger(GACHA_LOG_NAME)
 
 
@@ -30,7 +31,7 @@ class Gacha:
         if check:
             t_name = os.path.basename(config.gacha_dir)
             thread = threading.Thread(target=start_func, name=t_name, args=args, daemon=True)
-            supervise_log_time(thread, 120, mail=False, interval=3)
+            supervise_log_time(thread, 120, interval=3)
         else:
             start_func(*args)
 
@@ -85,8 +86,10 @@ class Gacha:
         print('Make sure the mailbox **FILTER** only shows "Experience Cards"/"Zhong Huo"!')
         wait_which_target(T.mailbox_unselected1, LOC.mailbox_get_all_action)
         if num < 0:
-            logger.warning('please clean mailbox manually and return to gacha page!')
-            BaseConfig.log_time = time.time() + 60 * 10  # n min for manual operation
+            logger.warning('please clean mailbox manually and return to gacha page!', NO_LOG_TIME)
+            time.sleep(2)
+            BaseConfig.log_time = time.time() + MANUAL_OPERATION_TIME  # n min for manual operation
+            return
         drag_num = config.clean_drag_times
 
         def _is_match_offset(_shot, template, old_loc, _offset):
@@ -94,7 +97,7 @@ class Gacha:
 
         no = 0
         skipped_drag_num = 0
-        MAX_SKIP_NUM = drag_num * 0.25
+        MAX_SKIP_NUM = drag_num * 0.2
         while no < num:
             page_no = wait_which_target([T.mailbox_unselected1, T.bag_full_alert],
                                         [LOC.mailbox_get_all_action, LOC.bag_full_sell_action])
@@ -157,8 +160,9 @@ class Gacha:
         gacha_logger.info('shop: selling...')
         print('Make sure the bag **FILTER** only shows "Experience Cards"/"Zhong Huo"!')
         if num <= 0:
-            logger.warning('please sell items manually and return to gacha page!')
-            BaseConfig.log_time = time.time() + 240  # 4min for manual operation
+            gacha_logger.warning('please sell items manually and return to gacha page!', NO_LOG_TIME)
+            time.sleep(2)
+            BaseConfig.log_time = time.time() + MANUAL_OPERATION_TIME  # min for manual operation
         else:
             no = 0
             while True:
@@ -174,7 +178,7 @@ class Gacha:
                     wait_which_target(T.bag_sell_confirm, LOC.bag_sell_confirm, at=True)
                     wait_which_target(T.bag_sell_finish, LOC.bag_sell_finish, at=True)
                 else:
-                    logger.info('all sold.')
+                    gacha_logger.info('all sold.')
                     click(LOC.bag_back)
                     wait_which_target(T.shop, LOC.shop_event_item_exchange, at=True)
                     wait_which_target(T.shop_event_banner_list, LOC.shop_event_banner_list[config.event_banner_no],
