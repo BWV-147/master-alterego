@@ -12,7 +12,6 @@ class Gacha:
 
     def pre_process(self, conf=None):
         config.load_config(conf)
-        config.mail = False
         check_sys_admin()
         BaseConfig.task_finished = False
         BaseConfig.log_file = f'logs/{GACHA_LOG_NAME}.full.log'

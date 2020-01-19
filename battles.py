@@ -1,5 +1,5 @@
 """Store battle_func for different battles"""
-from util.battle import *
+from util.base_battle import *
 
 
 # noinspection PyPep8Naming,DuplicatedCode
@@ -26,7 +26,7 @@ class Battle(BattleBase):
         master.show_svt_name = True
 
         # w_np: 幼贞 np first; w_dmg: damage first
-        w_np = [[21, 25, 22], [10, 15, 20], [1, 2, 3]]
+        w_np = [[19, 25, 22], [10, 15, 20], [1, 2, 3]]
         w_dmg = [[19, 21, 22], [10, 15, 20], [1, 2, 3]]
         master.set_card_weights(w_np)
         # ---- NP     Quick   Arts   Buster ----
@@ -150,7 +150,7 @@ class Battle(BattleBase):
         master.show_svt_name = True
 
         # w_np: 幼贞 np first; w_dmg: damage first
-        w_np = [[21, 25, 22], [10, 15, 20], [1, 2, 3]]
+        w_np = [[19, 25, 22], [10, 15, 20], [1, 2, 3]]
         w_dmg = [[19, 21, 22], [10, 15, 20], [1, 2, 3]]
         master.set_card_weights(w_np)
         # ---- NP     Quick   Arts   Buster ----

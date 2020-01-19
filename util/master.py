@@ -438,7 +438,8 @@ class Master:
                 chosen_cards = self.choose_cards(cards, np_cards, nps, mode=mode)
                 break
         if no_play_card is False:
-            time.sleep(0.8)
+            if nps is not None:
+                time.sleep(0.8)
             self.play_cards(chosen_cards)
         return chosen_cards
 

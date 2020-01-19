@@ -23,13 +23,11 @@
     <inspection_tool class="PyUnresolvedReferencesInspection" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="ignoredIdentifiers">
         <list>
-          <option value="battle.label" />
-          <option value="battle.goto" />
           <option value="cv2.cvtColor" />
           <option value="battles.goto" />
           <option value="battles.label" />
-          <option value="util.battle.label" />
-          <option value="util.battle.goto" />
+          <option value="util.base_battle.goto" />
+          <option value="util.base_battle.label" />
         </list>
       </option>
     </inspection_tool>

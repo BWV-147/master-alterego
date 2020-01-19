@@ -135,7 +135,8 @@ class Regions:
         (1587, 403, 1822, 643))
     order_change_confirm = (739, 907, 1167, 974)  # length 6
 
-    kizuna = (115, 251, 580, 305)
+    # kizuna = (115, 251, 580, 305)  # 与从者的羁绊text
+    kizuna = (186, 646, 205, 665)  # 羁绊点数第一格
     finish_qp = (418, 884, 487, 955)
     rewards_show_num = (1593, 115, 1718, 149)
     finish_next = (1444, 980, 1862, 1061)

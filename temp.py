@@ -1,17 +1,14 @@
 # %%
 from util.master import *
 
-# import pyautogui
-
 check_sys_admin()
 
 # %%
-base_path = 'img/gacha-a'  # 'img/gacha-jp'
+base_path = 'img/gacha'  # 'img/gacha-jp'
 
 
 # %%
 def capture(fn: str):
-    # pyautogui.hotkey('alt', 'tab')
     time.sleep(1)
     full_fp = os.path.join(base_path, fn + '.png')
     if os.path.exists(full_fp):
@@ -19,12 +16,11 @@ def capture(fn: str):
     else:
         print(f'   Saved : "{full_fp}" saved')
     screenshot().save(full_fp)
-    # pyautogui.hotkey('alt', 'tab')
+    pyautogui.hotkey('alt', 'tab')
 
 
 # %%
-def save_rewards():
-    quest_name = 'A-Archer'
+def save_rewards(quest_name):
     screenshot().save(f'img/_drops/rewards-{quest_name}-{time.strftime("%m%d-%H%M")}.png')
 
 
