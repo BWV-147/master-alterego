@@ -44,7 +44,7 @@ def check_sys_admin(admin=True):
     print('WARNING: make sure "config.monitor/offset_x/y" is set properly')
 
 
-# %% win32: mouse & screen pixel
+# %% mouse events & alert
 def click(xy: Sequence = None, lapse=0.5, r=2):
     """
     click at point (x,y) or region center (x1,y1,x2,y2) within a random offset in radius 0~r

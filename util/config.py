@@ -64,7 +64,7 @@ class BaseConfig:
             self.load_config()
 
     def load_config(self, fp=None):
-        self.fp = fp = fp or self.fp or 'config.json'
+        self.fp = fp = fp or self.fp or 'data/config.json'
         if os.path.exists(fp):
             data: dict = json.load(open(fp, encoding='utf-8'))
             for k, v in data.items():
@@ -73,6 +73,9 @@ class BaseConfig:
             print(f'loaded config: {fp}')
         else:
             print(f'config file "{fp}" not exists!')
+            _dir = os.path.dirname(fp)
+            if not os.path.exists(_dir):
+                os.makedirs(_dir)
             self.save(fp)
             print(f'Created the default config file "{fp}". Please check it.')
 

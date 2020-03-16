@@ -9,15 +9,21 @@ class BattleBase:
     def __init__(self):
         self.master = Master()
 
+    def pre_process(self, conf=None):
+        config.load_config(conf)
+        check_sys_admin()
+        BaseConfig.task_finished = False
+        BaseConfig.log_file = 'logs/log.full.log'
+        battle_func = getattr(self, config.battle_func)
+        battle_func(True)
+        BaseConfig.img_net = self.master.T.net_error
+        BaseConfig.loc_net = self.master.LOC.net_error
+
     @with_goto
-    def start(self, battle_func, battle_num, apples=None):
+    def _start(self, battle_func, battle_num, apples=None):
         T = self.master.T
         LOC = self.master.LOC
         timer = Timer()
-        battle_func(True)
-        BaseConfig.img_net = T.net_error
-        BaseConfig.loc_net = LOC.net_error
-        BaseConfig.task_finished = False
         finished_num = 0
         actual_max_num = min(battle_num, config.max_finished_battles - config.finished_battles)
         while finished_num < actual_max_num:
@@ -37,7 +43,8 @@ class BattleBase:
                     elif is_match_target(shot, T.apple_page, LOC.apple_page):
                         if self.master.eat_apple(apples) is False:
                             return
-                    elif is_match_target(shot, T.get('bag_full_alert', LOC.gen_empty_img()), LOC.bag_full_sell_action):
+                    elif T.get('bag_full_alert') is not None \
+                            and is_match_target(shot, T.bag_full_alert, LOC.bag_full_sell_action):
                         # usually used in hunting events.
                         logger.info('bag full, to sell...')
                         click(LOC.bag_full_sell_action)
@@ -67,17 +74,18 @@ class BattleBase:
                 logger.warning(f'{config.craft_num}th craft dropped!!!')
                 rewards.save(f'{png_fn}-drop{config.craft_num}.png')
                 if config.craft_num in config.enhance_craft_nums:
-                    send_mail(f'NEED Enhancement! {config.craft_num}th craft dropped!!!')
                     logger.warning('need to change party or enhance crafts. Exit.')
+                    send_mail(f'NEED Enhancement! {config.craft_num}th craft dropped!!!')
                     BaseConfig.task_finished = True
                     return
                 else:
                     send_mail(f'{config.craft_num}th craft dropped!!!')
+                    click(LOC.finish_next)
             else:
                 config.count_battle(False)
+                click(LOC.finish_next)
                 rewards.save(f"{png_fn}.png")
             # ready to restart a battle
-            click(LOC.finish_next)
             if finished_num % 30 == 0:
                 send_mail(f'Progress: {finished_num}/{actual_max_num} battles finished.', attach_shot=False)
             while True:
@@ -99,33 +107,30 @@ class BattleBase:
         if config.mail:
             send_mail(f'All {finished_num} battles "{self.master.quest_name}" finished')
 
-    def start_with_supervisor(self, check=True, conf=None):
+    def start(self, supervise=True, conf=None):
         """
         supervise battle progress.
-        :param check: if True, start battle in child thread, else start battle directly.
+        :param supervise: if True, start battle in child thread, else directly.
         :param conf: config filename, default config.json.
         :return:
         """
-        config.load_config(conf)
-        check_sys_admin()
-        BaseConfig.task_finished = False
-        BaseConfig.log_file = 'logs/log.full.log'
-        logger.info('start battle...')
+        self.pre_process(conf)
+        logger.info('starting battle...')
         time.sleep(2)
         battle_func = getattr(self, config.battle_func)
         t_name: str = battle_func.__name__.replace('_', '-').capitalize()
         if config.battle_num <= 0 or config.finished_battles >= config.max_finished_battles:
             logger.warning(f'no battle, exit.')
             return
-        if check:
-            thread = threading.Thread(target=self.start, name=t_name,
+        if supervise:
+            thread = threading.Thread(target=self._start, name=t_name,
                                       kwargs={"battle_func": battle_func,
                                               "battle_num": config.battle_num,
                                               "apples": config.apples},
                                       daemon=True)
             supervise_log_time(thread, 90, interval=3)
         else:
-            self.start(battle_func=battle_func, battle_num=config.battle_num, apples=config.apples)
+            self._start(battle_func=battle_func, battle_num=config.battle_num, apples=config.apples)
 
     @with_goto
     def battle_template(self, pre_process=False):

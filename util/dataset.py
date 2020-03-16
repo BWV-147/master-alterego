@@ -220,10 +220,7 @@ class ImageTemplates:
             return [self.templates[k] for k in attr]
         elif attr in self.templates:
             return self.templates[attr]
-        elif k is not None:
-            return k
-        else:
-            raise KeyError(f'Templates has no key "{attr}"')
+        return k
 
     def __repr__(self):
         return f'{self.__class__.__name__}(dir="{self.directory}", templates={self.templates})'
