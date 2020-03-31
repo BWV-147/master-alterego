@@ -26,8 +26,8 @@
           <option value="cv2.cvtColor" />
           <option value="battles.goto" />
           <option value="battles.label" />
-          <option value="util.base_battle.goto" />
-          <option value="util.base_battle.label" />
+          <option value="modules.battle_base.goto" />
+          <option value="modules.battle_base.label" />
         </list>
       </option>
     </inspection_tool>

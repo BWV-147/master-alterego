@@ -3,7 +3,6 @@ Master class
 additional, Card class included.
 """
 from util.autogui import *
-from util.config import BaseConfig
 from util.supervisor import send_mail
 
 
@@ -12,101 +11,117 @@ class Card:
     QUICK = 1
     ARTS = 2
     BUSTER = 3
+    UNKNOWN = 'unknown'
 
-    def __init__(self, loc, code):
-        # loc: 1~5, 6~8
-        self.loc = loc
-        self.code = code
-        # svt: 1~3,4~6
-        self.svt = code // 10
-        # color: 0-np, 1-quick, 2-arts, 3-buster
-        self.color = code % 10
+    def __init__(self, svt: str, color: int, _loc: int = 0):
+        assert svt and -1 <= color <= 3
+        self._svt = svt
+        self._color = color  # -1: unknown
+        # extra data, not included in hash
+        self.loc = _loc  # valid if 1~8
+
+    @property
+    def svt(self):
+        return self._svt
+
+    @property
+    def color(self):
+        return self._color
+
+    def get_color_string(self):
+        return ['NP', 'Quick', 'Arts', 'Buster', '?'][self.color]
 
     def __repr__(self):
-        return f'{self.__class__.__name__}({self.loc}, {self.code})'
+        return f'{self.__class__.__name__}({self._svt}, {self.get_color_string()}, {self.loc})'
+
+    def __hash__(self):
+        return hash(f'{self.__class__.__name__}({self._svt}, {self.get_color_string()})')
+
+    def __eq__(self, other):
+        if type(other) == type(self):
+            return other.svt == self._svt and other.color == self._color
+        return False
 
     @staticmethod
-    def has_card(cards: List, svt: int, color: int):
-        num = 0
-        for card in cards:
-            if isinstance(card, Card) and card.svt == svt and card.color == color:
-                num += 1
-        return num
+    def find_card(cards: List, svt: str, color: int):
+        """all locs of found cards"""
+        locs = []
+        for i, card in enumerate(cards):
+            if card.svt == svt and card.color == color:
+                locs.append(i)
+        return locs
 
 
 class Master:
-    """
-    1. crop screen to match card's svt&color
-    2. weights to decide the suit to play
-    3.
-    card: (svt_no, color)
-    """
-
-    def __init__(self, quest='', names=None):
+    def __init__(self, quest=''):
         self.quest_name = quest
-        self._party_members = None  # original party members, don't change, parse_cards used
-        self.realtime_party = None  # shown realtime members, order change/stella should change it
-        self.set_party_members(names)
+        # realtime member list, auto-update with order-change, but Arash/Chen Gong need to update manually.
+        self.members = list('ABCDEF')
         self.T = ImageTemplates()
         self.LOC = Regions()
-        self.templates = {}
-        self.weights: dict = {}
+        self.card_templates: Dict[Card, List[Image.Image]] = {}
+        self.card_weights: Dict[Card, float] = {}
         self.wave_a = None
         self.wave_b = None
-        self.show_svt_name = False
 
-    # set battle params
-    def set_party_members(self, svt_names: List[str] = None):
-        self._party_members = list(svt_names or ('A', 'B', 'C', 'D', 'E', 'F'))
-        self.realtime_party = list(self._party_members)
-
-    def set_card_templates(self, locs: List):
+    def set_card_template(self, svt_name: str, card_loc: List = None, json_fp: str = None, json_key: str = None):
         """
-        parse card templates from cards[1~3].png file. regions using inner boundary `self.LOC.cards`
-        :param locs: locations(tmpl:1~3, card:1~5 6~8) of  [svt1:[np, Q, A, B], svt2:...], loc=-1 if no card
+        use `card_loc` or `json_fp`, not together.
+        :param svt_name: svt name
+        :param card_loc: list length of 4: NP-Quick-Arts-Buster.
+                        For every item: tuple or list of tuple(multiple templates):
+                        tuple(0): int or str, if int i, i -> f"cards{i}".
+                        tuple(1): int, location of card, 1~5 + 6~8(NP)
+        :param json_fp: a json dict which stores serials of {name: card_loc}.
+                        Json file and images should be in the same folder.
+        :param json_key: key in json, default is `name`
+        :return:
         """
-        self.templates = {}
-        templates: List[Image.Image] = self.T.cards
-        for svt_loc, card_locs in enumerate(locs):
-            if card_locs:
-                for color, loc in enumerate(card_locs):
-                    if isinstance(loc[0], int):
-                        loc = [loc, ]
-                    for loc_i in loc:
-                        if 0 < loc_i[1] <= 8:
-                            card_id = (svt_loc + 1) * 10 + color
-                            if card_id not in self.templates:
-                                self.templates[card_id] = []
-                            self.templates[card_id].append(
-                                templates[loc_i[0] - 1].crop(self.LOC.cards[loc_i[1] - 1]))
+        assert card_loc is None or json_fp is None, "don't use 'card_loc' and 'json_fp' together."
+        if json_fp is not None:
+            import json
+            json_key = json_key or svt_name
+            _folder = os.path.dirname(os.path.abspath(json_fp))
+            card_loc = json.load(open(json_fp, encoding='utf8'))[json_key]
+            images = ImageTemplates(_folder)
+            # for fn in os.listdir(_folder):
+            #     if fn.lower().endswith('.png'):
+            #         images[fn[:-4]] = Image.open(os.path.join(_folder, fn))
+        else:
+            images = self.T
+        for color, locs in enumerate(card_loc):
+            _templates = []
+            if locs and isinstance(locs[-1], int):
+                # only one loc, not a list of loc
+                locs = [locs]
+            for img_name, loc in locs:
+                if isinstance(img_name, int):
+                    img_name = f'cards{img_name}'
+                _templates.append(images.get(img_name).crop(self.LOC.cards[loc - 1]))
+            self.card_templates[Card(svt_name, color)] = _templates
 
-    def set_card_weights(self, weights: List, color_weight: str = 'QAB'):
+        pass
+
+    def set_card_weight(self, weights: Dict[str, Union[float, List[float]]], color_weight: str = 'QAB'):
         """
         key:svt*10+color, value:weight
         :param weights: <6*3, M-servants, 3-quick/art/buster; or 6*1.
         :param color_weight: used when weight size is <6*1
         """
-        self.weights = {}
-        if isinstance(weights[0], (int, float)):
-            wq, wa, wb = color_weight.find('Q') + 1, color_weight.find('A') + 1, color_weight.find('B') + 1
-            assert wq > 0 and wa > 0 and wb > 0, color_weight
-            for i, w in enumerate(weights):
-                self.weights[(i + 1) * 10 + 1] = w * 10 + wq
-                self.weights[(i + 1) * 10 + 2] = w * 10 + wa
-                self.weights[(i + 1) * 10 + 3] = w * 10 + wb
-        else:
-            for i, ww in enumerate(weights):
-                for j, w in enumerate(ww):
-                    self.weights[(i + 1) * 10 + 1 + j] = w
+        color_weight = color_weight.upper()
+        assert 'ABQ' == ''.join(sorted('QAB')), f'invalid color_weight: {color_weight}'
+        self.card_weights.clear()
+        for svt, ww in weights.items():
+            if isinstance(ww, Sequence):
+                for i, w in enumerate(ww):
+                    self.card_weights[Card(svt, i + 1)] = w
+            else:
+                # number, default w*10+0/1/2
+                for i in range(3):
+                    self.card_weights[Card(svt, i + 1)] = ww * 10 + color_weight.find('QAB'[i])
 
-    def get_svt_name_at(self, pos: int):
-        """realtime party pos, rather than initial party pos."""
-        assert pos > 0
-        if not self.show_svt_name or pos > len(self.realtime_party):
-            return str(pos)
-        return self.realtime_party[pos - 1]
-
-    def str_cards(self, cards):
+    @staticmethod
+    def str_cards(cards):
         # type: (Union[List[Union[int, Card]], Union[int, Card], Dict[int, Card]])->Union[str,List[str]]
         if isinstance(cards, dict):
             # from parsed cards
@@ -115,23 +130,23 @@ class Master:
 
         def _str_card(_c):
             if isinstance(_c, Card):
-                return self._party_members[_c.svt - 1] + '-' + '宝QAB'[_c.color]
+                return _c.svt + '-' + '宝QAB?'[_c.color]
             else:
                 return str(_c)
 
-        if not isinstance(cards, Sequence):
-            return _str_card(cards)
+        if isinstance(cards, Sequence):
+            return [f'({_str_card(c)})?' if i >= 3 else _str_card(c) for i, c in enumerate(cards)]
         else:
-            return [('optional: ' if i >= 3 else '') + _str_card(c) for i, c in enumerate(cards)]
+            return _str_card(cards)
 
     # battle procedures
     def eat_apple(self, apples=None):
         apples = convert_to_list(apples)
-        if config.stop_around_3am:
+        if config.is_jp is True and config.battle.login_handler is None:
             t = time.localtime()
             if t.tm_hour == 2 and t.tm_min > 45:
                 logger.info('Around 3am, stop eating apples and battles.')
-                BaseConfig.task_finished = True
+                config.mark_task_finish()
                 return False
         if len(apples) > 0:
             for apple in apples:
@@ -155,91 +170,15 @@ class Master:
                             click(self.LOC.apple_confirm, lapse=1)
                         elif page_no == 2:
                             break
-                    return True
 
                     # noinspection DuplicatedCode
 
         logger.info(f'apples={apples}, don\'t eat apple or no left apples, task finish.')
-        BaseConfig.task_finished = True
-        return False
-
-    def choose_support(self, match_svt=True, match_ce=False, match_ce_max=False, match_skills=None, img=None,
-                       switch_classes=None):
-        # type:(bool,bool,bool,List[int],Image.Image,Sequence)->None
-        """
-        Choose support from the *first two* supports, no dragging scrollbar.
-        The two supports in template(T.support) should be the same.
-        Args: see self.choose_support_drag
-        """
-        logger.debug('choosing support...')
-        support_page = self.T.support if img is None else img
-        if switch_classes is None:
-            switch_classes = (-1,)
-        wait_which_target(support_page, self.LOC.support_refresh)
-        refresh_times = 0
-        while True:
-            found = False
-            time.sleep(0.5)
-            for icon in switch_classes:
-                if icon == -1:
-                    click(self.LOC.safe_area)
-                else:
-                    click(self.LOC.support_class_icons[icon])
-                    logger.debug(f'switch support class to No.{icon}.')
-                shot = screenshot()
-                if match_svt is False:  # select first one
-                    if is_match_target(shot, support_page, self.LOC.support_team_icon) \
-                            and is_match_target(shot, support_page, self.LOC.support_ce[0]):
-                        # match ce too, temp.
-                        click(self.LOC.support_ce[0])
-                        found = True
-                else:
-                    for svt in range(2):  # 2 support one time, no scroll
-                        if is_match_target(shot, support_page, self.LOC.support_skill[svt]):
-                            if match_skills is not None:
-                                rs = [is_match_target(shot, support_page,
-                                                      self.LOC.support_skills[svt][skill_loc - 1])
-                                      for skill_loc in match_skills]
-                                if rs.count(True) != len(match_skills):
-                                    continue
-                            if match_ce:
-                                if not is_match_target(shot, support_page, self.LOC.support_ce[svt]):
-                                    continue
-                            if match_ce_max:
-                                if not is_match_target(shot, support_page, self.LOC.support_ce_max[svt]):
-                                    continue
-                            click(self.LOC.support_ce[svt])
-                            logger.debug(f'choose support No.{svt + 1}')
-                            found = True
-                            break
-                if found:
-                    break
-            # refresh support
-            if found:
-                break
-            refresh_times += 1
-            logger.debug(f'refresh support {refresh_times} times')
-            if refresh_times == 40:
-                send_mail(body='refresh support more than 40 times.', subject='refresh support more than 40 times')
-            wait_which_target(support_page, self.LOC.support_refresh, at=True)
-            wait_which_target(self.T.support_confirm, self.LOC.support_confirm_title, clicking=self.LOC.support_refresh)
-            click(self.LOC.support_refresh_confirm, lapse=2)
-        while True:
-            # =1: in server cn and first loop to click START
-            page_no = wait_which_target([self.T.team, self.T.wave1a], [self.LOC.team_cloth, self.LOC.master_skill])
-            if page_no == 0:
-                # print('click start please\r', end='\r')
-                # time.sleep(5)
-                logger.debug('entering battle')
-                click(self.LOC.team_start_action, lapse=2)
-            elif page_no == 1:
-                break
-            else:
-                time.sleep(0.2)
+        config.mark_task_finish()
 
     # noinspection DuplicatedCode
-    def choose_support_drag(self, match_svt=True, match_ce=False, match_ce_max=False, match_skills=None, img=None,
-                            switch_classes=None):
+    def choose_support(self, match_svt=True, match_ce=False, match_ce_max=False, match_skills=None, img=None,
+                       switch_classes=None):
         # type:(bool,bool,bool,bool,Image.Image,Sequence)->None
         """
         Choose the *first* support in T.support from the whole support list, drag scrollbar to show all supports.
@@ -266,7 +205,7 @@ class Master:
             return is_match_target(_shot.crop(np.add(old_loc, [0, _offset, 0, _offset])), T.support.crop(old_loc))
 
         while True:
-            wait_which_target(support_page, self.LOC.support_refresh, lapse=0.5)
+            wait_which_target(support_page, self.LOC.support_class_affinity, lapse=0.5)
             for icon in switch_classes:
                 if icon == -1:
                     time.sleep(0.2)
@@ -314,8 +253,8 @@ class Master:
             # refresh support
             refresh_times += 1
             logger.debug(f'refresh support {refresh_times} times')
-            if refresh_times == 40:
-                send_mail(body='refresh support more than 40 times.', subject='refresh support more than 40 times')
+            if refresh_times % 40 == 0:
+                send_mail(body=f'refresh support more than {refresh_times} times.')
             wait_which_target(support_page, self.LOC.support_refresh, at=True)
             wait_which_target(self.T.support_confirm, self.LOC.support_confirm_title, clicking=self.LOC.support_refresh)
             click(self.LOC.support_refresh_confirm, lapse=1)
@@ -335,9 +274,9 @@ class Master:
         # validation
         valid1, valid2 = (1, 2, 3), (1, 2, 3, None)
         assert who in valid1 and skill in valid1 and friend in valid2 and enemy in valid2, (who, skill, friend, enemy)
-        s = f' to friend {self.get_svt_name_at(friend)}' if friend \
+        s = f' to friend {self.members[friend - 1]}' if friend \
             else f' to enemy {enemy}' if enemy else ''
-        logger.debug(f'Servant skill: {self.get_svt_name_at(who)}-{skill}{s}.')
+        logger.debug(f'Servant skill: {self.members[who - 1]}-{skill}{s}.')
 
         # start
         if enemy is not None:
@@ -378,14 +317,14 @@ class Master:
             assert skill == 3 and (order_change_img is not None or order_change is not None), \
                 ('order_change', skill, order_change_img)
         # assert (friend, enemy, order_change).count(None) <= 2, (friend, enemy, order_change)
-        s = f' to friend {self.get_svt_name_at(friend)}' if friend else f' to enemy {enemy}' if enemy \
-            else f' order change {[self.get_svt_name_at(i) for i in order_change]}' if order_change else ''
+        s = f' to friend {self.members[friend - 1]}' if friend else f' to enemy {enemy}' if enemy \
+            else f' order change {[self.members[i - 1] for i in order_change]}' if order_change else ''
         logger.debug(f'Master skill {skill}{s}.')
-        if order_change and self.show_svt_name:
-            _temp = self.realtime_party[order_change[1] - 1]
-            self.realtime_party[order_change[1] - 1] = self.realtime_party[order_change[0] - 1]
-            self.realtime_party[order_change[0] - 1] = _temp
-            logger.debug(f'After order change: {self.realtime_party}')
+        if order_change:
+            _temp = self.members[order_change[1] - 1]
+            self.members[order_change[1] - 1] = self.members[order_change[0] - 1]
+            self.members[order_change[0] - 1] = _temp
+            logger.debug(f'After order change: {self.members}')
 
         before = self.wave_a
         region = self.LOC.master_skills[skill - 1]
@@ -414,6 +353,22 @@ class Master:
         wait_which_target(before, self.LOC.master_skill)
         return self
 
+    def goto_parse_cards(self):
+        t0 = time.time()
+        while True:
+            shot = screenshot()
+            if is_match_target(shot, self.T.wave1a, self.LOC.attack):
+                click(self.LOC.attack)
+            elif is_match_target(shot, self.T.cards1, self.LOC.cards_back):
+                break
+        time.sleep(1)
+        while True:
+            cards, np_cards = self.parse_cards(screenshot())
+            if cards == {} or Card.UNKNOWN in [c.svt for c in cards.values()]:
+                if time.time() - t0 > 5 or self.card_templates == {}:
+                    break
+        return cards, np_cards
+
     def auto_attack(self, nps: Union[List[int], int] = None, mode='dmg', parse_np=False, allow_unknown=False,
                     no_play_card=False):
         """
@@ -431,13 +386,12 @@ class Master:
             cards, np_cards = self.parse_cards(screenshot(), nps=nps if parse_np else None)
             # print('in auto_attack: ', cards, np_cards)
             chosen_cards = []
-            if cards == {}:
-                if time.time() - t0 > 5 and allow_unknown or self.templates == {}:
+            if cards == {} or Card.UNKNOWN in [c.svt for c in cards.values()]:
+                if time.time() - t0 > 5 and allow_unknown or self.card_templates == {}:
                     # if lapse>3s, maybe someone has been died
-                    chosen_cards = convert_to_list(nps)
-                    chosen_cards.extend([1, 2, 3])
-                    logger.debug('unrecognized cards, choose [1,2,3]')
-                    # chosen_cards = chosen_cards[0:3]
+                    chosen_cards = self.choose_cards(cards, np_cards, nps, mode=mode)
+                    logger.debug(f'unrecognized: {[f"{self.str_cards(c)}" for c in cards.values()]},'
+                                 f' np_cards={self.str_cards(np_cards)}')
                     break
                 else:
                     continue
@@ -490,62 +444,63 @@ class Master:
         :param nps: which servants' np **MUST** be found. you'd better not set it.
         :returns cards and np_cards, location-card(svt*10+color) pair dictionary, np_cards may less then actual
         """
-        if self.templates == {}:
+        if self.card_templates == {}:
             return {}, {}
         nps = convert_to_list(nps)
         base_line = -1
 
-        def traverse(outer, mode):
+        def _traverse(outer, mode):
             # mode=0-all,1-common card,2-np card
-            nonlocal base_line
+            nonlocal base_line  # to decrease time of `search_target()`
             threshold = 0.7
-            _matched = -1
+            _matched = None
             max_th = 0
             values = []
-            for key, templ in self.templates.items():
-                _svt, _color = key // 10, key % 10
-                if mode == 1 and _color == 0:
+            for card, templates in self.card_templates.items():
+                # _svt, _color = key // 10, key % 10
+                if mode == 1 and card.color == Card.NP:
                     continue
-                elif mode == 2 and _color != 0:
+                elif mode == 2 and card.color != Card.NP:
                     continue
-                for i, templ_child in enumerate(templ):
+                for template in templates:
                     if base_line > 0:
                         # enhancement: from 0.95s->0.7s....
                         box = (0, max([0, base_line - 10]),
-                               outer.size[0], min([base_line + templ_child.size[1] + 10, outer.size[1]]))
+                               outer.size[0], min([base_line + template.size[1] + 10, outer.size[1]]))
                         cropped_outer = outer.crop(box)
                     else:
                         cropped_outer = outer
-                    th, pos = search_target(cropped_outer, templ_child)
+                    th, pos = search_target(cropped_outer, template)
                     values.append(th)
                     if th > threshold and th > max_th:
                         if base_line < 0:
                             base_line = pos[1]
                         max_th = th
-                        _matched = key
+                        _matched = Card(card.svt, card.color)
             # if _matched < 0:
             #     print(f'max matched value: {max(values):.4f}.')
             return _matched
 
         cards, np_cards = {}, {}
-        for loc in range(1, 6):  # 5 common card
+        for loc in range(1, 9):
             base_line = -1  # reset every card
-            matched = traverse(img.crop(self.LOC.cards_outer[loc - 1]), 1)
-            # print(f'\n---------end card {loc}')
-            if matched == -1:
-                return {}, {}  # 5 command card must be matched
+            matched = _traverse(img.crop(self.LOC.cards_outer[loc - 1]), 1 if loc <= 5 else 2)
+            if matched is None:
+                matched = Card(Card.UNKNOWN, -1, loc)
             else:
-                cards[loc] = Card(loc, matched)
-        for loc in range(6, 9):
-            base_line = -1  # reset every card
-            matched = traverse(img.crop(self.LOC.cards_outer[loc - 1]), 2)
-            if matched != -1:
-                np_cards[loc] = Card(loc, matched)
+                matched.loc = loc
+            if loc <= 5:
+                cards[loc] = matched
+            else:
+                np_cards[loc] = matched
+        for x in [cards, np_cards]:
+            if False not in [card.svt == Card.UNKNOWN for card in x.values()]:
+                # all cards are not recognized.
+                x.clear()
         if not set(nps).issubset(set(np_cards.keys())):
             # print(f'nobel phantasm not recognized:{nps} not in {list(np_cards.keys())}\r', end='')
-            return {}, {}
-        # logger.debug(f'Parsed: {[f"{self.str_cards(c)}:{self.weights.get(c.code, -1)}" for c in cards.values()]},'
-        #              f' np_cards={self.str_cards(np_cards)}')
+            np_cards.clear()
+            # return {}, {}
         logger.debug(f'Parsed: {[f"{self.str_cards(c)}" for c in cards.values()]},'
                      f' np_cards={self.str_cards(np_cards)}')
         return cards, np_cards
@@ -559,14 +514,16 @@ class Master:
         :param mode: dmg,np
         :return: locations of chosen cards
         """
+        if len(cards) < 5:
+            logger.warning(f'in choose_cards: cards count less then 5! {cards}')
         mode = mode.lower()
         nps = convert_to_list(nps)
-        chosen_nps = [np_cards.get(_np, Card(_np, (_np - 5) * 10)) for _np in nps]
+        chosen_nps = [np_cards.get(_np, Card(f'UNKNOWN{_np}', 0, _np)) for _np in nps]
         if mode == 'xjbd':
             s_cards = sorted(cards.values(), key=lambda _c: _c.loc)
             chosen_cards = s_cards[0:3]
         else:
-            s_cards = sorted(cards.values(), key=lambda _c: self.weights.get(_c.code, 0))
+            s_cards = sorted(cards.values(), key=lambda _c: self.card_weights.get(_c, 0))
             if mode == 'dmg':
                 if len(chosen_nps) > 0:
                     chosen_cards = [s_cards[i] for i in (-2, -1, -3)]
@@ -585,9 +542,6 @@ class Master:
                             chosen_cards.append(s_cards.pop(j))
                             break
                 chosen_cards = (chosen_cards + s_cards)[0:3]
-            elif mode == 'np':
-                # TODO: gain np mode
-                chosen_cards = s_cards
             else:
                 raise KeyError(f'Invalid mode "{mode}"')
         chosen_cards = chosen_nps + chosen_cards[0:3]

@@ -7,7 +7,6 @@ from email.utils import formataddr
 # noinspection PyUnresolvedReferences
 from typing import List, Tuple, Union, Dict, Callable, Sequence
 
-from util.config import config
 from util.my_logger import *
 
 
@@ -18,12 +17,6 @@ def convert_to_list(items):
         return list(items)
     else:
         return [items]
-
-
-def terminate_cur_child_thread():
-    if threading.current_thread().name != 'MainThread':
-        BaseConfig.task_finished = True
-        # how to stop?
 
 
 def get_center_coord(xy: Sequence):
@@ -42,8 +35,8 @@ def send_mail(body, subject=None, receiver=None, attach_shot=True):
     if threading.current_thread().name != 'MainThread':
         subject = f'[{threading.current_thread().name}]{subject}'
     subject = f'{time.strftime("[%H:%M]")}{subject}'
-    if BaseConfig.log_file is not None and os.path.exists(config.log_file):
-        with open(BaseConfig.log_file, encoding='utf8') as fd:
+    if config.log_file is not None and os.path.exists(config.log_file):
+        with open(config.log_file, encoding='utf8') as fd:
             lines = fd.readlines()
             n = len(lines)
             recent_records = lines[n + 1 - min(10, n):n + 1]
@@ -52,16 +45,13 @@ def send_mail(body, subject=None, receiver=None, attach_shot=True):
 ----------------------------------<br>
 Computer name: <b>{socket.getfqdn(socket.gethostname())}</b><br>
 ----------------------------------<br>
-<b>Recent log({BaseConfig.log_file})</b>:<br>
+<b>Recent log({config.log_file})</b>:<br>
 {'<br>'.join(recent_records)}<br>
 ----------------------------------<br>
 {'<b>Screenshot before shutdown</b>:<br>' +
  '<img width="80%" src="cid:screenshot"></br>' if attach_shot else ''}
 """
-    crash_fp = 'img/crash.jpg'
-    shot = screenshot()
-    shot.save('img/crash.png')
-    shot.resize((1920 // 2, 1080 // 2)).save(crash_fp, format='jpeg', quality=40)
+
     logger.info(f'ready to send email:\n'
                 f'--------- Email --------------\n'
                 f'subject: "{subject}"\n'
@@ -85,6 +75,10 @@ Computer name: <b>{socket.getfqdn(socket.gethostname())}</b><br>
     msg['To'] = receiver
     msg.attach(MIMEText(body, 'html', 'utf-8'))
     if attach_shot:
+        crash_fp = 'img/crash.jpg'
+        shot = screenshot()
+        shot.save(crash_fp + '.png')
+        shot.resize((1920 // 2, 1080 // 2)).save(crash_fp, format='jpeg', quality=40)
         with open(crash_fp, 'rb') as fd:
             m1 = MIMEImage(fd.read())
             m1.add_header('Content-ID', '<screenshot>')

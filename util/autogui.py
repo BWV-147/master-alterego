@@ -125,7 +125,7 @@ def match_which_target(img, targets, regions=None, threshold=THR, at=None):
     res = -1
     for i in range(len(targets)):
         sim = cal_sim(img, targets[i], regions[i])
-        if BaseConfig.temp.get('print_sim') is True:
+        if config.temp.get('print_sim') is True:
             print(f'sim={sim}')
         if sim > threshold:
             res = i
@@ -174,7 +174,7 @@ def wait_which_target(targets, regions, threshold=THR, lapse=0.1, at=None, click
             click(clicking, lapse=interval)
 
 
-def wait_targets(target, regions, threshold=THR, lapse=0.1, clicking=None, interval=0.5):
+def wait_targets(target, regions, threshold=THR, lapse=0.1, at=None, clicking=None, interval=0.5):
     if not isinstance(regions[0], Sequence):
         regions = [regions]
     while True:
@@ -184,6 +184,10 @@ def wait_targets(target, regions, threshold=THR, lapse=0.1, clicking=None, inter
             break
         if clicking is not None:
             click(clicking, lapse=interval)
+    if at is True and len(regions) == 1:
+        click(regions[0])
+    elif isinstance(at, Sequence):
+        click(at)
     time.sleep(lapse)
 
 
