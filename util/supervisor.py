@@ -1,22 +1,22 @@
 from util.autogui import *
 
 
-def supervise_log_time(thread: threading.Thread, secs=60, mail: bool = None, interval=10, alert: bool = None):
+def supervise_log_time(thread: threading.Thread, secs=60, mail: bool = None, interval=10, alert_type: bool = None):
     assert thread is not None, thread
     if mail is None:
         mail = config.mail
-    if alert is None:
-        alert = config.alert
+    if alert_type is None:
+        alert_type = config.alert_type
 
     def _overtime():
-        return time.time() - BaseConfig.log_time > secs
+        return time.time() - config.log_time > secs
 
     logger.info(f'start supervising thread {thread.name}...')
     thread.start()
     while not thread.is_alive():
         time.sleep(0.01)
     logger.info(f'Thread-{thread.ident}({thread.name}) started...')
-    BaseConfig.log_time = time.time()
+    config.log_time = time.time()
     # from here, every logging should have arg: NO_LOG_TIME, otherwise endless loop.
     loops = MAX_LOOPS = 15
     while True:
@@ -27,24 +27,34 @@ def supervise_log_time(thread: threading.Thread, secs=60, mail: bool = None, int
             time.sleep(interval)
             continue
         # case 2: thread finished normally - stop supervision
-        if not thread.is_alive() and BaseConfig.task_finished:
-            # thread finished
+        if config.task_finished:
+            # thread finished: all battles finished(thread exit normally)
             logger.debug(f'Thread-{thread.ident}({thread.name}) finished. Stop supervising.')
             if mail:
                 send_mail('Task finished.')
+            # make sure thread is stopped
+            if thread.is_alive():
+                kill_thread(thread)
             break
 
         # something wrong
+        T: ImageTemplates = config.T
+        LOC: Regions = config.LOC
         # case 3: network error - click "retry" and continue
-        if config.img_net is not None and config.loc_net is not None:
+        img_net, loc_net = T.net_error, LOC.net_error
+        if img_net is not None and loc_net is not None:
             shot = screenshot()
-            if is_match_target(shot, config.img_net, config.loc_net[0]) and \
-                    is_match_target(shot, config.img_net, config.loc_net[1]):
+            if is_match_target(shot, img_net, loc_net[0]) and is_match_target(shot, img_net, loc_net[1]):
                 logger.warning('Network error! click "retry" button', NO_LOG_TIME)
-                click(config.loc_net[1], lapse=3)
-                BaseConfig.log_time += 60
+                click(loc_net[1], lapse=3)
+                config.log_time += 60
                 continue
-        # case 4: unrecognized error - waiting user to handle (in 2*loops seconds)
+        # case 4: re-login after 3am in jp server
+        # if match menu button, click save_area until match quest1234, click 1234
+        if is_match_target(screenshot(), T.quest, LOC.menu_button):
+            if callable(config.battle.login_handler):
+                config.battle.login_handler()
+        # case 5: unrecognized error - waiting user to handle (in 2*loops seconds)
         if loops == MAX_LOOPS:
             logger.warning(f'Something wrong, please solve it, or it will be force stopped...', NO_LOG_TIME)
         if loops >= 0:
@@ -52,25 +62,22 @@ def supervise_log_time(thread: threading.Thread, secs=60, mail: bool = None, int
         else:
             logger.warning(f'Time out, it will be force stopped...', NO_LOG_TIME)
         loops -= 1
-        if alert:
+        if alert_type:
             beep(1, 2)
         else:
             time.sleep(3)
         if loops < 0:
             # not solved! kill thread and stop.
             err_msg = f'Thread-{thread.ident}({thread.name}): Time run out!\n' \
-                      f'lapse={time.time() - BaseConfig.log_time:.2f}(>{secs}) secs.\n' \
-                      f'lg_time={time.asctime(time.localtime(BaseConfig.log_time))}'
+                      f'lapse={time.time() - config.log_time:.2f}(>{secs}) secs.\n' \
+                      f'lg_time={time.asctime(time.localtime(config.log_time))}'
             print(err_msg)
             if mail:
                 send_mail(err_msg, subject=f'[{thread.name}]something went wrong!')
             kill_thread(thread)
             print('exit supervisor after killing thread.')
             break
-    if alert is True:
-        beep(2, 1, 20)
-    elif isinstance(alert, str):
-        play_ringtone(alert, 5)
+    raise_alert(alert_type, loops=-1)
 
 
 # inspired by https://github.com/mosquito/crew/blob/master/crew/worker/thread.py

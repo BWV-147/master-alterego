@@ -1,69 +1,72 @@
 # %%
-from util.master import *
+from modules.master import *
 
 check_sys_admin()
 
 # %%
-base_path = 'img/gacha'  # 'img/gacha-jp'
+base_path = 'img/battles/a-charlotte/'  # 'img/gacha-jp'
 
 
 # %%
 def capture(fn: str):
-    time.sleep(1)
+    # time.sleep(1)
     full_fp = os.path.join(base_path, fn + '.png')
     if os.path.exists(full_fp):
         print(f'! Replace: "{full_fp}"')
     else:
         print(f'   Saved : "{full_fp}" saved')
     screenshot().save(full_fp)
-    pyautogui.hotkey('alt', 'tab')
+    # pyautogui.hotkey('alt', 'tab')
 
 
 # %%
 def save_rewards(quest_name):
-    screenshot().save(f'img/_drops/rewards-{quest_name}-{time.strftime("%m%d-%H%M")}.png')
+    fn = f'img/_drops/rewards-{quest_name}-{time.strftime("%m%d-%H%M")}.png'
+    print(f'Save "{fn}"')
+    screenshot().save(fn)
 
 
 # %% ------------- battle part --------------
+# %% !!!
 capture('quest')
 # %%
 capture('apple_page')
 # %%
 capture('apple_confirm')
-# %%
+# %% !!!
 capture('support')
 # %%
 capture('support_confirm')
-# %%
+# %% !!!
 capture('team')
-# %%
+# %% !!!
 capture('wave1a')
-# %%
+# %% !!!
 capture('wave1b')
-# %%
+# %% !!!
 capture('cards1')
-# %%
+# %% !!!
 capture('wave2a')
-# %%
+# %% !!!
 capture('wave2b')
+# %% !!!
+capture('cards2')
 # %% --- order change ----
 capture('order_change')
-# %%
+# %% !!!
 capture('wave2c')
-# %%
+# %% !!!
 capture('wave2d')
 # --- end order change ---
-# %%
-capture('cards2')
-# %%
+# %% !!!
 capture('wave3a')
-# %%
+# %% !!!
 capture('wave3b')
-# %%
+# %% !!!
 capture('cards3')
-# %%
+# %% !!!
 capture('kizuna')
-# %%
+# %% !!!
 capture('rewards')
 # %%
 capture('restart_quest')
@@ -120,16 +123,33 @@ capture('shop_event_banner_list')
 # %%
 capture('net_error')
 
+# %% ======== fp gacha ========
+capture('fp_gacha_page')
+# %%
+capture('fp_gacha_confirm')
+# %%
+capture('fp_gacha_result')
+# %%
+capture('fp_bag1_full')
+# %%
+capture('fp_bag2_full')
+
+# %% kill thread
+from util.config import config
+from util.supervisor import kill_thread
+
+kill_thread(config.running_thread)
+
 # %% debug during battle
 from battles import *
 
 config.load_config('data/config.json')
 check_sys_admin()
-BaseConfig.task_finished = False
-BaseConfig.log_file = 'logs/log.full.log'
+config.task_finished = False
+config.log_file = 'logs/log.full.log'
 # _battle: Battle = globals()['battle']
 _battle = Battle()
-getattr(_battle, config.battle_func)(True)
+getattr(_battle, config.battle.battle_func)(True)
 master = _battle.master
 T = master.T
 LOC = master.LOC

@@ -2,7 +2,6 @@ from util.autogui import *
 from util.supervisor import supervise_log_time
 
 GACHA_LOG_NAME = 'gacha'
-MANUAL_OPERATION_TIME = 60 * 10
 logger = globals()['logger'] = get_logger(GACHA_LOG_NAME)
 
 
@@ -14,25 +13,25 @@ class Gacha:
     def pre_process(self, conf=None):
         config.load_config(conf)
         check_sys_admin()
-        self.T.read_templates(config.gacha_dir)
-        BaseConfig.img_net = self.T.net_error
-        BaseConfig.loc_net = self.LOC.net_error
-        BaseConfig.task_finished = False
-        BaseConfig.log_file = f'logs/{GACHA_LOG_NAME}.full.log'
+        self.T.read_templates(config.gacha.dir)
+        config.T = self.T
+        config.LOC = self.LOC
+        config.log_file = f'logs/{GACHA_LOG_NAME}.full.log'
 
     def start(self, supervise=True, conf=None):
         self.pre_process(conf)
         logger.info('start gacha...')
-        start_func = getattr(self, config.gacha_start_func or self.draw.__name__)
+        start_func = getattr(self, config.gacha.start_func or self.draw.__name__)
         logger.info(f'start_func = {start_func.__name__}')
-        args = {self.draw.__name__: [config.gacha_num],
-                self.clean.__name__: [config.clean_num],
-                self.sell.__name__: [config.sell_times]
+        args = {self.draw.__name__: [config.gacha.num],
+                self.clean.__name__: [config.gacha.clean_num],
+                self.sell.__name__: [config.gacha.sell_times]
                 }[start_func.__name__]
         time.sleep(2)
         if supervise:
-            t_name = os.path.basename(config.gacha_dir)
+            t_name = os.path.basename(config.gacha.dir)
             thread = threading.Thread(target=start_func, name=t_name, args=args, daemon=True)
+            config.running_thread = thread
             supervise_log_time(thread, 120, interval=3)
         else:
             start_func(*args)
@@ -46,32 +45,32 @@ class Gacha:
         reset_i = 0
         while True:
             loops += 1
-            # print(f'\rloop {loops:<4d}', end='')
+            # print(f'\r loop {loops:<4d}', end='')
             for _ in range(10):
                 click(LOC.gacha_point, lapse=0.05)
             shot = screenshot()
             if is_match_target(shot, T.gacha_empty, LOC.gacha_empty) and \
                     not is_match_target(shot, T.gacha_empty, LOC.gacha_reset_action):
                 logger.warning('no ticket left!')
-                BaseConfig.task_finished = True
+                config.mark_task_finish()
                 return
             if is_match_target(shot, T.gacha_empty, LOC.gacha_reset_action):
                 click(LOC.gacha_reset_action)
                 config.count_gacha()
                 reset_i += 1
-                logger.info(f'reset {reset_i}/{num} times(total {config.total_gacha_num}).')
+                logger.info(f'reset {reset_i}/{num} times(total {config.gacha.finished}).')
                 wait_which_target(T.gacha_reset_confirm, LOC.gacha_reset_confirm, at=True)
                 wait_which_target(T.gacha_reset_finish, LOC.gacha_reset_finish, at=True)
                 wait_which_target(T.gacha_initial, LOC.gacha_10_initial)
                 if reset_i >= num:
                     logger.info(f'All {num} gacha finished.')
-                    BaseConfig.task_finished = True
+                    config.mark_task_finish()
                     return
             elif is_match_target(shot, T.mailbox_full_alert, LOC.mailbox_full_confirm):
                 click(LOC.mailbox_full_confirm)
                 logger.info('mailbox full.')
                 wait_which_target(T.mailbox_unselected1, LOC.mailbox_get_all_action)
-                self.clean(config.clean_num)
+                self.clean(config.gacha.clean_num)
                 wait_which_target(T.gacha_initial, LOC.gacha_tab)
                 wait_which_target(T.gacha_initial, LOC.gacha_10_initial, clicking=LOC.gacha_tab)
                 logger.info('already back to gacha.')
@@ -90,10 +89,10 @@ class Gacha:
         if num < 0:
             logger.warning('please clean mailbox manually and return to gacha page!', NO_LOG_TIME)
             time.sleep(2)
-            BaseConfig.log_time = time.time() + MANUAL_OPERATION_TIME  # n min for manual operation
-            self.alert()
+            config.log_time = time.time() + config.manual_operation_time  # n min for manual operation
+            raise_alert()
             return
-        drag_num = config.clean_drag_times
+        drag_num = config.gacha.clean_drag_times
 
         def _is_match_offset(_shot, template, old_loc, _offset):
             return is_match_target(_shot.crop(np.add(old_loc, [0, _offset, 0, _offset])), template.crop(old_loc))
@@ -150,7 +149,7 @@ class Gacha:
             elif page_no == 1:
                 logger.info('bag full.')
                 click(LOC.bag_full_sell_action)
-                self.sell(config.sell_times)
+                self.sell(config.gacha.sell_times)
                 return
 
     def sell(self, num=100):
@@ -165,8 +164,8 @@ class Gacha:
         if num <= 0:
             logger.warning('please sell items manually and return to gacha page!', NO_LOG_TIME)
             time.sleep(2)
-            BaseConfig.log_time = time.time() + MANUAL_OPERATION_TIME  # min for manual operation
-            self.alert()
+            config.log_time = time.time() + config.manual_operation_time  # min for manual operation
+            raise_alert()
         else:
             no = 0
             while True:
@@ -185,16 +184,9 @@ class Gacha:
                     logger.info('all sold.')
                     click(LOC.bag_back)
                     wait_which_target(T.shop, LOC.shop_event_item_exchange, at=True)
-                    wait_which_target(T.shop_event_banner_list, LOC.shop_event_banner_list[config.event_banner_no],
-                                      at=True)
+                    wait_which_target(T.shop_event_banner_list,
+                                      LOC.shop_event_banner_list[config.gacha.event_banner_no], at=True)
                     wait_which_target(T.gacha_initial, LOC.gacha_10_initial, clicking=LOC.gacha_tab)
                     break
         wait_which_target(T.gacha_initial, LOC.gacha_10_initial)
         logger.info('from shop back to gacha')
-
-    @staticmethod
-    def alert():
-        if config.alert is True:
-            beep(2, 1, 20)
-        elif isinstance(config.alert, str):
-            play_ringtone(config.alert, 5)

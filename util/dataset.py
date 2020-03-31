@@ -18,9 +18,9 @@ class Regions:
     # common, or for supervisor
     net_error = ((599, 814, 720, 872), (1138, 813, 1378, 876))
     safe_area = (1400, 40)
+    menu_button = (1659, 974, 1911, 1074)
 
     # ---------- gacha part ----------
-    # in gacha
     gacha_point = (600, 650)
     gacha_tab = (1009, 188, 1213, 228)
     gacha_10_initial = (483, 630, 800, 774)
@@ -54,11 +54,14 @@ class Regions:
     bag_select_start = (200, 350)
     bag_select_end = (1416, 1050)
     bag_sell_action = (1600, 975, 1870, 1047)
-    bag_sell_confirm = (1181, 847, 1340, 906)
-    bag_sell_finish = (900, 845, 1020, 908)
-    # jp version:
-    # bag_sell_confirm = (1181, 912, 1340, 968)
-    # bag_sell_finish = (875, 908, 1045, 966)
+
+    @property
+    def bag_sell_confirm(self):
+        return (1181, 912, 1340, 968) if config.is_jp else (1181, 847, 1340, 906)
+
+    @property
+    def bag_sell_finish(self):
+        return (875, 908, 1045, 966) if config.is_jp else (900, 845, 1020, 908)
 
     # from bag to drawer
     shop_sell = (1352, 465, 1723, 552)
@@ -69,15 +72,14 @@ class Regions:
     # ---------- battle part ----------
     apply_friend = (1692, 521, 1826, 588)
     apply_friend_deny = (464, 913)
-    quest = (966, 256, 1149, 417)  # (937, 240, 1848, 360)
+    quest = (966, 295, 1149, 417)  # (937, 240, 1848, 360)
     quest_outer = (966, 246, 1149, 427)
     quest_c = (1600, 265)
     quest_master_avatar = (91, 835, 242, 997)
     # rewards = (1680, 33, 1868, 91)
 
     ap_time = (346, 1041, 366, 1072)
-    apple_page = (471, 177, 645, 359)
-    apple_close = (1000, 925)
+    apple_close = (900, 900, 1016, 952)
     apples = ((471, 177, 645, 359), (471, 397, 645, 579), (474, 621, 645, 803), (471, 840, 645, 861))
     apple_confirm = (1195, 802, 1313, 882)
     # support = ((72,489,1617,560), (72,790,1617,860))
@@ -103,6 +105,7 @@ class Regions:
     support_confirm_title = (821, 171, 1108, 230)
     support_refresh_confirm = (1110, 890)
     support_refresh = (1238, 160, 1318, 230)
+    support_class_affinity = (1119, 160, 1201, 230)
     support_scroll = ((1860, 520), (1860, 640), (760, 880))
 
     team_start_action = (1655, 973, 1902, 1052)
@@ -120,8 +123,8 @@ class Regions:
     skill_to_target = ((490, 700), (970, 700), (1429, 700))
     master_skill = (1736, 440, 1841, 507)
     master_skills = ((1319, 427, 1404, 512), (1450, 427, 1535, 512), (1581, 427, 1666, 512))
-
-    attack = (1554, 950, 1624, 1000)  # attack 字样以下部分，与大小变化的attack独立
+    loc_wave = [wave_num, master_skill]
+    attack = (1599, 957, 1688, 1010)  # 大小可变的attack字样以下部分，且与cards_back不重叠
     cards_back = (1725, 1007, 1878, 1043)
     cards = (
         (84, 655, 303, 903), (466, 655, 685, 903), (848, 655, 1067, 903), (1235, 655, 1454, 903),
@@ -140,10 +143,20 @@ class Regions:
     kizuna = (186, 646, 205, 665)  # 羁绊点数第一格
     finish_qp = (418, 884, 487, 955)
     rewards_show_num = (1593, 115, 1718, 149)
+    rewards_items_outer = [[(233 + j * 206, 186 + i * 213, 409 + j * 206, 379 + i * 213) for j in range(0, 7)] for i in
+                           range(0, 3)]
+    rewards_items = [[(241 + j * 206, 196 + i * 213, 401 + j * 206, 290 + i * 213) for j in range(0, 7)] for i in
+                     range(0, 3)]
     finish_next = (1444, 980, 1862, 1061)
     finish_craft = (454, 216, 623, 386)
     restart_quest_yes = (1122, 812, 1386, 829)
     friend_point = (460, 810, 580, 880)
+
+    # ============= fp gacha ================
+    fp_gacha_logo = (962, 22, 1050, 100)
+    fp_gacha10_button = (1111, 800, 1374, 886)
+    fp_gacha_confirm = (1205, 819, 1300, 868)
+    fp_gacha_result_summon = (1096, 980, 1200, 1037)
 
     width = 1920
     height = 1080
@@ -160,10 +173,10 @@ class Regions:
             # at most 3 layers
             if not key.startswith('__') and isinstance(value, (int, list, tuple)):
                 # print(key, value)
-                self.__dict__[key] = Regions.loop(value, region, Regions.size)
+                self.__dict__[key] = Regions.iter_relocate(value, region, Regions.size)
 
     @staticmethod
-    def loop(pt, new, old):
+    def iter_relocate(pt, new, old):
         if isinstance(pt, (tuple, list)):
             if isinstance(pt[0], int):
                 assert len(pt) % 2 == 0, pt
@@ -176,7 +189,7 @@ class Regions:
                     # oo.append(int(region[ii] + (region[ii + 2] - region[ii]) / origin[ii] * o[i]))
                 return oo
             else:
-                return [Regions.loop(k, new, old) for k in pt]
+                return [Regions.iter_relocate(k, new, old) for k in pt]
         else:
             print(f'skip key(type:{type(pt)}) for resize')
 
@@ -194,22 +207,15 @@ class ImageTemplates:
         if directory is not None:
             self.read_templates(directory)
 
-    def read_templates(self, directory: str, force=False):
-        old_templates = self.templates
-        self.templates = {}
-        flag = False
+    def read_templates(self, directory: str, append=False):
+        if not append:
+            self.templates = {}
         for filename in os.listdir(directory):
             if not filename.endswith('.png'):
                 continue
             filepath = os.path.join(directory, filename)
             key = filename[0:len(filename) - 4]
-            if directory == self.directory and force is False and key in old_templates:
-                self.templates[key] = old_templates[key]
-            else:
-                flag = True
-                self.templates[key] = Image.open(filepath)
-        if flag:
-            logger.debug(f'template images updated: {directory}')
+            self.templates[key] = Image.open(filepath)
         self.directory = directory
 
     def get(self, attr, k=None):
@@ -226,12 +232,13 @@ class ImageTemplates:
         return f'{self.__class__.__name__}(dir="{self.directory}", templates={self.templates})'
 
     @property
-    def apple_confirm(self):
-        return self.get('apple_confirm')
-
-    @property
     def net_error(self):
         return self.get('net_error')
+
+    # ================ battle ================
+    @property
+    def apple_confirm(self):
+        return self.get('apple_confirm')
 
     @property
     def apple_page(self):
@@ -243,14 +250,14 @@ class ImageTemplates:
 
     @property
     def cards(self):
-        templs = []
+        _templates = []
         for i in range(20):
             key = f'cards{i + 1}'
             if key in self.templates:
-                templs.append(self.templates[key])
+                _templates.append(self.templates[key])
             else:
                 break
-        return templs
+        return _templates
 
     @property
     def cards1(self):
@@ -388,6 +395,27 @@ class ImageTemplates:
     @property
     def shop_event_banner_list(self):
         return self.get('shop_event_banner_list')
+
+    # ================ fp gacha ================
+    @property
+    def fp_gacha_page(self):
+        return self.get('fp_gacha_page')
+
+    @property
+    def fp_gacha_confirm(self):
+        return self.get('fp_gacha_confirm')
+
+    @property
+    def fp_gacha_result(self):
+        return self.get('fp_gacha_result')
+
+    @property
+    def fp_bag1_full(self):
+        return self.get('fp_bag1_full')
+
+    @property
+    def fp_bag2_full(self):
+        return self.get('fp_bag2_full')
 
 
 # %% local test functions

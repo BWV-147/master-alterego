@@ -4,7 +4,7 @@ import threading
 import time
 from logging.handlers import RotatingFileHandler
 
-from util.config import BaseConfig
+from util.config import config
 
 NO_LOG_TIME = 'NO_LOG_TIME'
 
@@ -36,7 +36,7 @@ def get_logger(name='log', level=logging.INFO, save=True):
     _logger.setLevel(logging.DEBUG)
 
     def log_func():
-        BaseConfig.log_time = time.time()
+        config.log_time = time.time()
 
     log_filter = LogFilter(func=log_func)
     _logger.addFilter(log_filter)

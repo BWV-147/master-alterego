@@ -8,7 +8,7 @@ import pygame
 from mss import mss
 
 from util.base import *
-from util.config import *
+from util.config import config
 
 
 def check_sys_admin(admin=True):
@@ -86,14 +86,17 @@ def drag(start: Sequence, end: Sequence, duration=1.0, down_time=0.0, up_time=0.
 
 
 def beep(duration: float, interval: float = 1, loops=1):
+    if loops >= 0:
+        # make sure at least play once
+        loops += 1
     if sys.platform == 'win32':
         import winsound
-        while loops > 0:
+        while loops != 0:
             loops -= 1
             winsound.Beep(600, int(duration * 1000))
             time.sleep(interval)
     else:
-        while loops > 0:
+        while loops != 0:
             loops -= 1
             t0 = time.time()
             while time.time() - t0 < duration:
@@ -102,9 +105,22 @@ def beep(duration: float, interval: float = 1, loops=1):
         sys.stdout.flush()
 
 
-def play_ringtone(filename, loops=1):
+def play_music(filename, loops=1):
     pygame.mixer.init()
     pygame.mixer.music.load(filename)
     pygame.mixer.music.play(loops)
     while pygame.mixer.music.get_busy():
         time.sleep(0.5)
+
+
+def raise_alert(alert_type=None, loops=5):
+    """
+    :param alert_type: bool: beep, str: ring tone, alert if supervisor found errors or task finish.
+    :param loops: if loops == -1, infinite loop
+    """
+    if alert_type is None:
+        alert_type = config.alert_type
+    if alert_type is True:
+        beep(2, 1, loops)
+    elif isinstance(alert_type, str):
+        play_music(alert_type, loops)
