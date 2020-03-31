@@ -1,10 +1,9 @@
 # Alterego Master
 ぐだ子の分身、クラスはオルターエゴでち。
- 
-> **Environment setup**
+
+---
+### Environment setup
  - Python 3.7 on Windows
 
-> TODO
+### TODO
  - zihuiti mode
-
- 

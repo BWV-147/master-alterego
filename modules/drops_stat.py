@@ -12,7 +12,6 @@ class DropsStat:
     def __init__(self):
         self.images: Dict[str, Image.Image] = {}
         self.LOC = Regions()
-        # self.LOC.relocate()
         self.item_templates: Dict[str, Image.Image] = {}
         self.stat_results: Dict[str, int] = {}
         self._no, self._num = 0, len(self.images)
