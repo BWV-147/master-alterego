@@ -2,7 +2,7 @@
 import traceback
 
 import cv2
-import numpy as np
+import numpy
 from PIL import ImageGrab
 from scipy.signal import find_peaks
 from skimage.feature import match_template as sk_match_template
@@ -22,22 +22,26 @@ def screenshot(region: Sequence = None, filepath: str = None, monitor: int = Non
     """
     if monitor is None:
         monitor = config.monitor
+    _image = None
+    size = (1920, 1080)
     try:
-        # if monitor is off, mss will raise ScreenShotError("gdi32.GetDIBits() failed.")
-        # but PIL.ImageGrab only grab the main monitor(? even it is off?) if there are more than 2 monitors.
-        if monitor == 1:
-            # so grab main screen through PIL
-            _image = ImageGrab.grab()
-        else:
-            # grab second screen through mss, ensure the second monitor is *ON*!
-            with mss() as sct:
-                mon = sct.monitors[monitor]
-                shot = sct.grab(mon)
-                _image = Image.frombytes('RGB', (mon['width'], mon['height']), shot.rgb).crop(region)
+        with mss() as sct:
+            mon = sct.monitors[monitor]
+            size = (mon['width'], mon['height'])
+            shot = sct.grab(mon)
+            _image = Image.frombytes('RGB', size, shot.rgb).crop(region)
     except Exception as e:
-        logger.error('grab screenshot failed, return default single color image.\n%s' % e, NO_LOG_TIME)
-        logger.debug(traceback.format_exc(), NO_LOG_TIME)
-        _image = Image.new('RGB', (1920, 1080), (0, 255, 255)).crop(region)
+        logger.error(f'Fail to grab screenshot using mss(). Error:\n{e}', NO_LOG_TIME)
+        if config.monitor == 1 and tuple(config.offset) == (0, 0):
+            # ImageGrab can only grab the main screen
+            try:
+                _image = ImageGrab.grab()
+            except Exception as e:
+                logger.error(f'Fail to grab screenshot using ImageGrad. Error:\n{e}', NO_LOG_TIME)
+        logger.error(traceback.format_exc(), NO_LOG_TIME)
+    if _image is None:
+        # grab failed, return a empty image with single color
+        _image = Image.new('RGB', size, (0, 255, 255)).crop(region)
     if filepath is not None:
         _image.save(filepath)
     return _image
@@ -47,7 +51,7 @@ def get_mean_color(img: Image.Image, region: Sequence):
     if len(region) == 2:
         return img.getpixel(region)
     elif len(region) == 4:
-        return np.mean(list(img.crop(region).getdata()), 0)
+        return numpy.mean(list(img.crop(region).getdata()), 0)
     else:
         raise KeyError(f'len(region) != 2 or 4. region={region}')
 
@@ -69,9 +73,9 @@ def cal_sim(img1: Image.Image, img2: Image.Image, region=None, method='ssim') ->
     img2 = img2.convert('RGB')
     if method == 'ssim':
         # noinspection PyTypeChecker
-        sim = sk_compare_ssim(np.array(img1), np.array(img2), multichannel=True)
+        sim = sk_compare_ssim(numpy.array(img1), numpy.array(img2), multichannel=True)
     elif method == 'hist':
-        size = tuple(np.min((img1.size, img2.size), 0))
+        size = tuple(numpy.min((img1.size, img2.size), 0))
         if size != img1.size:
             img1 = img1.resize(size)
             img2 = img2.resize(size)
@@ -207,21 +211,21 @@ def search_target(img: Image.Image, target: Image.Image, mode='cv2'):
     mode ='cv2'(default) to use open-cv(quick), 'sk' to use skimage package(VERY slow)
     Attention: cv2 use (h,w), but PIL/numpy use (w,h).
     """
-    m1: np.ndarray = np.array(img.convert('RGB'))
-    m2: np.ndarray = np.array(target.convert('RGB'))
+    m1: numpy.ndarray = numpy.array(img.convert('RGB'))
+    m2: numpy.ndarray = numpy.array(target.convert('RGB'))
     if mode == 'sk':
-        matches: np.ndarray = sk_match_template(m1, m2)
-        max_match = np.max(matches)
-        pos = np.where(matches == max_match)
-        return np.max(matches), (pos[1][0], pos[0][0])
+        matches: numpy.ndarray = sk_match_template(m1, m2)
+        max_match = numpy.max(matches)
+        pos = numpy.where(matches == max_match)
+        return numpy.max(matches), (pos[1][0], pos[0][0])
     else:
         cv_img, cv_target = (cv2.cvtColor(m1, cv2.COLOR_RGB2BGR), cv2.cvtColor(m2, cv2.COLOR_RGB2BGR))
         # h, w = cv_target.shape[0:2]
         matches = cv2.matchTemplate(cv_img, cv_target, cv2.TM_CCOEFF_NORMED)
-        max_match = np.max(matches)
-        pos = np.where(matches == max_match)
+        max_match = numpy.max(matches)
+        pos = numpy.where(matches == max_match)
         # in PIL system, (x~w,y~h)
-        return np.max(matches), (pos[1][0], pos[0][0])
+        return numpy.max(matches), (pos[1][0], pos[0][0])
 
 
 # noinspection PyTypeChecker,PyUnresolvedReferences
@@ -230,8 +234,8 @@ def search_peaks(img: Image.Image, target: Image.Image, column=True, threshold=T
         assert img.size[0] == target.size[0], f'must be same width: img {img.size}, target {target.size}.'
     else:
         assert img.size[1] == target.size[1], f'must be same height: img {img.size}, target {target.size}.'
-    m1: np.ndarray = np.array(img.convert('RGB'))
-    m2: np.ndarray = np.array(target.convert('RGB'))
+    m1: numpy.ndarray = numpy.array(img.convert('RGB'))
+    m2: numpy.ndarray = numpy.array(target.convert('RGB'))
     cv_img, cv_target = (cv2.cvtColor(m1, cv2.COLOR_RGB2BGR), cv2.cvtColor(m2, cv2.COLOR_RGB2BGR))
-    matches: np.ndarray = cv2.matchTemplate(cv_img, cv_target, cv2.TM_CCOEFF_NORMED)
+    matches: numpy.ndarray = cv2.matchTemplate(cv_img, cv_target, cv2.TM_CCOEFF_NORMED)
     return find_peaks(matches.reshape(matches.size), height=threshold, **kwargs)[0]

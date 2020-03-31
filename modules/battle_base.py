@@ -10,7 +10,7 @@ class BattleBase:
         self.master = Master()
 
     def pre_process(self, conf=None):
-        config.load_config(conf)
+        config.load(conf)
         check_sys_admin()
         config.log_file = 'logs/log.full.log'
         battle_func = getattr(self, config.battle.battle_func)
@@ -192,11 +192,10 @@ class BattleBase:
 
             # LOC.relocate((0, 0, 1920 - 1, 1080 - 1))
 
-            # ----  NP     Quick    Arts   Buster ----
-            master.card_templates.clear()
-            master.set_card_template(names[0], [(3, 6), (1, 5), (1, 3), (3, 3)])
-            master.set_card_template(names[1], [(1, 7), (2, 2), (1, 1), (2, 4)])
-            master.set_card_template(names[2], json_fp='img/cards/android/cards-android.json', json_key='孔明')
+            # -----------------------    NP    Quick    Arts   Buster -----------
+            master.set_cards(names[0], (3, 6), (1, 5), (1, 3), (3, 3))
+            master.set_cards(names[1], (1, 7), (2, 2), (1, 1), (2, 4))
+            master.set_cards_from_json(names[2], 'img/cards/android/cards-android.json', '孔明')
 
             def _handler():
                 # mainly for jp, re-login handler at 3am(UTC+8)

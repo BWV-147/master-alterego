@@ -4,38 +4,55 @@ import os
 
 class _BaseConfig:
     def __init__(self):
-        self.ignored = []
+        self._ignored = []
 
-    def load_json(self, data):
+    def from_json(self, data):
         for k, v in data.items():
             if k in self.__dict__:
                 if isinstance(self.__dict__[k], _BaseConfig):
-                    self.__dict__[k].load_json(v)
+                    self.__dict__[k].from_json(v)
                 else:
                     self.__dict__[k] = v
 
-    def dump_json(self):
+    def to_json(self):
         out = {}
         for k, v in self.__dict__.items():
-            if k != 'ignored' and k not in self.ignored:
+            if not k.startswith('_') and k not in self._ignored:
                 if isinstance(v, _BaseConfig):
-                    out[k] = v.dump_json()
+                    out[k] = v.to_json()
                 else:
                     out[k] = v
         return out
+
+    def load(self, fp):
+        assert fp is not None, f'please provide filepath of config file.'
+        if os.path.exists(fp):
+            data: dict = json.load(open(fp, encoding='utf-8'))
+            self.from_json(data)
+            print(f'loaded config: {fp}')
+        else:
+            print(f'config file "{fp}" not exists!')
+            _dir = os.path.dirname(fp)
+            if not os.path.exists(_dir):
+                os.makedirs(_dir)
+            self.save(fp)
+            print(f'Created the default config file "{fp}". Please update it.')
+
+    def save(self, fp):
+        assert fp is not None, f'please provide filepath of config file.'
+        json.dump(self.to_json(), open(fp, 'w', encoding='utf8'), ensure_ascii=False, indent=2,
+                  skipkeys=True, default=lambda o: o.__dict__)
 
 
 class Config(_BaseConfig):
 
     def __init__(self, fp=None):
         super().__init__()
-        self.fp = fp
-        # sys config
+        # ================= sys config =================
         self.id = None
         self.is_jp = False  # difference between jp and cn server
         self.monitor = 1  # >=1, check mss().monitors to see monitor info, 0 is total size
-        self.offset_x = 0  # xy offset for mouse click event, relative to MAIN monitor's origin
-        self.offset_y = 0
+        self.offset = (0, 0)  # xy offset for mouse click event, relative to MAIN monitor's origin
         self.mail = False  # whether to send_mail
         self.alert_type = False  # bool: beep, str: ring tone, alert if supervisor found errors or task finish.
         self.manual_operation_time = 60 * 10  # seconds.
@@ -44,7 +61,7 @@ class Config(_BaseConfig):
         self.battle = BattleConfig()
         self.gacha = GachaConfig()
         self.fp_gacha = FpGachaConfig()
-        # ================= Email part =================
+        # ================= Email part ==================
         # make sure the security of password.
         self.receiver = None
         self.sender = None
@@ -53,7 +70,8 @@ class Config(_BaseConfig):
         self.server_host = None
         self.server_port = None
 
-        # ====== ignored =======
+        # ================= ignored =================
+        self.fp = fp
         self.T = None
         self.LOC = None
         self.log_time = 0  # record the time of last logging.info/debug..., set NO_LOG_TIME outside battle progress
@@ -62,32 +80,18 @@ class Config(_BaseConfig):
         self.running_thread = None
         self.temp = {}  # save temp vars at runtime
 
-        self.ignored = ['fp', 'T', 'LOC', 'log_time', 'task_finished', 'log_file', 'running_thread', 'temp']
+        self._ignored = ['fp', 'T', 'LOC', 'log_time', 'task_finished', 'log_file', 'running_thread', 'temp']
         # load config
         if fp:
-            self.load_config()
+            self.load()
 
-    def load_config(self, fp=None):
-        self.fp = fp = fp or self.fp or 'data/config.json'
-        if os.path.exists(fp):
-            data: dict = json.load(open(fp, encoding='utf-8'))
-            self.load_json(data)
-            print(f'loaded config: {fp}')
-        else:
-            print(f'config file "{fp}" not exists!')
-            _dir = os.path.dirname(fp)
-            if not os.path.exists(_dir):
-                os.makedirs(_dir)
-            self.save(fp)
-            print(f'Created the default config file "{fp}". Please check it.')
+    def load(self, fp=None):
+        self.fp = fp or self.fp or 'data/config.json'
+        return super().load(self.fp)
 
     def save(self, fp=None):
         fp = fp or self.fp
-        if not fp:
-            print(f'please provide valid filename: "{fp}"')
-            return
-        json.dump(self.dump_json(), open(fp or self.fp, 'w', encoding='utf8'), ensure_ascii=False, indent=2,
-                  skipkeys=True, default=lambda o: o.__dict__)
+        return super().save(fp)
 
     def count_gacha(self):
         self.gacha.finished += 1
@@ -118,6 +122,7 @@ class Config(_BaseConfig):
             kill_thread(threading.current_thread())
 
 
+# sub member of Config
 class BattleConfig(_BaseConfig):
     def __init__(self):
         super().__init__()

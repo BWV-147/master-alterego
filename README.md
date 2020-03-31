@@ -7,3 +7,4 @@
 
 ### TODO
  - zihuiti mode
+ - config.logger

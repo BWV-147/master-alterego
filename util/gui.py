@@ -1,5 +1,4 @@
 import ctypes
-import random
 import sys
 from pprint import pprint
 
@@ -41,26 +40,37 @@ def check_sys_admin(admin=True):
     sct = mss()
     print('** Monitors information **')
     pprint(sct.monitors)
-    print('WARNING: make sure "config.monitor/offset_x/y" is set properly')
+    print('WARNING: make sure "config.monitor/offset" is set properly')
 
 
-# %% mouse events & alert
-def click(xy: Sequence = None, lapse=0.5, r=2):
+# %% mouse events
+# Attention: outside of this module, pyautogui.dragRel and moveRel is allowed.
+# Otherwise, apply_offset() before action
+
+def apply_offset(xy: Sequence, offset: Sequence = None):
     """
-    click at point (x,y) or region center (x1,y1,x2,y2) within a random offset in radius 0~r
-    :param xy:
-    :param lapse:
-    :param r:
+    :param xy: list length = 2*n
+    :param offset: (dx, dy)
     :return:
     """
+    offset = offset or config.offset or (0, 0)
+    return [p + offset[i % 2] for i, p in enumerate(xy)]
+
+
+def click(xy: Sequence = None, lapse=0.5):
+    """
+    click at point (x,y) or region center (x1,y1,x2,y2) within a random offset in radius 0~r
+    """
     if xy is not None:
-        x, y = get_center_coord(xy)
-        x += random.randint(-r, r) + config.offset_x
-        y += random.randint(-r, r) + config.offset_y
-        pyautogui.moveTo(x, y)
+        move_to(xy)
         # print('click (%d, %d)' % (x, y))
     pyautogui.click()
     time.sleep(lapse)
+
+
+def move_to(xy: Sequence):
+    x, y = apply_offset(get_center_coord(xy), config.offset)
+    pyautogui.moveTo(x, y)
 
 
 def drag(start: Sequence, end: Sequence, duration=1.0, down_time=0.0, up_time=0.0, lapse=0.5):
@@ -74,6 +84,8 @@ def drag(start: Sequence, end: Sequence, duration=1.0, down_time=0.0, up_time=0.
     :param lapse: lapse after mouse up
     :return:
     """
+    start = apply_offset(get_center_coord(start), config.offset)
+    end = apply_offset(get_center_coord(end), config.offset)
     pyautogui.moveTo(start[0], start[1])
     if down_time is not None:
         pyautogui.mouseDown()
@@ -85,6 +97,7 @@ def drag(start: Sequence, end: Sequence, duration=1.0, down_time=0.0, up_time=0.
     time.sleep(lapse)
 
 
+# %% sound related.
 def beep(duration: float, interval: float = 1, loops=1):
     if loops >= 0:
         # make sure at least play once
@@ -110,7 +123,7 @@ def play_music(filename, loops=1):
     pygame.mixer.music.load(filename)
     pygame.mixer.music.play(loops)
     while pygame.mixer.music.get_busy():
-        time.sleep(0.5)
+        time.sleep(0.1)
 
 
 def raise_alert(alert_type=None, loops=5):
@@ -121,6 +134,8 @@ def raise_alert(alert_type=None, loops=5):
     if alert_type is None:
         alert_type = config.alert_type
     if alert_type is True:
+        logger.info(f'alert: beep for {loops} loops.')
         beep(2, 1, loops)
     elif isinstance(alert_type, str):
+        logger.info(f'alert: play music for {loops} loops.')
         play_music(alert_type, loops)

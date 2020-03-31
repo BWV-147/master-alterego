@@ -22,7 +22,7 @@ def supervise_log_time(thread: threading.Thread, secs=60, mail: bool = None, int
     while True:
         # every case: stop or continue
         # case 1: all right - continue supervision
-        if not _overtime():
+        if thread.is_alive() and not _overtime():
             loops = MAX_LOOPS  # reset loops
             time.sleep(interval)
             continue
@@ -77,7 +77,7 @@ def supervise_log_time(thread: threading.Thread, secs=60, mail: bool = None, int
             kill_thread(thread)
             print('exit supervisor after killing thread.')
             break
-    raise_alert(alert_type, loops=-1)
+    raise_alert(alert_type, loops=10)
 
 
 # inspired by https://github.com/mosquito/crew/blob/master/crew/worker/thread.py

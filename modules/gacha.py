@@ -11,7 +11,7 @@ class Gacha:
         self.LOC = Regions()
 
     def pre_process(self, conf=None):
-        config.load_config(conf)
+        config.load(conf)
         check_sys_admin()
         self.T.read_templates(config.gacha.dir)
         config.T = self.T
@@ -79,7 +79,7 @@ class Gacha:
         """
         Pay attention if cleaning before mailbox is full.
         :param num: max item num to get out from mailbox, if <0: manual mode. num < (box_max_num - 10 - retained_num)
-        TODO: if num = np.INF, use get_all_items action.
+        TODO: if num = numpy.INF, use get_all_items action.
         """
         T = self.T
         LOC = self.LOC
@@ -95,7 +95,7 @@ class Gacha:
         drag_num = config.gacha.clean_drag_times
 
         def _is_match_offset(_shot, template, old_loc, _offset):
-            return is_match_target(_shot.crop(np.add(old_loc, [0, _offset, 0, _offset])), template.crop(old_loc))
+            return is_match_target(_shot.crop(numpy.add(old_loc, [0, _offset, 0, _offset])), template.crop(old_loc))
 
         no = 0
         skipped_drag_num = 0
@@ -125,7 +125,7 @@ class Gacha:
                             if _is_match_offset(shot, mailbox_unselect, LOC.mailbox_first_xn, y_offset) \
                                     or (_is_match_offset(shot, mailbox_unselect, LOC.mailbox_first_icon, y_offset)
                                         and _is_match_offset(shot, mailbox_unselect, LOC.mailbox_first_xn2, y_offset)):
-                                click(np.add(LOC.mailbox_first_checkbox, [0, y_offset] * 2), lapse=0.01)
+                                click(numpy.add(LOC.mailbox_first_checkbox, [0, y_offset] * 2), lapse=0.01)
                                 no += 1
                                 skipped_drag_num = 0
                                 if no % 10 == 0:

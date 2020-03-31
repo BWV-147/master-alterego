@@ -143,7 +143,7 @@ kill_thread(config.running_thread)
 # %% debug during battle
 from battles import *
 
-config.load_config('data/config.json')
+config.load('data/config.json')
 check_sys_admin()
 config.task_finished = False
 config.log_file = 'logs/log.full.log'

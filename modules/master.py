@@ -64,32 +64,17 @@ class Master:
         self.wave_a = None
         self.wave_b = None
 
-    def set_card_template(self, svt_name: str, card_loc: List = None, json_fp: str = None, json_key: str = None):
+    def set_cards(self, svt, np, quick, arts, buster, images=None):
+        # type:(str,Sequence,Sequence,Sequence,Sequence,ImageTemplates)->None
         """
-        use `card_loc` or `json_fp`, not together.
-        :param svt_name: svt name
-        :param card_loc: list length of 4: NP-Quick-Arts-Buster.
-                        For every item: tuple or list of tuple(multiple templates):
-                        tuple(0): int or str, if int i, i -> f"cards{i}".
-                        tuple(1): int, location of card, 1~5 + 6~8(NP)
-        :param json_fp: a json dict which stores serials of {name: card_loc}.
-                        Json file and images should be in the same folder.
-        :param json_key: key in json, default is `name`
-        :return:
+        np/quick/arts/buster: (img, loc) or list of (img, loc).
+                - img could be filename(without ".png") or int (e.g. "1" = "cards1").
+                - loc should be 1~8, or it'll be ignored.
+        images: ImageTemplates, default is `self.T`. Needed if data loaded from json
         """
-        assert card_loc is None or json_fp is None, "don't use 'card_loc' and 'json_fp' together."
-        if json_fp is not None:
-            import json
-            json_key = json_key or svt_name
-            _folder = os.path.dirname(os.path.abspath(json_fp))
-            card_loc = json.load(open(json_fp, encoding='utf8'))[json_key]
-            images = ImageTemplates(_folder)
-            # for fn in os.listdir(_folder):
-            #     if fn.lower().endswith('.png'):
-            #         images[fn[:-4]] = Image.open(os.path.join(_folder, fn))
-        else:
+        if images is None:
             images = self.T
-        for color, locs in enumerate(card_loc):
+        for color, locs in enumerate([np, quick, arts, buster]):
             _templates = []
             if locs and isinstance(locs[-1], int):
                 # only one loc, not a list of loc
@@ -98,9 +83,31 @@ class Master:
                 if isinstance(img_name, int):
                     img_name = f'cards{img_name}'
                 _templates.append(images.get(img_name).crop(self.LOC.cards[loc - 1]))
-            self.card_templates[Card(svt_name, color)] = _templates
+            self.card_templates[Card(svt, color)] = _templates
 
-        pass
+    def set_cards_from_json(self, svt: str, fp: str, key: str = None):
+        """
+        read card templates from outside folder(within json file and images).
+        :param svt: svt name
+        :param fp: json file path. Json file and images should be in the same folder.
+                format: {"svt": {"NP/Quick/Arts/Buster":"k1,1,k2,2,k3,3"}}.
+                in which "k1,1,..." is serials of (img, loc).
+        :param key: svt key in json, default is `svt`
+        :return:
+        """
+        import json
+        key = key or svt
+        _folder = os.path.dirname(os.path.abspath(fp))
+        data: Dict[str, str] = json.load(open(fp, encoding='utf8'))[key]
+        params = []
+        for card in ('NP', 'Quick', 'Arts', 'Buster'):
+            params.append([])
+            pair_str = data[card]
+            pairs = pair_str.split(',') if pair_str else []
+            assert len(pairs) % 2 == 0, f'cards format should be (img1, loc1, ...): \n({card}) {pair_str}'
+            for i in range(len(pairs) // 2):
+                params[-1].append((pairs[2 * i], int(pairs[2 * i + 1])))
+        self.set_cards(svt, *params, images=ImageTemplates(_folder))
 
     def set_card_weight(self, weights: Dict[str, Union[float, List[float]]], color_weight: str = 'QAB'):
         """
@@ -197,12 +204,12 @@ class Master:
         if switch_classes is None:
             switch_classes = (-1,)
         wait_which_target(support_page, self.LOC.support_refresh)
-        while np.mean(get_mean_color(screenshot(), LOC.loading_line)) > 200:
+        while numpy.mean(get_mean_color(screenshot(), LOC.loading_line)) > 200:
             time.sleep(0.2)
         refresh_times = 0
 
         def _is_match_offset(_shot, old_loc, _offset):
-            return is_match_target(_shot.crop(np.add(old_loc, [0, _offset, 0, _offset])), T.support.crop(old_loc))
+            return is_match_target(_shot.crop(numpy.add(old_loc, [0, _offset, 0, _offset])), T.support.crop(old_loc))
 
         while True:
             wait_which_target(support_page, self.LOC.support_class_affinity, lapse=0.5)
@@ -212,9 +219,9 @@ class Master:
                 else:
                     click(self.LOC.support_class_icons[icon], 0.5)
                     logger.debug(f'switch support class to No.{icon}.')
-                pyautogui.moveTo(*LOC.support_scrollbar_start)
+                move_to(LOC.support_scrollbar_start)
                 if is_match_target(screenshot(), T.support, LOC.support_scrollbar_head, 0.8) \
-                        and np.mean(T.support.getpixel(get_center_coord(LOC.support_scrollbar_head))) > 200:
+                        and numpy.mean(T.support.getpixel(get_center_coord(LOC.support_scrollbar_head))) > 200:
                     drag_points = 5
                     dy_mouse = (LOC.support_scrollbar_end[1] - LOC.support_scrollbar_start[1]) // (drag_points - 1)
                 else:
@@ -500,9 +507,9 @@ class Master:
         if not set(nps).issubset(set(np_cards.keys())):
             # print(f'nobel phantasm not recognized:{nps} not in {list(np_cards.keys())}\r', end='')
             np_cards.clear()
-            # return {}, {}
-        logger.debug(f'Parsed: {[f"{self.str_cards(c)}" for c in cards.values()]},'
-                     f' np_cards={self.str_cards(np_cards)}')
+        if cards or np_cards:
+            logger.debug(f'Parsed: {[f"{self.str_cards(c)}" for c in cards.values()]},'
+                         f' np_cards={self.str_cards(np_cards)}')
         return cards, np_cards
 
     def choose_cards(self, cards, np_cards, nps=None, mode='dmg'):

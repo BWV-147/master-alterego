@@ -8,7 +8,7 @@ class FpGacha:
         self.LOC = Regions()
 
     def pre_process(self, conf=None):
-        config.load_config(conf)
+        config.load(conf)
         check_sys_admin()
         self.T.read_templates(config.fp_gacha.dir)
         config.T = self.T
