@@ -121,6 +121,7 @@ def beep(duration: float, interval: float = 1, loops=1):
 def play_music(filename, loops=1):
     pygame.mixer.init()
     pygame.mixer.music.load(filename)
+    pygame.mixer.music.set_volume(0.5)
     pygame.mixer.music.play(loops)
     while pygame.mixer.music.get_busy():
         time.sleep(0.1)
@@ -134,8 +135,8 @@ def raise_alert(alert_type=None, loops=5):
     if alert_type is None:
         alert_type = config.alert_type
     if alert_type is True:
-        logger.info(f'alert: beep for {loops} loops.')
+        logger.info(f'alert: beep for {loops} loops.', NO_LOG_TIME)
         beep(2, 1, loops)
     elif isinstance(alert_type, str):
-        logger.info(f'alert: play music for {loops} loops.')
+        logger.info(f'alert: play music for {loops} loops.', NO_LOG_TIME)
         play_music(alert_type, loops)

@@ -35,22 +35,22 @@ class FpGacha:
         """
         T = self.T
         LOC = self.LOC
-        wait_which_target(T.fp_gacha_page, LOC.fp_gacha_logo)
+
         logger.info('gacha: starting...')
         loops = 0
         while loops < num:
             # print(f'\r loop {loops:<4d}', end='')
+            config.log_time = time.time()
             if loops % 5 == 0:
                 logger.debug(f'fp gacha {loops}/{num}...')
             loops += 1
-            wait_targets(T.fp_gacha_page, [LOC.fp_gacha_logo, LOC.fp_gacha10_button], at=LOC.fp_gacha10_button)
-            res_no = wait_which_target([T.fp_gacha_confirm, T.fp_bag1_full, T.fp_bag2_full],
-                                       [LOC.fp_gacha_confirm, LOC.bag_full_sell_action, LOC.bag_full_sell_action])
+            wait_targets(T.fp_gacha_page, [LOC.fp_gacha_logo, LOC.fp_gacha10_button], at=LOC.fp_gacha10_button, lapse=0)
+            res_no = wait_which_target([T.fp_gacha_result, T.fp_bag2_full],
+                                       [LOC.fp_gacha_result_summon, LOC.bag_full_sell_action],
+                                       clicking=LOC.fp_gacha_point, interval=0.01)
             if res_no == 0:
-                click(LOC.fp_gacha_confirm)
+                click(LOC.fp_gacha_result_summon)
                 config.count_fp_gacha()
-                wait_targets(T.fp_gacha_result, LOC.fp_gacha_result_summon, at=True,
-                             clicking=LOC.fp_gacha_logo, interval=0.1)
             elif res_no > 0:
                 logger.info(f'bag {res_no} full, sell or enhance manually.')
                 config.log_time = time.time() + config.manual_operation_time

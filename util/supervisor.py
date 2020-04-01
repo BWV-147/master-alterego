@@ -37,7 +37,6 @@ def supervise_log_time(thread: threading.Thread, secs=60, mail: bool = None, int
                 kill_thread(thread)
             break
 
-        # something wrong
         T: ImageTemplates = config.T
         LOC: Regions = config.LOC
         # case 3: network error - click "retry" and continue
@@ -51,12 +50,15 @@ def supervise_log_time(thread: threading.Thread, secs=60, mail: bool = None, int
                 continue
         # case 4: re-login after 3am in jp server
         # if match menu button, click save_area until match quest1234, click 1234
-        if is_match_target(screenshot(), T.quest, LOC.menu_button):
-            if callable(config.battle.login_handler):
+        if callable(config.battle.login_handler):
+            if is_match_target(screenshot(), T.quest, LOC.menu_button):
                 config.battle.login_handler()
         # case 5: unrecognized error - waiting user to handle (in 2*loops seconds)
         if loops == MAX_LOOPS:
-            logger.warning(f'Something wrong, please solve it, or it will be force stopped...', NO_LOG_TIME)
+            logger.warning(f'Something wrong, please solve it, or it will be force stopped...\n'
+                           f'Thread alive: {thread.is_alive()}.\n'
+                           f'task_finish: {config.task_finished}.\n'
+                           f'log_time: {time.strftime("%H:%M:%S", time.localtime(time.time()))}', NO_LOG_TIME)
         if loops >= 0:
             print(f'\r{loops}...\r', end='')
         else:

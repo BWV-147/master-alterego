@@ -155,6 +155,7 @@ class Regions:
     # ============= fp gacha ================
     fp_gacha_logo = (962, 22, 1050, 100)
     fp_gacha10_button = (1111, 800, 1374, 886)
+    fp_gacha_point = (1240, 864)
     fp_gacha_confirm = (1205, 819, 1300, 868)
     fp_gacha_result_summon = (1096, 980, 1200, 1037)
 
