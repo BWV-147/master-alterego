@@ -38,7 +38,9 @@ class BattleBase:
                     shot = screenshot()
                     res = search_target(shot.crop(LOC.quest_outer), T.quest.crop(LOC.quest))
                     if res[0] > THR:
-                        click(LOC.quest_c)
+                        _x = LOC.quest_outer[0] + res[1][0] + (LOC.quest[2] - LOC.quest[0]) / 2
+                        _y = LOC.quest_outer[1] + res[1][1] + (LOC.quest[3] - LOC.quest[1]) / 2
+                        click((_x, _y))
                     elif is_match_target(shot, T.apple_page, LOC.apple_close):
                         self.master.eat_apple(apples)
                     elif T.get('bag_full_alert') is not None \

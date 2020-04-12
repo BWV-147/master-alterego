@@ -14,4 +14,7 @@ pass
 if __name__ == '__main__':
     args, _ = parser.parse_known_intermixed_args(sys.argv[1:])
     battle = globals()['battle'] = FreeBattle()
-    battle.start(supervise=not args.disable_supervisor, conf=args.config)
+    supervise = True  # args.disable_supervisor
+    conf = 'data/config-jp.json' or args.config
+    # conf = 'data/config.json' or args.config
+    battle.start(supervise=supervise, conf=conf)

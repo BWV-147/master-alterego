@@ -118,19 +118,21 @@ def beep(duration: float, interval: float = 1, loops=1):
         sys.stdout.flush()
 
 
-def play_music(filename, loops=1):
+def play_music(filename, loops=1, wait=True):
     pygame.mixer.init()
     pygame.mixer.music.load(filename)
     pygame.mixer.music.set_volume(0.5)
     pygame.mixer.music.play(loops)
-    while pygame.mixer.music.get_busy():
-        time.sleep(0.1)
+    if wait:
+        while pygame.mixer.music.get_busy():
+            time.sleep(0.1)
 
 
-def raise_alert(alert_type=None, loops=5):
+def raise_alert(alert_type=None, loops=5, wait=True):
     """
     :param alert_type: bool: beep, str: ring tone, alert if supervisor found errors or task finish.
     :param loops: if loops == -1, infinite loop
+    :param wait: wait music to finish. only for music rather beep.
     """
     if alert_type is None:
         alert_type = config.alert_type
@@ -139,4 +141,4 @@ def raise_alert(alert_type=None, loops=5):
         beep(2, 1, loops)
     elif isinstance(alert_type, str):
         logger.info(f'alert: play music for {loops} loops.', NO_LOG_TIME)
-        play_music(alert_type, loops)
+        play_music(alert_type, loops, wait)

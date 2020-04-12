@@ -130,7 +130,7 @@ class BattleConfig(_BaseConfig):
         self.num = 1  # max battle num once running, auto decrease
         self.finished = 0  # all finished battles sum, auto increase, don't edit
         self.check_drop = True  # check craft dropped or not, if True, make sure rewards.png contains the dropped craft.
-        self.apples = []  # invalid: stop, 0-colorful, 1-gold, 2-sliver, 3-cropper
+        self.apples = []  # invalid: stop, 0-colorful, 1-gold, 2-sliver, 3-cropper, 4-zihuiti
         self.jump_battle = False  # goto decoration in Battle.battle_func
         self.jump_start = False  # goto decoration in Battle.start
         self.login_handler = None  # JP: re-login at 3am(UTC+08)
@@ -143,6 +143,7 @@ class BattleConfig(_BaseConfig):
         # 5 bonus: (7, 8, 11, 12, 15, 16, 20)
         # 6 bonus: (5, 8, 9, 12, 13, 16, 17, 20, 21, 25)
         self.enhance_craft_nums = (7, 8, 11, 12, 15, 16, 20)
+        self._ignored = ['login_handler', ]
 
 
 class GachaConfig(_BaseConfig):

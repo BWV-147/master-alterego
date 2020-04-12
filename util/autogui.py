@@ -90,7 +90,7 @@ def cal_sim(img1: Image.Image, img2: Image.Image, region=None, method='ssim') ->
 
 
 # 是否匹配一个或多个regions
-def compare_regions(img, target, regions=None, threshold=THR, at=None, lapse=0.1):
+def compare_regions(img, target, regions=None, threshold=THR, at=None, lapse=0.0):
     # type:(Image.Image,Image.Image,Sequence,float,Union[bool,Sequence],float)->bool
     """
     compare two image at `region`, click `at` if matches. use `screenshot()` as img if img is None
@@ -114,7 +114,7 @@ def compare_regions(img, target, regions=None, threshold=THR, at=None, lapse=0.1
 
 
 # 匹配第几个target
-def match_which_target(img, targets, regions=None, threshold=THR, at=None, lapse=0.1):
+def match_which_target(img, targets, regions=None, threshold=THR, at=None, lapse=0.0):
     # type:(Image.Image,Union[Image.Image,Sequence[Image.Image]],Sequence,float,Union[bool,Sequence],float)->int
     """
     compare img with multi targets, click `at` if matches.
@@ -150,7 +150,7 @@ def is_match_target(img, target, region=None, threshold=THR, at=None):
 
 
 # 直到匹配某一个target
-def wait_which_target(targets, regions, threshold=THR, lapse=0.1, at=None, clicking=None, interval=0.5):
+def wait_which_target(targets, regions, threshold=THR, lapse=0.0, at=None, clicking=None, interval=0.5):
     # type:(Union[Image.Image,Sequence[Image.Image]],Sequence,float,float,Union[bool,Sequence],Sequence,float)->int
     """
     Waiting for screenshot matching the region of some target.
@@ -180,7 +180,7 @@ def wait_which_target(targets, regions, threshold=THR, lapse=0.1, at=None, click
             click(clicking, lapse=interval)
 
 
-def wait_targets(target, regions, threshold=THR, lapse=0.1, at=None, clicking=None, interval=0.5):
+def wait_targets(target, regions, threshold=THR, lapse=0.0, at=None, clicking=None, interval=0.5):
     if not isinstance(regions[0], Sequence):
         regions = [regions]
     while True:

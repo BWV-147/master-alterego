@@ -11,7 +11,7 @@ class Card:
     QUICK = 1
     ARTS = 2
     BUSTER = 3
-    UNKNOWN = 'unknown'
+    UNKNOWN = 'who'
 
     def __init__(self, svt: str, color: int, _loc: int = 0):
         assert svt and -1 <= color <= 3
@@ -109,12 +109,15 @@ class Master:
                 params[-1].append((pairs[2 * i], int(pairs[2 * i + 1])))
         self.set_cards(svt, *params, images=ImageTemplates(_folder))
 
-    def set_card_weight(self, weights: Dict[str, Union[float, List[float]]], color_weight: str = 'QAB'):
+    def set_card_weight(self, weights: Union[Sequence, Dict[str, Union[float, List]]], color_weight: str = 'QAB'):
         """
         key:svt*10+color, value:weight
-        :param weights: <6*3, M-servants, 3-quick/art/buster; or 6*1.
-        :param color_weight: used when weight size is <6*1
+        :param weights: [names,weights] or {name:weights}.
+        :param color_weight: used when weight size
         """
+        if isinstance(weights, Sequence):
+            assert len(weights[0]) == len(weights[1]), weights
+            weights = dict([(x, y) for x, y in zip(weights[0], weights[1])])
         color_weight = color_weight.upper()
         assert 'ABQ' == ''.join(sorted('QAB')), f'invalid color_weight: {color_weight}'
         self.card_weights.clear()
@@ -149,18 +152,29 @@ class Master:
     # battle procedures
     def eat_apple(self, apples=None):
         apples = convert_to_list(apples)
-        if config.is_jp is True and config.battle.login_handler is None:
+        if not apples:  # empty list
+            apples = [-1]
+        if config.is_jp is True and not callable(config.battle.login_handler):
             t = time.localtime()
             if t.tm_hour == 2 and t.tm_min > 45:
                 logger.info('Around 3am, stop eating apples and battles.')
                 config.mark_task_finish()
                 return False
-        if len(apples) > 0:
-            for apple in apples:
-                if apple not in (0, 1, 2, 3):
-                    break
-                if apple == 0:  # 不舍得吃彩苹果
-                    apple = 3
+        for apple in apples:
+            if apple not in (0, 1, 2, 3, 4):
+                logger.info(f'apples={apples}, don\'t eat apple or no left apples, task finish.')
+                click(self.LOC.apple_close)
+                config.mark_task_finish()
+                break
+            if apple == 4:
+                # zihuiti: sleep 1 hour to check again whether ap enough
+                click(self.LOC.apple_close)
+                config.log_time += 3600
+                time.sleep(3600)
+                break
+            if apple == 0:  # 不舍得吃彩苹果
+                apple = 3
+            if apple in (1, 2, 3):
                 if is_match_target(screenshot(), self.T.apple_page, self.LOC.apples[apple]):
                     eaten = False
                     while True:
@@ -177,11 +191,7 @@ class Master:
                             click(self.LOC.apple_confirm, lapse=1)
                         elif page_no == 2:
                             break
-
-                    # noinspection DuplicatedCode
-
-        logger.info(f'apples={apples}, don\'t eat apple or no left apples, task finish.')
-        config.mark_task_finish()
+                    break
 
     # noinspection DuplicatedCode
     def choose_support(self, match_svt=True, match_ce=False, match_ce_max=False, match_skills=None, img=None,
@@ -212,7 +222,7 @@ class Master:
             return is_match_target(_shot.crop(numpy.add(old_loc, [0, _offset, 0, _offset])), T.support.crop(old_loc))
 
         while True:
-            wait_which_target(support_page, self.LOC.support_class_affinity, lapse=0.5)
+            wait_targets(support_page, self.LOC.support_class_affinity)
             for icon in switch_classes:
                 if icon == -1:
                     time.sleep(0.2)
@@ -222,7 +232,7 @@ class Master:
                 move_to(LOC.support_scrollbar_start)
                 if is_match_target(screenshot(), T.support, LOC.support_scrollbar_head, 0.8) \
                         and numpy.mean(T.support.getpixel(get_center_coord(LOC.support_scrollbar_head))) > 200:
-                    drag_points = 5
+                    drag_points = 8
                     dy_mouse = (LOC.support_scrollbar_end[1] - LOC.support_scrollbar_start[1]) // (drag_points - 1)
                 else:
                     drag_points = 1
@@ -255,8 +265,8 @@ class Master:
                                 elif page_no == 1:
                                     return
                     if dy_mouse != 0:
-                        time.sleep(0.2)
                         pyautogui.dragRel(0, dy_mouse, 0.2)
+                        time.sleep(0.5)
             # refresh support
             refresh_times += 1
             logger.debug(f'refresh support {refresh_times} times')
@@ -509,7 +519,7 @@ class Master:
             np_cards.clear()
         if cards or np_cards:
             logger.debug(f'Parsed: {[f"{self.str_cards(c)}" for c in cards.values()]},'
-                         f' np_cards={self.str_cards(np_cards)}')
+                         f' nps={self.str_cards(np_cards)}')
         return cards, np_cards
 
     def choose_cards(self, cards, np_cards, nps=None, mode='dmg'):
@@ -525,7 +535,7 @@ class Master:
             logger.warning(f'in choose_cards: cards count less then 5! {cards}')
         mode = mode.lower()
         nps = convert_to_list(nps)
-        chosen_nps = [np_cards.get(_np, Card(f'UNKNOWN{_np}', 0, _np)) for _np in nps]
+        chosen_nps = [np_cards.get(_np, Card(f'{Card.UNKNOWN}{_np}', 0, _np)) for _np in nps]
         if mode == 'xjbd':
             s_cards = sorted(cards.values(), key=lambda _c: _c.loc)
             chosen_cards = s_cards[0:3]
