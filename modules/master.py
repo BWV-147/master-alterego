@@ -169,6 +169,7 @@ class Master:
             if apple == 4:
                 # zihuiti: sleep 1 hour to check again whether ap enough
                 click(self.LOC.apple_close)
+                logger.info('Zihuiti: waiting...', NO_LOG_TIME)
                 config.log_time += 3600
                 time.sleep(3600)
                 break
@@ -193,10 +194,9 @@ class Master:
                             break
                     break
 
-    # noinspection DuplicatedCode
     def choose_support(self, match_svt=True, match_ce=False, match_ce_max=False, match_skills=None, img=None,
-                       switch_classes=None):
-        # type:(bool,bool,bool,bool,Image.Image,Sequence)->None
+                       switch_classes=None, friend_only=False):
+        # type:(bool,bool,bool,bool,Image.Image,Sequence,bool)->None
         """
         Choose the *first* support in T.support from the whole support list, drag scrollbar to show all supports.
         :param match_svt: match the whole rect of 3 skills
@@ -206,6 +206,7 @@ class Master:
         :param img: support page img
         :param switch_classes: e.g. (0,5,...) means switch between ALL and CASTER.
                         ALL=0, Saber-Berserker=1-7, extra=8, Mixed=9. if empty, set (-1,), click Regions.safe_area
+        :param friend_only: only choose friends' support if true
         """
         T = self.T
         LOC = self.LOC
@@ -220,6 +221,15 @@ class Master:
 
         def _is_match_offset(_shot, old_loc, _offset):
             return is_match_target(_shot.crop(numpy.add(old_loc, [0, _offset, 0, _offset])), T.support.crop(old_loc))
+
+        matches = [
+            lambda _shot, _offset: not match_ce or _is_match_offset(_shot, LOC.support_ce[0], _offset),
+            lambda _shot, _offset: not match_ce_max or _is_match_offset(_shot, LOC.support_ce_max[0], _offset),
+            lambda _shot, _offset: not match_svt or _is_match_offset(_shot, LOC.support_skill[0], _offset),
+            lambda _shot, _offset: not match_skills or False not in [_is_match_offset(_shot, loc, _offset) for loc in
+                                                                     LOC.support_skills[0]],
+            lambda _shot, _offset: not friend_only or _is_match_offset(_shot, LOC.support_friend_icon, _offset),
+        ]
 
         while True:
             wait_targets(support_page, self.LOC.support_class_affinity)
@@ -243,27 +253,28 @@ class Master:
                                            T.support.crop(LOC.support_team_icon))
                     for y_peak in y_peaks:
                         y_offset = y_peak - (LOC.support_team_icon[1] - LOC.support_team_icon_column[1])
-                        flag_ce = not match_ce or _is_match_offset(shot, LOC.support_ce[0], y_offset)
-                        flag_ce_max = not match_ce_max or _is_match_offset(shot, LOC.support_ce_max[0], y_offset)
-                        flag_svt = not match_svt or _is_match_offset(shot, LOC.support_skill[0], y_offset)
-                        flag_skills = not match_skills or False not in [_is_match_offset(shot, loc, y_offset) for loc in
-                                                                        LOC.support_skills[0]]
-                        if flag_ce and flag_ce_max and flag_svt and flag_skills:
-                            click((LOC.width / 2, LOC.support_team_icon_column[1] + y_peak))
-                            logger.debug('found support.')
-                            while True:
-                                page_no = wait_which_target([self.T.team, self.T.wave1a],
-                                                            [self.LOC.team_cloth, self.LOC.master_skill])
-                                time.sleep(0.3)
-                                if page_no == 0:
-                                    # print('click start please\r', end='\r')
-                                    logger.debug('entering battle')
-                                    click(self.LOC.team_start_action)
-                                    click(self.LOC.team_start_action, lapse=2)
-                                    time.sleep(2)
-                                    return
-                                elif page_no == 1:
-                                    return
+                        matched = True
+                        for func in matches:
+                            matched = func(shot, y_offset)
+                            if not matched:
+                                break
+                        if not matched:
+                            continue
+                        click((LOC.width / 2, LOC.support_team_icon_column[1] + y_peak))
+                        logger.debug('found support.')
+                        while True:
+                            page_no = wait_which_target([self.T.team, self.T.wave1a],
+                                                        [self.LOC.team_cloth, self.LOC.master_skill])
+                            time.sleep(0.3)
+                            if page_no == 0:
+                                # print('click start please\r', end='\r')
+                                logger.debug('entering battle')
+                                click(self.LOC.team_start_action)
+                                click(self.LOC.team_start_action, lapse=2)
+                                time.sleep(2)
+                                return
+                            elif page_no == 1:
+                                return
                     if dy_mouse != 0:
                         pyautogui.dragRel(0, dy_mouse, 0.2)
                         time.sleep(0.5)
