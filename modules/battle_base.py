@@ -59,7 +59,7 @@ class BattleBase:
                         break
                     time.sleep(0.5)
             battle_func()
-            wait_which_target(T.rewards, LOC.finish_qp, clicking=LOC.finish_qp, lapse=0.5)
+            wait_targets(T.rewards, LOC.finish_qp, clicking=LOC.finish_qp, lapse=0.5)
             click(LOC.rewards_show_num, lapse=1)
             # check reward_page has CE dropped or not
             dt = timer.lapse()

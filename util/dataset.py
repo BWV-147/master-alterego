@@ -54,14 +54,8 @@ class Regions:
     bag_select_start = (200, 350)
     bag_select_end = (1416, 1050)
     bag_sell_action = (1600, 975, 1870, 1047)
-
-    @property
-    def bag_sell_confirm(self):
-        return (1181, 912, 1340, 968) if config.is_jp else (1181, 847, 1340, 906)
-
-    @property
-    def bag_sell_finish(self):
-        return (875, 908, 1045, 966) if config.is_jp else (900, 845, 1020, 908)
+    bag_sell_confirm = (1181, 912, 1340, 968)
+    bag_sell_finish = (875, 908, 1045, 966)
 
     # from bag to drawer
     shop_sell = (1352, 465, 1723, 552)
@@ -101,6 +95,7 @@ class Regions:
     support_skill_lvs = [[(1260, 511, 1300, 544), (1380, 511, 1420, 544), (1500, 511, 1540, 544)],
                          [(1260, 811, 1334, 844), (1380, 811, 1454, 844),
                           (1500, 811, 1574, 844)]]  # 3个lv, 强化箭头未比较, not used
+    support_friend_icon = (1696, 484, 1741, 529)
 
     support_confirm_title = (821, 171, 1108, 230)
     support_refresh_confirm = (1110, 890)
@@ -150,7 +145,7 @@ class Regions:
     finish_next = (1444, 980, 1862, 1061)
     finish_craft = (454, 216, 623, 386)
     restart_quest_yes = (1122, 812, 1386, 829)
-    friend_point = (460, 810, 580, 880)
+    # friend_point = (460, 810, 580, 880)
 
     # ============= fp gacha ================
     fp_gacha_logo = (962, 22, 1050, 100)
@@ -275,10 +270,6 @@ class ImageTemplates:
     @property
     def cards4(self):
         return self.get('cards4')
-
-    @property
-    def friend_point(self):
-        return self.get('friend_point')
 
     @property
     def rewards(self):

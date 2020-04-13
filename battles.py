@@ -34,8 +34,8 @@ class FreeBattle(BattleBase):
             # LOC.relocate((0, 0, 1920 - 1, 1080 - 1))
 
             # -----------------------    NP    Quick    Arts   Buster -----------
-            master.set_cards(names[0], (3, 6), (1, 5), (1, 3), (3, 3))
-            master.set_cards(names[1], (1, 7), (2, 2), (1, 1), (2, 4))
+            master.set_cards(names[0], (3, 6), (3, 2), (2, 4), (3, 1))
+            master.set_cards(names[1], (1, 7), (1, 4), (1, 2), (2, 2))
             master.set_cards_from_json(names[2], 'img/cards/android/cards-android.json', '孔明')
 
             def _handler():
@@ -168,7 +168,7 @@ class FreeBattle(BattleBase):
         master.svt_skill(3, 2)
         master.svt_skill(3, 3)
         master.svt_skill(2, 1)
-        master.auto_attack(nps=7)
+        master.auto_attack(nps=7, mode='alter')
 
         # wave 2
         wait_targets(T.wave2a, LOC.loc_wave)

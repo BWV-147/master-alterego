@@ -1,3 +1,4 @@
+import argparse
 import smtplib
 import socket
 from email.mime.image import MIMEImage
@@ -8,6 +9,35 @@ from email.utils import formataddr
 from typing import List, Tuple, Union, Dict, Callable, Sequence
 
 from util.my_logger import *
+
+
+class ArgParser:
+    _parser: argparse.ArgumentParser = None
+
+    def __init__(self, args: list = None):
+        self._init_parser()
+        self.supervise = None
+        self.config = None
+        self.parse(args)
+
+    def parse(self, args):
+        # args without filename
+        resolved_args = self._parser.parse_known_intermixed_args(args)[0]
+        self.supervise = not resolved_args.disable_supervisor
+        self.config = resolved_args.config
+
+    @property
+    def parser(self):
+        return self._parser
+
+    @classmethod
+    def _init_parser(cls):
+        if cls._parser is not None:
+            return
+        cls._parser = argparse.ArgumentParser(conflict_handler='resolve')
+        cls._parser.add_argument('-c', '--config', default='data/config.json', help='config file path.')
+        cls._parser.add_argument('-d', '--disable-supervisor', action='store_true',
+                                 help='disable supervisor (default enabled).')
 
 
 def convert_to_list(items):

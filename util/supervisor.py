@@ -79,7 +79,7 @@ def supervise_log_time(thread: threading.Thread, secs=60, mail: bool = None, int
             kill_thread(thread)
             print('exit supervisor after killing thread.')
             break
-    raise_alert(alert_type, loops=10)
+    raise_alert(alert_type, loops=5)
 
 
 # inspired by https://github.com/mosquito/crew/blob/master/crew/worker/thread.py

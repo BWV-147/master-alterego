@@ -121,6 +121,11 @@ class Config(_BaseConfig):
         if kill:
             kill_thread(threading.current_thread())
 
+    def kill(self):
+        from util.supervisor import kill_thread
+        if self.running_thread is not None:
+            kill_thread(self.running_thread)
+
 
 # sub member of Config
 class BattleConfig(_BaseConfig):

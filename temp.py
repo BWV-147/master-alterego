@@ -73,8 +73,6 @@ capture('restart_quest')
 # %%
 capture('apply_friend')
 # %%
-capture('friend_point')
-# %%
 capture('net_error')
 
 # %% ---------- battle extra parts ----------

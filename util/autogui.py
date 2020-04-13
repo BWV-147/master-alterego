@@ -150,7 +150,7 @@ def is_match_target(img, target, region=None, threshold=THR, at=None):
 
 
 # 直到匹配某一个target
-def wait_which_target(targets, regions, threshold=THR, lapse=0.0, at=None, clicking=None, interval=0.5):
+def wait_which_target(targets, regions, threshold=THR, lapse=0.0, at=None, clicking=None, interval=0.2):
     # type:(Union[Image.Image,Sequence[Image.Image]],Sequence,float,float,Union[bool,Sequence],Sequence,float)->int
     """
     Waiting for screenshot matching the region of some target.
@@ -180,7 +180,7 @@ def wait_which_target(targets, regions, threshold=THR, lapse=0.0, at=None, click
             click(clicking, lapse=interval)
 
 
-def wait_targets(target, regions, threshold=THR, lapse=0.0, at=None, clicking=None, interval=0.5):
+def wait_targets(target, regions, threshold=THR, lapse=0.0, at=None, clicking=None, interval=0.2):
     if not isinstance(regions[0], Sequence):
         regions = [regions]
     while True:
@@ -198,7 +198,7 @@ def wait_targets(target, regions, threshold=THR, lapse=0.0, at=None, clicking=No
 
 
 # 直到匹配模板
-def wait_search_template(target: Image.Image, threshold=THR, lapse=0.1):
+def wait_search_template(target: Image.Image, threshold=THR, lapse=0.0):
     while True:
         if search_target(screenshot(), target)[0] > threshold:
             return
