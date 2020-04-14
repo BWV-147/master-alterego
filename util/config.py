@@ -88,7 +88,10 @@ class Config(_BaseConfig):
             self.load()
 
     def load(self, fp=None):
+        # should only load config at the start of thread,
+        # thus task_finish set to False after loaded.
         self.fp = fp or self.fp or 'data/config.json'
+        self.task_finished = False
         return super().load(self.fp)
 
     def save(self, fp=None):

@@ -160,15 +160,15 @@ class Master:
             if t.tm_hour == 2 and t.tm_min > 45:
                 logger.info('Around 3am, stop eating apples and battles.')
                 config.mark_task_finish()
-                return False
+                config.kill()
         for apple in apples:
             if apple == 0:  # 不舍得吃彩苹果
                 apple = 3
             if apple not in (0, 1, 2, 3, 4):
-                logger.info(f'apples={apples}, don\'t eat apple or no left apples, task finish.')
+                logger.info(f'apple={apple} ({apples}), don\'t eat apple or no left apples, task finish.')
                 click(self.LOC.apple_close)
                 config.mark_task_finish()
-                break
+                config.kill()
             elif apple == 4:
                 # zihuiti: sleep 1 hour to check again whether ap enough
                 click(self.LOC.apple_close)

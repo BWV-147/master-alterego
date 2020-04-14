@@ -1,7 +1,7 @@
 from util.autogui import *
 
 
-def supervise_log_time(thread: threading.Thread, secs=60, mail: bool = None, interval=10, alert_type: bool = None):
+def supervise_log_time(thread: threading.Thread, time_out=60, mail: bool = None, interval=10, alert_type: bool = None):
     assert thread is not None, thread
     if mail is None:
         mail = config.mail
@@ -9,7 +9,7 @@ def supervise_log_time(thread: threading.Thread, secs=60, mail: bool = None, int
         alert_type = config.alert_type
 
     def _overtime():
-        return time.time() - config.log_time > secs
+        return time.time() - config.log_time > time_out
 
     logger.info(f'start supervising thread {thread.name}...')
     thread.start()
@@ -58,9 +58,9 @@ def supervise_log_time(thread: threading.Thread, secs=60, mail: bool = None, int
             logger.warning(f'Something wrong, please solve it, or it will be force stopped...\n'
                            f' - thread  alive: {thread.is_alive()}.\n'
                            f' - task finished: {config.task_finished}.\n'
-                           f' - last log time: {time.strftime("%H:%M:%S", time.localtime(time.time()))}')
+                           f' - last log time: {time.asctime()}')
         if loops >= 0:
-            print(f'\r{loops}...\r', end='')
+            print(f'\r{loops}...\r', end='\r')
         else:
             logger.warning(f'Time out, it will be force stopped...')
         loops -= 1
@@ -73,7 +73,7 @@ def supervise_log_time(thread: threading.Thread, secs=60, mail: bool = None, int
             err_msg = f'Thread-{thread.ident}({thread.name}): Time run out!\n' \
                       f' - current  time: {time.asctime()}\n' \
                       f' - last log time: {time.asctime(time.localtime(config.log_time))}\n' \
-                      f' - over time: {time.time() - config.log_time:.2f}(>{secs}) secs.\n'
+                      f' - over time: {time.time() - config.log_time:.2f}(>{time_out}) secs.\n'
             logger.warning(err_msg)
             if mail:
                 send_mail(err_msg, subject=f'[{thread.name}]Went wrong!')
@@ -86,12 +86,12 @@ def supervise_log_time(thread: threading.Thread, secs=60, mail: bool = None, int
 # inspired by https://github.com/mosquito/crew/blob/master/crew/worker/thread.py
 def kill_thread(thread: threading.Thread):
     friendly_name = f'Thread-{thread.ident}({thread.name})'
+    logger.debug(f'Ready to kill {"*self* " if thread == threading.current_thread() else ""}{friendly_name}')
     if not thread.is_alive():
         logger.warning(f'{friendly_name} is already not alive!')
         return
 
     res = ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(thread.ident), ctypes.py_object(SystemExit))
-    # print(f'kill thread res={res}')
     if res == 0:
         raise ValueError('nonexistent thread id')
     elif res > 1:

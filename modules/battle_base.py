@@ -106,6 +106,7 @@ class BattleBase:
         if config.mail:
             send_mail(f'All {finished_num} battles "{self.master.quest_name}" finished')
         config.mark_task_finish()
+        return
 
     def start(self, supervise=True, conf=None):
         """
