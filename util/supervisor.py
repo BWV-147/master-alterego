@@ -31,7 +31,7 @@ def supervise_log_time(thread: threading.Thread, secs=60, mail: bool = None, int
             # thread finished: all battles finished(thread exit normally)
             logger.debug(f'Thread-{thread.ident}({thread.name}) finished. Stop supervising.')
             if mail:
-                send_mail('Task finished.')
+                send_mail(f'[{thread.name}]Task finished.')
             # make sure thread is stopped
             if thread.is_alive():
                 kill_thread(thread)
@@ -76,7 +76,7 @@ def supervise_log_time(thread: threading.Thread, secs=60, mail: bool = None, int
                       f' - over time: {time.time() - config.log_time:.2f}(>{secs}) secs.\n'
             logger.warning(err_msg)
             if mail:
-                send_mail(err_msg, subject=f'[{thread.name}]something went wrong!')
+                send_mail(err_msg, subject=f'[{thread.name}]Went wrong!')
             kill_thread(thread)
             logger.info('exit supervisor after killing thread.')
             break

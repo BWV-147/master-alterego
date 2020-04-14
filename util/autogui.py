@@ -2,7 +2,6 @@
 import traceback
 
 import cv2
-import numpy
 from PIL import ImageGrab
 from scipy.signal import find_peaks
 from skimage.feature import match_template as sk_match_template

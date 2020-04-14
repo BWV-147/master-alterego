@@ -9,6 +9,8 @@ from email.utils import formataddr
 # noinspection PyUnresolvedReferences
 from typing import List, Tuple, Union, Dict, Callable, Sequence, Optional
 
+import numpy
+
 from util.log import *
 
 
@@ -61,101 +63,100 @@ def get_center_coord(xy: Sequence):
 
 def send_mail(body, subject=None, receiver=None, attach_shot=True):
     from util.autogui import screenshot
+    # check email params
+    if receiver is None:
+        receiver = config.receiver
+    if None in (receiver, config.sender, config.password):
+        logger.warning(f'Incomplete email config:\n'
+                       f'======== Incomplete Email Settings ========\n'
+                       f' - receiver: {receiver}\n'
+                       f' - sender  : {config.sender}\n'
+                       f' - password:{"*****" if config.password else "None"}\n'
+                       f'===========================================\n')
+        return
+
+    mail = MIMEMultipart()
+
+    # subject
     if subject is None:
         subject = f'{body[0:50]}...' if len(body) > 50 else body
     if threading.current_thread().name != 'MainThread':
         subject = f'[{threading.current_thread().name}]{subject}'
     subject = f'{time.strftime("[%H:%M]")}{subject}'
-    if config.log_file is not None and os.path.exists(config.log_file):
+
+    # body
+    body = f'<b>{body}</b><br><br>\n' \
+           f'<hr><b>Computer name:</b><br>{socket.getfqdn(socket.gethostname())}<br>\n'
+
+    # body.screenshot
+    crash_fp = 'img/crash.jpg'
+    if attach_shot:
+        body += '<hr><b>Screenshot before shutdown</b>:<br>\n' \
+                '<img src="cid:screenshot" style="width: 100%; max-width: 720px;"><br>\n'
+        shot = screenshot()
+        shot.save(crash_fp + '.png')  # save a backup of origin screenshot
+        # shrink the image/email size
+        shot.resize((numpy.array(shot.size) / 1.5).astype('int')).save(crash_fp, format='jpeg', quality=40)
+        with open(crash_fp, 'rb') as fd:
+            image = MIMEImage(fd.read())
+            image.add_header('Content-ID', '<screenshot>')
+            mail.attach(image)
+
+    # body.recent_log
+    if config.log_file and os.path.exists(config.log_file):
         with open(config.log_file, encoding='utf8') as fd:
             lines = fd.readlines()
             n = len(lines)
-            recent_records = lines[n + 1 - min(10, n):n + 1]
-            body = f"""
-<b>{body}</b><br>
-----------------------------------<br>
-Computer name: <b>{socket.getfqdn(socket.gethostname())}</b><br>
-----------------------------------<br>
-<b>Recent log({config.log_file})</b>:<br>
-{'<br>'.join(recent_records)}<br>
-----------------------------------<br>
-{'<b>Screenshot before shutdown</b>:<br>' +
- '<img width="80%" src="cid:screenshot"></br>' if attach_shot else ''}
-"""
+            recent_records = ['<p>' + x.rstrip() + '</p>\n' for x in lines[-min(10, n):]]
+            body += f'<hr><b>Recent 10 logs ({config.log_file}):</b><br>\n' \
+                    '<style>.logs { font-family: "Consolas" } .logs p { margin: 0.3em auto; }</style>\n' \
+                    f'<span class="logs">\n{"".join(recent_records)}</span>'
 
-    logger.info(f'ready to send email:\n'
-                f'--------- Email --------------\n'
-                f'subject: "{subject}"\n'
-                f'receiver: {receiver}\n'
-                f'body:\n{body}\n'
-                f'------------------------------\n')
-    if receiver is None:
-        receiver = config.receiver
-    if None in (receiver, config.sender, config.password):
-        print(f'----Email account info needs to be updated.-----\n'
-              f'receiver: {receiver}\n'
-              f'sender:{config.sender}\n'
-              f'password:{"*****"}'
-              f'----------------------------\n')
-        return
+    print(f'Ready to send email:\n'
+          f'=============== Email ===============\n'
+          f' - Subject  : {subject}\n'
+          f' - Receiver : {receiver}\n'
+          f' - Body html:\n{body}\n'
+          f'================ End ================\n')
 
-    # Email object
-    msg = MIMEMultipart()
-    msg['Subject'] = subject
-    msg['From'] = formataddr((config.sender_name, config.sender))
-    msg['To'] = receiver
-    msg.attach(MIMEText(body, 'html', 'utf-8'))
-    if attach_shot:
-        crash_fp = 'img/crash.jpg'
-        shot = screenshot()
-        shot.save(crash_fp + '.png')
-        shot.resize((1920 // 2, 1080 // 2)).save(crash_fp, format='jpeg', quality=40)
-        with open(crash_fp, 'rb') as fd:
-            m1 = MIMEImage(fd.read())
-            m1.add_header('Content-ID', '<screenshot>')
-            msg.attach(m1)
-    # send
+    # make email
+    mail['Subject'] = subject
+    mail['From'] = formataddr((config.sender_name, config.sender))
+    mail['To'] = receiver
+    mail.attach(MIMEText(body, 'html', 'utf-8'))
+
+    # send email, retry 5 times at most if failed.
     retry_time = 0
     while retry_time < 5:
         retry_time += 1
         try:
-            server = smtplib.SMTP_SSL(config.server_host, config.server_port)  # 邮件服务器及端口号
+            server = smtplib.SMTP_SSL(config.server_host, config.server_port)
             # server.set_debuglevel(1)
             try:
                 server.login(config.sender, config.password)
-                result = server.sendmail(config.sender, receiver, msg.as_string())
+                result = server.sendmail(config.sender, receiver, mail.as_string())
                 if result == {}:
-                    logger.warning(f'send success')
+                    logger.warning(f'send email success.')
                 else:
-                    logger.warning(f'send failed! Error:\n{result}')
+                    logger.warning(f'send email failed! Error:\n{result}')
                 server.quit()
                 break
-            except Exception as e:
-                logger.warning(f'send error, error_type={type(e)},\ne={e}')
+            except Exception:
                 server.quit()
+                raise
         except Exception as e:
-            logger.warning(f'connect server "{(config.server_host, config.server_port)}" failed,'
-                           f' error_type={type(e)},\ne={e}')
-            logger.info(f'retry sending mail after 5 sec...({retry_time}/5 times)')
-        time.sleep(5)
+            logger.warning(f'Error when sending email: {type(e)}\n{e}')
+            logger.info(f'retry sending mail in 5 seconds... ({retry_time}/5 times)')
+            time.sleep(5)
 
 
 class Timer:
-    t1 = 0
-    t2 = 0
-    dt = 0
-
     def __init__(self):
-        self.t1 = time.time()
+        self.t0 = time.time()
 
     def lapse(self, save=True):
-        dt = time.time() - self.t1
+        t1 = time.time()
+        dt = t1 - self.t0
         if save:
-            self.t1 = time.time()
+            self.t0 = t1
         return dt
-
-    def stop(self):
-        self.t2 = time.time()
-        self.dt = self.t2 - self.t1
-        # print('Time lapse: %f sec' % (self.t2 - self.t1))
-        return self

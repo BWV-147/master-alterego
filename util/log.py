@@ -31,7 +31,7 @@ def get_logger(name='log', level=logging.INFO, save=True):
     formatter = logging.Formatter(
         style='{',
         datefmt="%m-%d %H:%M:%S",
-        fmt='{asctime} - {filename:<10.10s}[line:{lineno:>3d}] - {levelname:<5s}: [{threadName}] {message}')
+        fmt='{asctime} - {filename:<11.11s}[line:{lineno:>3d}] - {levelname:<5s}: [{threadName}] {message}')
 
     console = logging.StreamHandler()
     console.setFormatter(formatter)
