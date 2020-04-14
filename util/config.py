@@ -1,5 +1,6 @@
 import json
 import os
+import threading
 
 
 class _BaseConfig:
@@ -45,7 +46,6 @@ class _BaseConfig:
 
 
 class Config(_BaseConfig):
-
     def __init__(self, fp=None):
         super().__init__()
         # ================= sys config =================
@@ -78,9 +78,11 @@ class Config(_BaseConfig):
         self.task_finished = False  # all battles finished, set to True before child process exist.
         self.log_file = None  # filepath of logger when send_mail review the recent logs, usually 'logs/log.full.log'.
         self.running_thread = None
+        self.screenshot_lock = threading.Lock()  # raise exception if two threads take screenshots at same time
         self.temp = {}  # save temp vars at runtime
 
-        self._ignored = ['fp', 'T', 'LOC', 'log_time', 'task_finished', 'log_file', 'running_thread', 'temp']
+        self._ignored = ['fp', 'T', 'LOC', 'log_time', 'task_finished', 'log_file',
+                         'running_thread', 'screenshot_lock', 'temp']
         # load config
         if fp:
             self.load()
@@ -111,19 +113,13 @@ class Config(_BaseConfig):
             self.battle.craft_history[str(self.battle.craft_num)] = self.battle.finished
         self.save()
 
-    def mark_task_finish(self, kill=True):
-        import time
-        from util.supervisor import kill_thread
-        import threading
-        self.task_finished = True
+    def mark_task_finish(self):
         self.save()
-        time.sleep(5)
-        if kill:
-            kill_thread(threading.current_thread())
+        self.task_finished = True
 
     def kill(self):
-        from util.supervisor import kill_thread
         if self.running_thread is not None:
+            from util.supervisor import kill_thread
             kill_thread(self.running_thread)
 
 

@@ -132,25 +132,4 @@ capture('fp_bag1_full')
 # %%
 capture('fp_bag2_full')
 
-# %% kill thread
-from util.config import config
-from util.supervisor import kill_thread
-
-kill_thread(config.running_thread)
-
-# %% debug during battle
-from battles import *
-
-config.load('data/config.json')
-check_sys_admin()
-config.task_finished = False
-config.log_file = 'logs/log.full.log'
-# _battle: Battle = globals()['battle']
-_battle = Battle()
-getattr(_battle, config.battle.battle_func)(True)
-master = _battle.master
-T = master.T
-LOC = master.LOC
-# start debugging
-print(master.quest_name)
-# end debug
+# %%

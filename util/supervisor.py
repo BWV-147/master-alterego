@@ -56,9 +56,9 @@ def supervise_log_time(thread: threading.Thread, secs=60, mail: bool = None, int
         # case 5: unrecognized error - waiting user to handle (in 2*loops seconds)
         if loops == MAX_LOOPS:
             logger.warning(f'Something wrong, please solve it, or it will be force stopped...\n'
-                           f'Thread alive: {thread.is_alive()}.\n'
-                           f'task_finish: {config.task_finished}.\n'
-                           f'log_time: {time.strftime("%H:%M:%S", time.localtime(time.time()))}')
+                           f' - thread  alive: {thread.is_alive()}.\n'
+                           f' - task finished: {config.task_finished}.\n'
+                           f' - last log time: {time.strftime("%H:%M:%S", time.localtime(time.time()))}')
         if loops >= 0:
             print(f'\r{loops}...\r', end='')
         else:
@@ -71,26 +71,26 @@ def supervise_log_time(thread: threading.Thread, secs=60, mail: bool = None, int
         if loops < 0:
             # not solved! kill thread and stop.
             err_msg = f'Thread-{thread.ident}({thread.name}): Time run out!\n' \
-                      f'lapse={time.time() - config.log_time:.2f}(>{secs}) secs.\n' \
-                      f'lg_time={time.asctime(time.localtime(config.log_time))}'
-            print(err_msg)
+                      f' - current  time: {time.asctime()}\n' \
+                      f' - last log time: {time.asctime(time.localtime(config.log_time))}\n' \
+                      f' - over time: {time.time() - config.log_time:.2f}(>{secs}) secs.\n'
+            logger.warning(err_msg)
             if mail:
                 send_mail(err_msg, subject=f'[{thread.name}]something went wrong!')
             kill_thread(thread)
-            print('exit supervisor after killing thread.')
+            logger.info('exit supervisor after killing thread.')
             break
     raise_alert(alert_type, loops=5)
 
 
 # inspired by https://github.com/mosquito/crew/blob/master/crew/worker/thread.py
 def kill_thread(thread: threading.Thread):
-    logger.warning(f'ready to kill thread-{thread.ident}({thread.name})')
+    friendly_name = f'Thread-{thread.ident}({thread.name})'
     if not thread.is_alive():
+        logger.warning(f'{friendly_name} is already not alive!')
         return
 
-    res = ctypes.pythonapi.PyThreadState_SetAsyncExc(
-        ctypes.c_long(thread.ident), ctypes.py_object(SystemExit)
-    )
+    res = ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(thread.ident), ctypes.py_object(SystemExit))
     # print(f'kill thread res={res}')
     if res == 0:
         raise ValueError('nonexistent thread id')
@@ -100,4 +100,4 @@ def kill_thread(thread: threading.Thread):
 
     while thread.is_alive():
         time.sleep(0.01)
-    logger.critical(f'Thread-{thread.ident}({thread.name}) have been killed!')
+    logger.critical(f'{friendly_name} have been killed!')

@@ -198,7 +198,7 @@ class Master:
                        switch_classes=None, friend_only=False):
         # type:(bool,bool,bool,bool,Image.Image,Sequence,bool)->None
         """
-        Choose the *first* support in T.support from the whole support list, drag scrollbar to show all supports.
+        Choose the **first** support in T.support from the whole support list, drag scrollbar to show all supports.
 
         :param match_svt: match the whole rect of 3 skills
         :param match_ce: whether match CE, please set to False if jp server since CE could be filtered in jp server
@@ -275,7 +275,7 @@ class Master:
                                 return
                     if dy_mouse != 0:
                         pyautogui.dragRel(0, dy_mouse, 0.2)
-                        time.sleep(0.5)
+                        time.sleep(0.2)
             # refresh support
             refresh_times += 1
             logger.debug(f'refresh support {refresh_times} times', extra=LOG_TIME)

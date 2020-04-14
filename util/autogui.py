@@ -25,21 +25,22 @@ def screenshot(region: Sequence = None, filepath: str = None, monitor: int = Non
         monitor = config.monitor
     _image = None
     size = (1920, 1080)
-    try:
-        with mss() as sct:
-            mon = sct.monitors[monitor]
-            size = (mon['width'], mon['height'])
-            shot = sct.grab(mon)
-            _image = Image.frombytes('RGB', size, shot.rgb).crop(region)
-    except Exception as e:
-        logger.error(f'Fail to grab screenshot using mss(). Error:\n{e}')
-        if config.monitor == 1 and tuple(config.offset) == (0, 0):
-            # ImageGrab can only grab the main screen
-            try:
-                _image = ImageGrab.grab()
-            except Exception as e:
-                logger.error(f'Fail to grab screenshot using ImageGrad. Error:\n{e}')
-        logger.error(traceback.format_exc())
+    with config.screenshot_lock:
+        try:
+            with mss() as sct:
+                mon = sct.monitors[monitor]
+                size = (mon['width'], mon['height'])
+                shot = sct.grab(mon)
+                _image = Image.frombytes('RGB', size, shot.rgb).crop(region)
+        except Exception as e:
+            logger.error(f'Fail to grab screenshot using mss(). Error:\n{e}')
+            if tuple(config.offset) == (0, 0):
+                # ImageGrab can only grab the main screen
+                try:
+                    _image = ImageGrab.grab()
+                except Exception as e:
+                    logger.error(f'Fail to grab screenshot using ImageGrad. Error:\n{e}')
+            logger.error(traceback.format_exc())
     if _image is None:
         # grab failed, return a empty image with single color
         _image = Image.new('RGB', size, (0, 255, 255)).crop(region)

@@ -1,8 +1,12 @@
 import ctypes
+import os
+import pprint
 import sys
-from pprint import pprint
 
 import pyautogui
+
+if 'PYGAME_HIDE_SUPPORT_PROMPT' not in os.environ:
+    os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
 import pygame
 from mss import mss
 
@@ -39,7 +43,7 @@ def check_sys_admin(admin=True):
         raise EnvironmentError(f'Unsupported system: {sys.platform}. please run in windows/macOS.')
     sct = mss()
     print('** Monitors information **')
-    pprint(sct.monitors)
+    pprint.pprint(sct.monitors)
     print('WARNING: make sure "config.monitor/offset" is set properly')
 
 
