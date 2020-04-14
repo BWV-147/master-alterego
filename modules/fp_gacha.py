@@ -13,11 +13,11 @@ class FpGacha:
         self.T.read_templates(config.fp_gacha.dir)
         config.T = self.T
         config.LOC = self.LOC
-        config.log_file = f'logs/gacha.full.log'
+        config.log_file = f'logs/log.full.log'
 
     def start(self, supervise=True, conf=None):
         self.pre_process(conf)
-        logger.info('start friend point gacha...')
+        logger.info('start friend point gacha...', extra=LOG_TIME)
         start_func = self.draw
         time.sleep(2)
         if supervise:
@@ -35,13 +35,13 @@ class FpGacha:
         T = self.T
         LOC = self.LOC
 
-        logger.info('gacha: starting...')
+        logger.info('draw: starting...', extra=LOG_TIME)
         loops = 0
         while loops < num:
             # print(f'\r loop {loops:<4d}', end='')
             config.log_time = time.time()
             if loops % 5 == 0:
-                logger.debug(f'fp gacha {loops}/{num}...')
+                logger.debug(f'fp gacha {loops}/{num}...', extra=LOG_TIME)
             loops += 1
             wait_targets(T.fp_gacha_page, [LOC.fp_gacha_logo, LOC.fp_gacha10_button], at=LOC.fp_gacha10_button)
             page_no = wait_which_target([T.fp_gacha_result, T.fp_bag2_full],
@@ -51,8 +51,8 @@ class FpGacha:
                 click(LOC.fp_gacha_result_summon)
                 config.count_fp_gacha()
             elif page_no > 0:
-                logger.info(f'bag {page_no} full, sell or enhance manually.')
+                logger.info(f'bag {page_no} full, sell or enhance manually.', extra=LOG_TIME)
                 config.log_time = time.time() + config.manual_operation_time
                 raise_alert(loops=1)
                 wait_targets(T.fp_gacha_page, [LOC.fp_gacha_logo, LOC.fp_gacha10_button])
-                logger.info('back to fp gacha.')
+                logger.info('back to fp gacha.', extra=LOG_TIME)

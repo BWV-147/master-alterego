@@ -1,6 +1,7 @@
 import argparse
 import smtplib
 import socket
+import threading
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -8,7 +9,7 @@ from email.utils import formataddr
 # noinspection PyUnresolvedReferences
 from typing import List, Tuple, Union, Dict, Callable, Sequence, Optional
 
-from util.my_logger import *
+from util.log import *
 
 
 class ArgParser:
@@ -124,18 +125,18 @@ Computer name: <b>{socket.getfqdn(socket.gethostname())}</b><br>
                 server.login(config.sender, config.password)
                 result = server.sendmail(config.sender, receiver, msg.as_string())
                 if result == {}:
-                    logger.warning(f'send success', NO_LOG_TIME)
+                    logger.warning(f'send success')
                 else:
-                    logger.warning(f'send failed! Error:\n{result}', NO_LOG_TIME)
+                    logger.warning(f'send failed! Error:\n{result}')
                 server.quit()
                 break
             except Exception as e:
-                logger.warning(f'send error, error_type={type(e)},\ne={e}', NO_LOG_TIME)
+                logger.warning(f'send error, error_type={type(e)},\ne={e}')
                 server.quit()
         except Exception as e:
             logger.warning(f'connect server "{(config.server_host, config.server_port)}" failed,'
-                           f' error_type={type(e)},\ne={e}', NO_LOG_TIME)
-            logger.info(f'retry sending mail after 5 sec...({retry_time}/5 times)', NO_LOG_TIME)
+                           f' error_type={type(e)},\ne={e}')
+            logger.info(f'retry sending mail after 5 sec...({retry_time}/5 times)')
         time.sleep(5)
 
 

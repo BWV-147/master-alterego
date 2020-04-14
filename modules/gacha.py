@@ -1,9 +1,6 @@
 from util.autogui import *
 from util.supervisor import supervise_log_time
 
-GACHA_LOG_NAME = 'gacha'
-logger = globals()['logger'] = get_logger(GACHA_LOG_NAME)
-
 
 class Gacha:
     def __init__(self, path=None):
@@ -16,11 +13,11 @@ class Gacha:
         self.T.read_templates(config.gacha.dir)
         config.T = self.T
         config.LOC = self.LOC
-        config.log_file = f'logs/{GACHA_LOG_NAME}.full.log'
+        config.log_file = f'logs/log.full.log'
 
     def start(self, supervise=True, conf=None):
         self.pre_process(conf)
-        logger.info('start gacha...')
+        logger.info('start gacha...', extra=LOG_TIME)
         start_func = getattr(self, config.gacha.start_func or self.draw.__name__)
         logger.info(f'start_func = {start_func.__name__}')
         args = {self.draw.__name__: [config.gacha.num],
@@ -37,10 +34,10 @@ class Gacha:
             start_func(*args)
 
     def draw(self, num=100):
+        logger.info('draw: starting...', extra=LOG_TIME)
         T = self.T
         LOC = self.LOC
         wait_targets(T.gacha_initial, LOC.gacha_tab)
-        logger.info('gacha: starting...')
         loops = 0
         reset_i = 0
         while True:
@@ -58,22 +55,22 @@ class Gacha:
                 click(LOC.gacha_reset_action)
                 config.count_gacha()
                 reset_i += 1
-                logger.info(f'reset {reset_i}/{num} times(total {config.gacha.finished}).')
+                logger.info(f'reset {reset_i}/{num} times(total {config.gacha.finished}).', extra=LOG_TIME)
                 wait_targets(T.gacha_reset_confirm, LOC.gacha_reset_confirm, at=0)
                 wait_targets(T.gacha_reset_finish, LOC.gacha_reset_finish, at=0)
                 wait_targets(T.gacha_initial, LOC.gacha_10_initial)
                 if reset_i >= num:
-                    logger.info(f'All {num} gacha finished.')
+                    logger.info(f'All {num} gacha finished.', extra=LOG_TIME)
                     config.mark_task_finish()
                     return
             elif match_targets(shot, T.mailbox_full_alert, LOC.mailbox_full_confirm):
                 click(LOC.mailbox_full_confirm)
-                logger.info('mailbox full.')
+                logger.info('mailbox full.', extra=LOG_TIME)
                 wait_targets(T.mailbox_unselected1, LOC.mailbox_get_all_action)
                 self.clean(config.gacha.clean_num)
                 wait_targets(T.gacha_initial, LOC.gacha_tab)
                 wait_targets(T.gacha_initial, LOC.gacha_10_initial, clicking=LOC.gacha_tab)
-                logger.info('already back to gacha.')
+                logger.info('already back to gacha.', extra=LOG_TIME)
 
     def clean(self, num: int = 100):
         """
@@ -84,11 +81,11 @@ class Gacha:
         """
         T = self.T
         LOC = self.LOC
-        logger.info('mailbox: cleaning...')
+        logger.info('mailbox: cleaning...', extra=LOG_TIME)
         print('Make sure the mailbox **FILTER** only shows "Experience Cards"/"Zhong Huo"!')
         wait_targets(T.mailbox_unselected1, LOC.mailbox_get_all_action)
         if num < 0:
-            logger.warning('please clean mailbox manually and return to gacha page!', NO_LOG_TIME)
+            logger.warning('please clean mailbox manually and return to gacha page!')
             time.sleep(2)
             config.log_time = time.time() + config.manual_operation_time  # n min for manual operation
             raise_alert()
@@ -105,10 +102,10 @@ class Gacha:
             page_no = wait_which_target([T.mailbox_unselected1, T.bag_full_alert],
                                         [LOC.mailbox_get_all_action, LOC.bag_full_sell_action])
             if page_no == 0:
-                logger.info('check mailbox items...')
+                logger.info('check mailbox items...', extra=LOG_TIME)
                 drag_no = 0
                 if skipped_drag_num > MAX_SKIP_NUM:  # not item_checked:
-                    logger.debug(f'no item available, stop cleaning.')
+                    logger.debug(f'no item available, stop cleaning.', extra=LOG_TIME)
                     wait_targets(T.mailbox_unselected1, LOC.mailbox_get_all_action)
                     click(self.LOC.mailbox_back)
                     logger.info('from mailbox back to gacha')
@@ -120,7 +117,6 @@ class Gacha:
                         shot = screenshot()
                         peaks = search_peaks(shot.crop(LOC.mailbox_check_column),
                                              mailbox_unselect.crop(LOC.mailbox_first_checkbox))
-                        # print(f'peaks {i}={peaks}')
                         for y_peak in peaks:
                             y_offset = y_peak - (LOC.mailbox_first_checkbox[1] - LOC.mailbox_check_column[1])
                             if _is_match_offset(shot, mailbox_unselect, LOC.mailbox_first_xn, y_offset) \
@@ -129,10 +125,9 @@ class Gacha:
                                 click(numpy.add(LOC.mailbox_first_checkbox, [0, y_offset] * 2), lapse=0.01)
                                 no += 1
                                 skipped_drag_num = 0
-                                if no % 10 == 0:
-                                    logger.debug(f'got items {no}/{num}...')
+                                if no % 10 == 0 or no == num:
+                                    logger.debug(f'got items {no}/{num}...', extra=LOG_TIME)
                                 if no == num:
-                                    logger.info(f'got all items {no}/{num}...')
                                     break
                         if no >= num:
                             break
@@ -143,7 +138,7 @@ class Gacha:
                         skipped_drag_num += 1
                     if skipped_drag_num > MAX_SKIP_NUM:
                         break
-                logger.info('get mailbox items.')
+                logger.info('get mailbox items.', extra=LOG_TIME)
                 # wait_which_target(T.mailbox_selected, LOC.mailbox_get_action)
                 click(LOC.mailbox_get_action, lapse=1)
                 click(LOC.mailbox_get_action, lapse=1)
@@ -162,10 +157,10 @@ class Gacha:
         """
         T = self.T
         LOC = self.LOC
-        logger.info('shop: selling...')
+        logger.info('shop: selling...', extra=LOG_TIME)
         print('Make sure the bag **FILTER** only shows "Experience Cards"/"Zhong Huo"!')
         if num <= 0:
-            logger.warning('please sell items manually and return to gacha page!', NO_LOG_TIME)
+            logger.warning('please sell items manually and return to gacha page!')
             time.sleep(2)
             config.log_time = time.time() + config.manual_operation_time  # min for manual operation
             raise_alert()
@@ -179,12 +174,12 @@ class Gacha:
                                             [LOC.bag_sell_action, LOC.bag_sell_action])
                 if page_no == 0:
                     no += 1
-                    logger.info(f'sell: {no} times...')
+                    logger.info(f'sell: {no} times...', extra=LOG_TIME)
                     click(LOC.bag_sell_action)
                     wait_targets(T.bag_sell_confirm, LOC.bag_sell_confirm, at=True)
                     wait_targets(T.bag_sell_finish, LOC.bag_sell_finish, at=0)
                 else:
-                    logger.info('all sold.')
+                    logger.info('all sold.', extra=LOG_TIME)
                     click(LOC.bag_back)
                     wait_targets(T.shop, LOC.shop_event_item_exchange, at=0)
                     wait_targets(T.shop_event_banner_list,
@@ -192,4 +187,4 @@ class Gacha:
                     wait_targets(T.gacha_initial, LOC.gacha_10_initial, clicking=LOC.gacha_tab)
                     break
         wait_targets(T.gacha_initial, LOC.gacha_10_initial)
-        logger.info('from shop back to gacha')
+        logger.info('from shop back to gacha', extra=LOG_TIME)

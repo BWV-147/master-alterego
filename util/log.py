@@ -1,26 +1,18 @@
 import logging
 import os
-import threading
 import time
 from logging.handlers import RotatingFileHandler
 
 from util.config import config
 
-NO_LOG_TIME = 'NO_LOG_TIME'
+LOG_TIME = {'log_time': True}
 
 
 class LogFilter(logging.Filter):
-    def __init__(self, func=None):
-        super().__init__()
-        assert callable(func)
-        self.func = func
-
     def filter(self, record: logging.LogRecord):
-        if NO_LOG_TIME in record.args:
-            record.args = [x for x in record.args if x is not NO_LOG_TIME]
-        else:
-            if threading.current_thread().name != 'MainThread':
-                self.func()
+        config.temp['record'] = record
+        if getattr(record, 'log_time', False) is True:
+            config.log_time = time.time()
         return True
 
 
@@ -34,12 +26,7 @@ def get_logger(name='log', level=logging.INFO, save=True):
         os.makedirs(log_dir)
     _logger = logging.getLogger(name)
     _logger.setLevel(logging.DEBUG)
-
-    def log_func():
-        config.log_time = time.time()
-
-    log_filter = LogFilter(func=log_func)
-    _logger.addFilter(log_filter)
+    _logger.addFilter(LogFilter())
 
     formatter = logging.Formatter(
         style='{',

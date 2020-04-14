@@ -27,7 +27,7 @@ class BattleBase:
         max_num = battle_num
         while finished_num < max_num:
             finished_num += 1
-            logger.info(f'>>>>> Battle "{self.master.quest_name}" No.{finished_num}/{max_num} <<<<<')
+            logger.info(f'>>>>> Battle "{self.master.quest_name}" No.{finished_num}/{max_num} <<<<<', extra=LOG_TIME)
             if config.battle.jump_start:
                 config.battle.jump_start = False
                 logger.warning('in start: goto label.g')
@@ -65,7 +65,7 @@ class BattleBase:
             dt = timer.lapse()
             logger.info(f'--- Battle {finished_num}/{max_num} finished,'
                         f' time = {int(dt // 60)} min {int(dt % 60)} sec.'
-                        f' (total {config.battle.finished})')
+                        f' (total {config.battle.finished})', extra=LOG_TIME)
             rewards = screenshot()
             craft_dropped = match_targets(rewards, T.rewards, LOC.finish_craft)
             png_fn = f'img/_drops/rewards-{self.master.quest_name}-{time.strftime("%m%d-%H%M")}'
@@ -94,7 +94,7 @@ class BattleBase:
                     break
                 elif match_targets(shot, T.restart_quest, LOC.restart_quest_yes):
                     click(LOC.restart_quest_yes)
-                    logger.debug('restart the same battle')
+                    logger.debug('restart the same battle', extra=LOG_TIME)
                     break
                 elif match_targets(shot, T.apply_friend, LOC.apply_friend):
                     click(LOC.apply_friend_deny)
@@ -116,7 +116,7 @@ class BattleBase:
         :return:
         """
         self.pre_process(conf)
-        logger.info('starting battle...')
+        logger.info('starting battle...', extra=LOG_TIME)
         time.sleep(2)
         battle_func = getattr(self, config.battle.battle_func)
         t_name: str = battle_func.__name__.replace('_', '-').capitalize()
@@ -142,11 +142,11 @@ class BattleBase:
         """
         T = self.master.T
         LOC = self.master.LOC
-        logger.info('shop: selling...')
+        logger.info('shop: selling...', extra=LOG_TIME)
         print('Make sure the bag **FILTER** only shows "Experience Cards"/"Zhong Huo"!')
         no = 0
         if num <= 0:
-            logger.warning('please sell items manually and return to gacha page!', NO_LOG_TIME)
+            logger.warning('please sell items manually and return to gacha page!')
             time.sleep(2)
             config.log_time = time.time() + config.manual_operation_time  # min for manual operation
             raise_alert()
@@ -157,14 +157,14 @@ class BattleBase:
             page_no = wait_which_target([T.bag_selected, T.bag_unselected], [LOC.bag_sell_action, LOC.bag_sell_action])
             if page_no == 0:
                 no += 1
-                logger.debug(f'sell {no} times.')
+                logger.debug(f'sell {no} times.', extra=LOG_TIME)
                 click(LOC.bag_sell_action)
                 wait_targets(T.bag_sell_confirm, LOC.bag_sell_confirm, at=0)
                 wait_targets(T.bag_sell_finish, LOC.bag_sell_finish, at=0)
                 if no >= num:
                     break
             elif page_no == 1:
-                logger.debug('all items are sold.')
+                logger.debug('all items are sold.', extra=LOG_TIME)
                 break
         wait_targets(T.bag_unselected, LOC.bag_sell_action)
         click(LOC.bag_back)
@@ -172,7 +172,7 @@ class BattleBase:
         click(LOC.bag_back)
         wait_targets(T.quest, LOC.quest)
         click(LOC.quest_c)
-        logger.debug('from shop back to supporting')
+        logger.debug('from shop back to supporting', extra=LOG_TIME)
         return
 
     # noinspection DuplicatedCode
@@ -191,7 +191,7 @@ class BattleBase:
 
         # pre-processing: e.g. set templates, only once
         if pre_process:
-            logger.info(f'pre-process for {master.quest_name}...')
+            logger.info(f'pre-process for {master.quest_name}...', extra=LOG_TIME)
             T.read_templates('img/battles/a-charlotte/')
 
             # LOC.relocate((0, 0, 1920 - 1, 1080 - 1))

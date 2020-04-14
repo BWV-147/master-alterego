@@ -6,7 +6,7 @@ import numpy
 from PIL import ImageGrab
 from scipy.signal import find_peaks
 from skimage.feature import match_template as sk_match_template
-from skimage.metrics import structural_similarity as sk_compare_ssim
+from skimage.metrics import structural_similarity
 
 from util.dataset import *
 from util.gui import *
@@ -32,14 +32,14 @@ def screenshot(region: Sequence = None, filepath: str = None, monitor: int = Non
             shot = sct.grab(mon)
             _image = Image.frombytes('RGB', size, shot.rgb).crop(region)
     except Exception as e:
-        logger.error(f'Fail to grab screenshot using mss(). Error:\n{e}', NO_LOG_TIME)
+        logger.error(f'Fail to grab screenshot using mss(). Error:\n{e}')
         if config.monitor == 1 and tuple(config.offset) == (0, 0):
             # ImageGrab can only grab the main screen
             try:
                 _image = ImageGrab.grab()
             except Exception as e:
-                logger.error(f'Fail to grab screenshot using ImageGrad. Error:\n{e}', NO_LOG_TIME)
-        logger.error(traceback.format_exc(), NO_LOG_TIME)
+                logger.error(f'Fail to grab screenshot using ImageGrad. Error:\n{e}')
+        logger.error(traceback.format_exc())
     if _image is None:
         # grab failed, return a empty image with single color
         _image = Image.new('RGB', size, (0, 255, 255)).crop(region)
@@ -75,7 +75,7 @@ def cal_sim(img1: Image.Image, img2: Image.Image, region=None, method='ssim') ->
     img2 = img2.convert('RGB')
     if method == 'ssim':
         # noinspection PyTypeChecker
-        sim = sk_compare_ssim(numpy.array(img1), numpy.array(img2), multichannel=True)
+        sim = structural_similarity(numpy.array(img1), numpy.array(img2), multichannel=True)
     elif method == 'hist':
         size = tuple(numpy.min((img1.size, img2.size), 0))
         if size != img1.size:
@@ -179,7 +179,6 @@ def wait_targets(targets, regions, threshold=THR, at=None, lapse=0.0, clicking=N
     while True:
         n += 1
         if match_targets(screenshot(), targets, regions, threshold, at, lapse):
-            print(f'in wait_regions: n={n}')
             return
         if clicking is not None:
             click(clicking, 0)

@@ -76,7 +76,7 @@ class Config(_BaseConfig):
         self.LOC = None
         self.log_time = 0  # record the time of last logging.info/debug..., set NO_LOG_TIME outside battle progress
         self.task_finished = False  # all battles finished, set to True before child process exist.
-        self.log_file = None  # filename of logger when send_mail review the recent logs
+        self.log_file = None  # filepath of logger when send_mail review the recent logs, usually 'logs/log.full.log'.
         self.running_thread = None
         self.temp = {}  # save temp vars at runtime
 

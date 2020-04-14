@@ -44,7 +44,7 @@ def supervise_log_time(thread: threading.Thread, secs=60, mail: bool = None, int
         if img_net is not None and loc_net is not None:
             shot = screenshot()
             if match_targets(shot, img_net, loc_net[0]) and match_targets(shot, img_net, loc_net[1]):
-                logger.warning('Network error! click "retry" button', NO_LOG_TIME)
+                logger.warning('Network error! click "retry" button')
                 click(loc_net[1], lapse=3)
                 config.log_time += 60
                 continue
@@ -58,11 +58,11 @@ def supervise_log_time(thread: threading.Thread, secs=60, mail: bool = None, int
             logger.warning(f'Something wrong, please solve it, or it will be force stopped...\n'
                            f'Thread alive: {thread.is_alive()}.\n'
                            f'task_finish: {config.task_finished}.\n'
-                           f'log_time: {time.strftime("%H:%M:%S", time.localtime(time.time()))}', NO_LOG_TIME)
+                           f'log_time: {time.strftime("%H:%M:%S", time.localtime(time.time()))}')
         if loops >= 0:
             print(f'\r{loops}...\r', end='')
         else:
-            logger.warning(f'Time out, it will be force stopped...', NO_LOG_TIME)
+            logger.warning(f'Time out, it will be force stopped...')
         loops -= 1
         if alert_type:
             beep(1, 2)

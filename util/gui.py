@@ -136,8 +136,8 @@ def raise_alert(alert_type=None, loops=5, wait=True):
     if alert_type is None:
         alert_type = config.alert_type
     if alert_type is True:
-        logger.info(f'alert: beep for {loops} loops.', NO_LOG_TIME)
+        logger.info(f'alert: beep for {loops} loops.')
         beep(2, 1, loops)
     elif isinstance(alert_type, str):
-        logger.info(f'alert: play music for {loops} loops.', NO_LOG_TIME)
+        logger.info(f'alert: play music for {loops} loops.')
         play_music(alert_type, loops, wait)
