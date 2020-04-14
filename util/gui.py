@@ -75,7 +75,6 @@ def move_to(xy: Sequence):
 
 def drag(start: Sequence, end: Sequence, duration=1.0, down_time=0.0, up_time=0.0, lapse=0.5):
     """
-    drag event
     :param start: (x1,y1)
     :param end: (x2,y2) both absolute coordinate
     :param duration: duration of mouse moving

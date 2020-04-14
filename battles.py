@@ -5,8 +5,9 @@ from modules.battle_base import *
 # noinspection PyPep8Naming,DuplicatedCode
 class Battle(BattleBase):
     """
-    采用好友助战(如孔明)时，若涉及其指令卡识别，务必加入三个再临阶段的指令卡(load from img/cards/**/**.json)
-    ensure the same app version.
+    - it's better to load card templates from json if friend's support(need to parse card) has 3/4 sets of dress,
+      e.g. Kongming, Merlin(3+1 dress), Skadi
+    - ensure the same app version: e.g. command card might differ.
     """
     pass
 
@@ -41,7 +42,7 @@ class FreeBattle(BattleBase):
             def _handler():
                 # mainly for jp, re-login handler at 3am(UTC+8)
                 wait_targets(T.get('login_page'), LOC.menu_button)
-                wait_targets(T.get('login1'), (1000, 480, 1350, 600), at=True, clicking=LOC.safe_area)
+                wait_targets(T.get('login1'), (1000, 480, 1350, 600), at=0, clicking=LOC.safe_area)
                 # ....
                 wait_targets(T.quest, LOC.quest)
 
@@ -68,10 +69,9 @@ class FreeBattle(BattleBase):
                                   switch_classes=(5, 0))
         else:
             logger.debug('please choose support manually!')
-        time.sleep(2)
 
         # wave 1
-        wait_targets(T.wave1a, LOC.loc_wave)
+        wait_targets(T.wave1a, LOC.loc_wave, 0.7)
         logger.debug(f'Quest {master.quest_name} started...')
         logger.debug('wave 1...')
         master.set_waves(T.wave1a, T.wave1b)
@@ -82,7 +82,7 @@ class FreeBattle(BattleBase):
         master.auto_attack(nps=7)
 
         # wave 2
-        wait_targets(T.wave2a, LOC.loc_wave)
+        wait_targets(T.wave2a, LOC.loc_wave, 0.7)
         logger.debug('wave 2...')
         master.set_waves(T.wave2a, T.wave2b)
         master.svt_skill(2, 1)
@@ -92,7 +92,7 @@ class FreeBattle(BattleBase):
         # master.play_cards([chosen_cards[i] for i in (2, 0, 1)])
 
         # wave 3
-        wait_targets(T.wave3a, LOC.loc_wave)
+        wait_targets(T.wave3a, LOC.loc_wave, 0.7)
         logger.debug('wave 3...')
         master.set_waves(T.wave3a, T.wave3b)
         master.svt_skill(1, 3)
@@ -131,7 +131,7 @@ class FreeBattle(BattleBase):
             def _handler():
                 # mainly for jp, re-login handler at 3am(UTC+8)
                 wait_targets(T.get('login_page'), LOC.menu_button)
-                wait_targets(T.get('login1'), (1000, 480, 1350, 600), at=True, clicking=LOC.safe_area)
+                wait_targets(T.get('login1'), (1000, 480, 1350, 600), at=0, clicking=LOC.safe_area)
                 # ....
                 wait_targets(T.quest, LOC.quest)
 
@@ -158,10 +158,9 @@ class FreeBattle(BattleBase):
                                   switch_classes=(5, 0))
         else:
             logger.debug('please choose support manually!')
-        time.sleep(2)
 
         # wave 1
-        wait_targets(T.wave1a, LOC.loc_wave)
+        wait_targets(T.wave1a, LOC.loc_wave, 0.7)
         logger.debug(f'Quest {master.quest_name} started...')
         logger.debug('wave 1...')
         master.set_waves(T.wave1a, T.wave1b)
@@ -171,7 +170,7 @@ class FreeBattle(BattleBase):
         master.auto_attack(nps=7, mode='alter')
 
         # wave 2
-        wait_targets(T.wave2a, LOC.loc_wave)
+        wait_targets(T.wave2a, LOC.loc_wave, 0.7)
         logger.debug('wave 2...')
         master.set_waves(T.wave2a, T.wave2b)
         master.svt_skill(3, 1, 2)
@@ -180,7 +179,7 @@ class FreeBattle(BattleBase):
         master.auto_attack(nps=7)
 
         # wave 3
-        wait_targets(T.wave3a, LOC.loc_wave)
+        wait_targets(T.wave3a, LOC.loc_wave, 0.7)
         logger.debug('wave 3...')
         master.set_waves(T.wave3a, T.wave3b)
         master.svt_skill(1, 2)

@@ -43,7 +43,7 @@ def supervise_log_time(thread: threading.Thread, secs=60, mail: bool = None, int
         img_net, loc_net = T.net_error, LOC.net_error
         if img_net is not None and loc_net is not None:
             shot = screenshot()
-            if is_match_target(shot, img_net, loc_net[0]) and is_match_target(shot, img_net, loc_net[1]):
+            if match_targets(shot, img_net, loc_net[0]) and match_targets(shot, img_net, loc_net[1]):
                 logger.warning('Network error! click "retry" button', NO_LOG_TIME)
                 click(loc_net[1], lapse=3)
                 config.log_time += 60
@@ -51,7 +51,7 @@ def supervise_log_time(thread: threading.Thread, secs=60, mail: bool = None, int
         # case 4: re-login after 3am in jp server
         # if match menu button, click save_area until match quest1234, click 1234
         if callable(config.battle.login_handler):
-            if is_match_target(screenshot(), T.quest, LOC.menu_button):
+            if match_targets(screenshot(), T.quest, LOC.menu_button):
                 config.battle.login_handler()
         # case 5: unrecognized error - waiting user to handle (in 2*loops seconds)
         if loops == MAX_LOOPS:

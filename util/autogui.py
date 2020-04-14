@@ -15,6 +15,7 @@ from util.gui import *
 def screenshot(region: Sequence = None, filepath: str = None, monitor: int = None) -> Image.Image:
     """
     take screenshot of multi-monitors. set python.exe and pythonw.exe high dpi first!(see README.md)
+
     :param region: region inside monitor
     :param filepath: if not None, save to `filepath` then return
     :param monitor: 0-total size of all monitors, 1-main, 2-second monitor
@@ -58,7 +59,8 @@ def get_mean_color(img: Image.Image, region: Sequence):
 
 def cal_sim(img1: Image.Image, img2: Image.Image, region=None, method='ssim') -> float:
     """
-    calculate the similarity of two image at region.
+    Calculate the similarity of two image at region.
+
     :param img1:
     :param img2:
     :param region: region to crop.
@@ -89,129 +91,149 @@ def cal_sim(img1: Image.Image, img2: Image.Image, region=None, method='ssim') ->
     return sim
 
 
-# 是否匹配一个或多个regions
-def compare_regions(img, target, regions=None, threshold=THR, at=None, lapse=0.0):
-    # type:(Image.Image,Image.Image,Sequence,float,Union[bool,Sequence],float)->bool
-    """
-    compare two image at `region`, click `at` if matches. use `screenshot()` as img if img is None
-    :return: bool: match or not
-    """
+def _fix_length(images: Union[Image.Image, Sequence[Image.Image]], regions: Sequence):
+    # fix to equal length of images and regions
+    if isinstance(images, Image.Image):
+        images = [images]
+    images = list(images)
     if regions is None:
-        res = cal_sim(img, target) > threshold
+        regions = [None] * len(images)
+    elif isinstance(regions[0], (int, float)):
+        regions = [regions] * len(images)
     else:
-        if isinstance(regions[0], Sequence):
-            matches = [cal_sim(img.crop(region), target.crop(region)) > threshold for region in regions]
-            res = False not in matches
+        if len(images) == len(regions):
+            pass
+        elif len(images) == 1:
+            images = list(images) * len(regions)
+        elif len(regions) == 1:
+            regions = list(regions) * len(images)
         else:
-            res = cal_sim(img.crop(regions), target.crop(regions)) > threshold
-    if res:
-        if at is True:
-            click(regions, 0)
-        elif isinstance(at, Sequence):
-            click(at, 0)
-    time.sleep(lapse)
-    return res
+            assert False, f'lengths should be equal or 1:\n {(images, regions)}'
+    return images, regions
+
+
+def match_one_target(img: Image.Image, target: Image.Image, region: Sequence, threshold: float = THR) -> bool:
+    return cal_sim(img, target, region) >= threshold
+
+
+def match_targets(img, targets, regions=None, threshold=THR, at=None, lapse=0.0):
+    # type:(Image.Image,Union[Image.Image,Sequence[Image.Image]],Sequence,float,Union[int,Sequence],float)->bool
+    """
+    Match all targets. See `wait_targets`.
+    `at` is a region or an **int** value of target index.
+
+    :return: bool, matched or not.
+    """
+    targets, regions = _fix_length(targets, regions)
+    for target, region in zip(targets, regions):
+        if cal_sim(img, target, region) < threshold:
+            return False
+    if at is None:
+        pass
+    elif isinstance(at, Sequence):
+        click(at, lapse)
+    elif at is not True and isinstance(at, int) and 0 <= at < len(regions):
+        # add first condition since isinstance(True, int)=True
+        click(regions[at], lapse)
+    else:
+        assert False, f'*at* should be int or a region: at={at}'
+    return True
 
 
 # 匹配第几个target
 def match_which_target(img, targets, regions=None, threshold=THR, at=None, lapse=0.0):
     # type:(Image.Image,Union[Image.Image,Sequence[Image.Image]],Sequence,float,Union[bool,Sequence],float)->int
     """
-    compare img with multi targets, click `at` if matches.
-    :return: matched index, -1 if not matched.
+    Compare targets to find which matches. See `wait_which_target`.
+    `at` is a region or **bool** value `True`, if True, click matched region.
+
+    :return: matched index, return -1 if not matched.
     """
-    if isinstance(targets, Image.Image):
-        targets = [targets]
-    if regions is None:
-        regions = [None for _ in targets]
-    if isinstance(regions[0], (int, float)):
-        regions = [regions]
-    assert len(targets) == len(regions), (targets, regions)
+    targets, regions = _fix_length(targets, regions)
+    assert len(targets) > 1, f'length of targets or regions must be at least 2: {(len(targets), len(regions))}'
     res = -1
-    for i in range(len(targets)):
-        sim = cal_sim(img, targets[i], regions[i])
-        if config.temp.get('print_sim') is True:
-            print(f'sim={sim}')
-        if sim > threshold:
-            res = i
-            break
-    if res >= 0:
-        if at is True:
-            click(regions[res], 0)
-        elif isinstance(at, Sequence):
-            click(at, 0)
-    time.sleep(lapse)
-    return res
+    for target, region in zip(targets, regions):
+        res += 1
+        if cal_sim(img, target, region) >= threshold:
+            if at is None:
+                pass
+            elif isinstance(at, Sequence):
+                click(at, lapse)
+            elif at is True:
+                click(regions[res], lapse)
+            else:
+                assert False, f'*at* should be True or a region: at={at}'
+            return res
+    return -1
 
 
-def is_match_target(img, target, region=None, threshold=THR, at=None):
-    # type:(Image.Image,Image.Image,Sequence,float,Union[bool,Sequence])->bool
-    return match_which_target(img, target, region, threshold, at) >= 0
+def wait_targets(targets, regions, threshold=THR, at=None, lapse=0.0, clicking=None, interval=0.2):
+    # type:(Union[Image.Image,Sequence[Image.Image]],Union[int,Sequence],float,Union[int,Sequence],float,Sequence,float)->None
+    """
+    Waiting screenshot to match all targets.
+
+    :param : See `wait_which_target`
+    :return: None
+    """
+    n = 0
+    while True:
+        n += 1
+        if match_targets(screenshot(), targets, regions, threshold, at, lapse):
+            print(f'in wait_regions: n={n}')
+            return
+        if clicking is not None:
+            click(clicking, 0)
+        time.sleep(interval)
 
 
 # 直到匹配某一个target
-def wait_which_target(targets, regions, threshold=THR, lapse=0.0, at=None, clicking=None, interval=0.2):
-    # type:(Union[Image.Image,Sequence[Image.Image]],Sequence,float,float,Union[bool,Sequence],Sequence,float)->int
+def wait_which_target(targets, regions, threshold=THR, at=None, lapse=0.0, clicking=None, interval=0.2):
+    # type:(Union[Image.Image,Sequence[Image.Image]],Sequence,float,Union[bool,Sequence],float,Sequence,float)->int
     """
-    Waiting for screenshot matching the region of some target.
-    :param targets: an Image or list of Image.
-    :param regions: corresponding region to target.
+    Waiting for screenshot to match one of targets.
+
+    :param targets: one Image or list of Image.
+    :param regions: one region or list of region.
+            `targets` or `regions` must contains at least 2 elements.
+            length of targets and regions could be (1,n), (n,1), (n,n), where n>=2.
     :param threshold:
-    :param lapse:
-    :param at:  if True, click the region which screenshot matches,
-                if a region, click the region `at`.
-    :param clicking: a region to click at until screenshot matches some target
-    :param interval: interval of clicking loop
+    :param at:  if True, click the region which target matches,
+            if a region, click the region.
+    :param lapse: lapse when click `at`.
+    :param clicking: a region to click at until screenshot matches some target.
+            e.g. Arash death animation, kizuna->rewards page.
+    :param interval: interval of loop when no one matched.
     :return: the index which target matches.
     """
-    if isinstance(targets, Image.Image):
-        targets = [targets]
-        regions = [regions]
-    num = len(targets)
-    assert len(regions) == num, (targets, regions)
-
     while True:
-        shot = screenshot()
-        res = match_which_target(shot, targets, regions, threshold, at)
+        res = match_which_target(screenshot(), targets, regions, threshold, at, lapse)
         if res >= 0:
-            time.sleep(lapse)
             return res
         if clicking is not None:
-            click(clicking, lapse=interval)
-
-
-def wait_targets(target, regions, threshold=THR, lapse=0.0, at=None, clicking=None, interval=0.2):
-    if not isinstance(regions[0], Sequence):
-        regions = [regions]
-    while True:
-        shot = screenshot()
-        res = [is_match_target(shot, target, region, threshold) for region in regions]
-        if False not in res:
-            break
-        if clicking is not None:
-            click(clicking, lapse=interval)
-    if at is True and len(regions) == 1:
-        click(regions[0], 0)
-    elif isinstance(at, Sequence):
-        click(at, 0)
-    time.sleep(lapse)
+            click(clicking, 0)
+        time.sleep(interval)
 
 
 # 直到匹配模板
-def wait_search_template(target: Image.Image, threshold=THR, lapse=0.0):
+def wait_search_template(target: Image.Image, threshold=THR, lapse=0.0, interval=0.2):
     while True:
-        if search_target(screenshot(), target)[0] > threshold:
+        if search_target(screenshot(), target)[0] >= threshold:
+            time.sleep(lapse)
             return
-        time.sleep(lapse)
+        time.sleep(interval)
 
 
 # 搜索目标模板存在匹配的最大值
-# noinspection PyTypeChecker,PyUnresolvedReferences
+# noinspection PyTypeChecker
 def search_target(img: Image.Image, target: Image.Image, mode='cv2'):
     """
-    return the maximum of matched
-    mode ='cv2'(default) to use open-cv(quick), 'sk' to use skimage package(VERY slow)
-    Attention: cv2 use (h,w), but PIL/numpy use (w,h).
+    find the max matched target in img.
+
+    :param img:
+    :param target:
+    :parameter mode: 'cv2'(default) to use open-cv(quick), 'sk' to use skimage package(VERY slow)
+            Attention: cv2 use (h,w), but PIL/numpy use (w,h).
+    :return (max value, left-top pos)
     """
     m1: numpy.ndarray = numpy.array(img.convert('RGB'))
     m2: numpy.ndarray = numpy.array(target.convert('RGB'))
@@ -230,13 +252,24 @@ def search_target(img: Image.Image, target: Image.Image, mode='cv2'):
         return numpy.max(matches), (pos[1][0], pos[0][0])
 
 
-# noinspection PyTypeChecker,PyUnresolvedReferences
-def search_peaks(img: Image.Image, target: Image.Image, column=True, threshold=THR, **kwargs):
+# noinspection PyTypeChecker
+def search_peaks(image: Image.Image, target: Image.Image, column=True, threshold=THR, **kwargs) -> numpy.ndarray:
+    """
+    Find target position in img which contains several targets. For simplicity, `target` and `image` should have
+    the same width or height. Thus it's 1-D search.
+
+    :param image:
+    :param target:
+    :param column: search target in column or in row direction.
+    :param threshold:
+    :param kwargs: extra args for `scipy.signal.find_peaks`
+    :return: offsets of peaks in column/row direction.
+    """
     if column is True:
-        assert img.size[0] == target.size[0], f'must be same width: img {img.size}, target {target.size}.'
+        assert image.size[0] == target.size[0], f'must be same width: img {image.size}, target {target.size}.'
     else:
-        assert img.size[1] == target.size[1], f'must be same height: img {img.size}, target {target.size}.'
-    m1: numpy.ndarray = numpy.array(img.convert('RGB'))
+        assert image.size[1] == target.size[1], f'must be same height: img {image.size}, target {target.size}.'
+    m1: numpy.ndarray = numpy.array(image.convert('RGB'))
     m2: numpy.ndarray = numpy.array(target.convert('RGB'))
     cv_img, cv_target = (cv2.cvtColor(m1, cv2.COLOR_RGB2BGR), cv2.cvtColor(m2, cv2.COLOR_RGB2BGR))
     matches: numpy.ndarray = cv2.matchTemplate(cv_img, cv_target, cv2.TM_CCOEFF_NORMED)

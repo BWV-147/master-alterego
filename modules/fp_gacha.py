@@ -30,8 +30,7 @@ class FpGacha:
 
     def draw(self, num=100):
         """
-        fp_gacha_page, fp_gacha_confirm, fp_gacha_result, fp_bag1_full, fp_bag2_full
-        :param num: times of 10 gacha, 2000fp
+        :param num: times of gacha10(2000fp)
         """
         T = self.T
         LOC = self.LOC
@@ -44,15 +43,15 @@ class FpGacha:
             if loops % 5 == 0:
                 logger.debug(f'fp gacha {loops}/{num}...')
             loops += 1
-            wait_targets(T.fp_gacha_page, [LOC.fp_gacha_logo, LOC.fp_gacha10_button], at=LOC.fp_gacha10_button, lapse=0)
-            res_no = wait_which_target([T.fp_gacha_result, T.fp_bag2_full],
-                                       [LOC.fp_gacha_result_summon, LOC.bag_full_sell_action],
-                                       clicking=LOC.fp_gacha_point, interval=0.01)
-            if res_no == 0:
+            wait_targets(T.fp_gacha_page, [LOC.fp_gacha_logo, LOC.fp_gacha10_button], at=LOC.fp_gacha10_button)
+            page_no = wait_which_target([T.fp_gacha_result, T.fp_bag2_full],
+                                        [LOC.fp_gacha_result_summon, LOC.bag_full_sell_action],
+                                        clicking=LOC.fp_gacha_point, interval=0.01)
+            if page_no == 0:
                 click(LOC.fp_gacha_result_summon)
                 config.count_fp_gacha()
-            elif res_no > 0:
-                logger.info(f'bag {res_no} full, sell or enhance manually.')
+            elif page_no > 0:
+                logger.info(f'bag {page_no} full, sell or enhance manually.')
                 config.log_time = time.time() + config.manual_operation_time
                 raise_alert(loops=1)
                 wait_targets(T.fp_gacha_page, [LOC.fp_gacha_logo, LOC.fp_gacha10_button])

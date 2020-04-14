@@ -6,7 +6,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import formataddr
 # noinspection PyUnresolvedReferences
-from typing import List, Tuple, Union, Dict, Callable, Sequence
+from typing import List, Tuple, Union, Dict, Callable, Sequence, Optional
 
 from util.my_logger import *
 

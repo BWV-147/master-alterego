@@ -39,7 +39,7 @@ class Gacha:
     def draw(self, num=100):
         T = self.T
         LOC = self.LOC
-        wait_which_target(T.gacha_initial, LOC.gacha_tab)
+        wait_targets(T.gacha_initial, LOC.gacha_tab)
         logger.info('gacha: starting...')
         loops = 0
         reset_i = 0
@@ -49,43 +49,44 @@ class Gacha:
             for _ in range(10):
                 click(LOC.gacha_point, lapse=0.05)
             shot = screenshot()
-            if is_match_target(shot, T.gacha_empty, LOC.gacha_empty) and \
-                    not is_match_target(shot, T.gacha_empty, LOC.gacha_reset_action):
+            if match_targets(shot, T.gacha_empty, LOC.gacha_empty) and \
+                    not match_targets(shot, T.gacha_empty, LOC.gacha_reset_action):
                 logger.warning('no ticket left!')
                 config.mark_task_finish()
                 return
-            if is_match_target(shot, T.gacha_empty, LOC.gacha_reset_action):
+            if match_targets(shot, T.gacha_empty, LOC.gacha_reset_action):
                 click(LOC.gacha_reset_action)
                 config.count_gacha()
                 reset_i += 1
                 logger.info(f'reset {reset_i}/{num} times(total {config.gacha.finished}).')
-                wait_which_target(T.gacha_reset_confirm, LOC.gacha_reset_confirm, at=True)
-                wait_which_target(T.gacha_reset_finish, LOC.gacha_reset_finish, at=True)
-                wait_which_target(T.gacha_initial, LOC.gacha_10_initial)
+                wait_targets(T.gacha_reset_confirm, LOC.gacha_reset_confirm, at=0)
+                wait_targets(T.gacha_reset_finish, LOC.gacha_reset_finish, at=0)
+                wait_targets(T.gacha_initial, LOC.gacha_10_initial)
                 if reset_i >= num:
                     logger.info(f'All {num} gacha finished.')
                     config.mark_task_finish()
                     return
-            elif is_match_target(shot, T.mailbox_full_alert, LOC.mailbox_full_confirm):
+            elif match_targets(shot, T.mailbox_full_alert, LOC.mailbox_full_confirm):
                 click(LOC.mailbox_full_confirm)
                 logger.info('mailbox full.')
-                wait_which_target(T.mailbox_unselected1, LOC.mailbox_get_all_action)
+                wait_targets(T.mailbox_unselected1, LOC.mailbox_get_all_action)
                 self.clean(config.gacha.clean_num)
-                wait_which_target(T.gacha_initial, LOC.gacha_tab)
-                wait_which_target(T.gacha_initial, LOC.gacha_10_initial, clicking=LOC.gacha_tab)
+                wait_targets(T.gacha_initial, LOC.gacha_tab)
+                wait_targets(T.gacha_initial, LOC.gacha_10_initial, clicking=LOC.gacha_tab)
                 logger.info('already back to gacha.')
 
     def clean(self, num: int = 100):
         """
         Pay attention if cleaning before mailbox is full.
-        :param num: max item num to get out from mailbox, if <0: manual mode. num < (box_max_num - 10 - retained_num)
         TODO: if num = numpy.INF, use get_all_items action.
+
+        :param num: max item num to get out from mailbox, if <0: manual mode. num < (box_max_num - 10 - retained_num)
         """
         T = self.T
         LOC = self.LOC
         logger.info('mailbox: cleaning...')
         print('Make sure the mailbox **FILTER** only shows "Experience Cards"/"Zhong Huo"!')
-        wait_which_target(T.mailbox_unselected1, LOC.mailbox_get_all_action)
+        wait_targets(T.mailbox_unselected1, LOC.mailbox_get_all_action)
         if num < 0:
             logger.warning('please clean mailbox manually and return to gacha page!', NO_LOG_TIME)
             time.sleep(2)
@@ -95,7 +96,7 @@ class Gacha:
         drag_num = config.gacha.clean_drag_times
 
         def _is_match_offset(_shot, template, old_loc, _offset):
-            return is_match_target(_shot.crop(numpy.add(old_loc, [0, _offset, 0, _offset])), template.crop(old_loc))
+            return match_targets(_shot.crop(numpy.add(old_loc, [0, _offset, 0, _offset])), template.crop(old_loc))
 
         no = 0
         skipped_drag_num = 0
@@ -108,7 +109,7 @@ class Gacha:
                 drag_no = 0
                 if skipped_drag_num > MAX_SKIP_NUM:  # not item_checked:
                     logger.debug(f'no item available, stop cleaning.')
-                    wait_which_target(T.mailbox_unselected1, LOC.mailbox_get_all_action)
+                    wait_targets(T.mailbox_unselected1, LOC.mailbox_get_all_action)
                     click(self.LOC.mailbox_back)
                     logger.info('from mailbox back to gacha')
                     return
@@ -154,8 +155,10 @@ class Gacha:
 
     def sell(self, num=100):
         """
+        Back to gacha_initial page finally.
+
         :param num: num<0: manual mode; num=0: don't sell, go back directly; num>0: sell times.
-        :return: back to gacha_initial page
+        :return:
         """
         T = self.T
         LOC = self.LOC
@@ -169,7 +172,7 @@ class Gacha:
         else:
             no = 0
             while True:
-                wait_which_target(T.bag_unselected, LOC.bag_sell_action)
+                wait_targets(T.bag_unselected, LOC.bag_sell_action)
                 if no < num:
                     drag(LOC.bag_select_start, LOC.bag_select_end, duration=1, down_time=1, up_time=4)
                 page_no = wait_which_target([T.bag_selected, T.bag_unselected],
@@ -178,15 +181,15 @@ class Gacha:
                     no += 1
                     logger.info(f'sell: {no} times...')
                     click(LOC.bag_sell_action)
-                    wait_which_target(T.bag_sell_confirm, LOC.bag_sell_confirm, at=True)
-                    wait_which_target(T.bag_sell_finish, LOC.bag_sell_finish, at=True)
+                    wait_targets(T.bag_sell_confirm, LOC.bag_sell_confirm, at=True)
+                    wait_targets(T.bag_sell_finish, LOC.bag_sell_finish, at=0)
                 else:
                     logger.info('all sold.')
                     click(LOC.bag_back)
-                    wait_which_target(T.shop, LOC.shop_event_item_exchange, at=True)
-                    wait_which_target(T.shop_event_banner_list,
-                                      LOC.shop_event_banner_list[config.gacha.event_banner_no], at=True)
-                    wait_which_target(T.gacha_initial, LOC.gacha_10_initial, clicking=LOC.gacha_tab)
+                    wait_targets(T.shop, LOC.shop_event_item_exchange, at=0)
+                    wait_targets(T.shop_event_banner_list,
+                                 LOC.shop_event_banner_list[config.gacha.event_banner_no], at=True)
+                    wait_targets(T.gacha_initial, LOC.gacha_10_initial, clicking=LOC.gacha_tab)
                     break
-        wait_which_target(T.gacha_initial, LOC.gacha_10_initial)
+        wait_targets(T.gacha_initial, LOC.gacha_10_initial)
         logger.info('from shop back to gacha')
