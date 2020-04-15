@@ -1,4 +1,4 @@
-from util.autogui import *
+from .autogui import *
 
 
 def supervise_log_time(thread: threading.Thread, time_out=60, mail: bool = None, interval=10, alert_type: bool = None):

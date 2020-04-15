@@ -7,8 +7,8 @@ from scipy.signal import find_peaks
 from skimage.feature import match_template as sk_match_template
 from skimage.metrics import structural_similarity
 
-from util.dataset import *
-from util.gui import *
+from .dataset import *
+from .gui import *
 
 
 def screenshot(region: Sequence = None, filepath: str = None, monitor: int = None) -> Image.Image:

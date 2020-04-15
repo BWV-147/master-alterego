@@ -4,7 +4,7 @@ Coordination: using PIL coordination, (x,y), (left,top,right,bottom), e.g. (0,0,
 
 from PIL import Image
 
-from util.base import *
+from .base import *
 
 THR = 0.85  # default threshold
 
@@ -223,6 +223,7 @@ class ImageTemplates:
     Otherwise, image comparision may not work.
     @DynamicAttrs
     """
+
     def __init__(self, directory: str = None):
         self.directory: str = directory
         self.templates: Dict[str, Image.Image] = {}

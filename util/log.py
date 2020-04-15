@@ -3,7 +3,7 @@ import os
 import time
 from logging.handlers import RotatingFileHandler
 
-from util.config import config
+from .config import config
 
 LOG_TIME = {'log_time': True}
 

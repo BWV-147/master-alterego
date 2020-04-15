@@ -10,8 +10,8 @@ if 'PYGAME_HIDE_SUPPORT_PROMPT' not in os.environ:
 import pygame
 from mss import mss
 
-from util.base import *
-from util.config import config
+from .base import *
+from .config import config
 
 
 def check_sys_admin(admin=True):

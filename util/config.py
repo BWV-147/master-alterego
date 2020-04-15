@@ -122,7 +122,7 @@ class Config(_BaseConfig):
 
     def kill(self):
         if self.running_thread is not None:
-            from util.supervisor import kill_thread
+            from .supervisor import kill_thread
             kill_thread(self.running_thread)
 
 

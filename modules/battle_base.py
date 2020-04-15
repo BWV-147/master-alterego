@@ -1,8 +1,8 @@
 # noinspection PyPackageRequirements
 from goto import with_goto
 
-from modules.master import *
 from util.supervisor import supervise_log_time
+from .master import *
 
 
 class BattleBase:

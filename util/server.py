@@ -17,7 +17,7 @@ sys.path.append(project_dir)
 print(f'cwd: {os.getcwd()}\n')
 
 # change cwd before import custom packages
-from util.autogui import screenshot
+from .autogui import screenshot
 
 app = Flask(__name__, static_folder=os.path.join(project_dir, 'img'), static_url_path='/static')
 

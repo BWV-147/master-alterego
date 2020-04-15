@@ -11,7 +11,7 @@ from typing import List, Tuple, Union, Dict, Callable, Sequence, Optional
 
 import numpy
 
-from util.log import *
+from .log import *
 
 
 class ArgParser:
@@ -62,7 +62,7 @@ def get_center_coord(xy: Sequence):
 
 
 def send_mail(body, subject=None, receiver=None, attach_shot=True):
-    from util.autogui import screenshot
+    from .autogui import screenshot
     # check email params
     if receiver is None:
         receiver = config.receiver
