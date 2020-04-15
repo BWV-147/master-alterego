@@ -108,15 +108,19 @@ class BattleBase:
         config.mark_task_finish()
         return
 
-    def start(self, supervise=True, conf=None):
+    def start(self, supervise=True, conf=None, force_jump=False):
         """
         Start battle.
 
         :param supervise: if True, start battle in child thread, else directly.
         :param conf: config filename, default data/config.json.
+        :param force_jump: if True, set True for config.battle.jump_battle, do nothing if False.
+                            Just a convenient way to jump other then edit config file.
         :return:
         """
         self.pre_process(conf)
+        if force_jump:
+            config.battle.jump_battle = True
         logger.info('starting battle...', extra=LOG_TIME)
         time.sleep(2)
         battle_func = getattr(self, config.battle.battle_func)

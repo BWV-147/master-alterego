@@ -239,7 +239,7 @@ class Master:
                     time.sleep(0.2)
                 else:
                     click(self.LOC.support_class_icons[icon], 0.5)
-                    logger.debug(f'switch support class to No.{icon}.', extra=LOG_TIME)
+                    logger.debug(f'switch support class to No.{icon}.')
                 move_to(LOC.support_scrollbar_start)
                 if match_targets(screenshot(), T.support, LOC.support_scrollbar_head, 0.8) \
                         and numpy.mean(T.support.getpixel(get_center_coord(LOC.support_scrollbar_head))) > 200:

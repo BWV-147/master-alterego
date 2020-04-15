@@ -25,7 +25,7 @@ class FreeBattle(BattleBase):
 
         master.quest_name = 'A-Charlotte'
         names = master.members = ['旧剑', '豆爸', '孔明']
-        master.set_card_weight([names, [3, 1, 1.1]])
+        master.set_card_weight([names, [3, 1, 1.09]])
 
         # pre-processing: e.g. set templates, only once
         if pre_process:
@@ -104,7 +104,7 @@ class FreeBattle(BattleBase):
         return
 
     @with_goto
-    def jp_charlotte(self, pre_process=False):
+    def j_charlotte(self, pre_process=False):
         """
         lily(80NP)-黑C(80NP)-孔明support-X-X-X
         """
@@ -112,14 +112,14 @@ class FreeBattle(BattleBase):
         T = master.T
         LOC = master.LOC
 
-        master.quest_name = 'JP-Charlotte'
+        master.quest_name = 'J-Charlotte'
         names = master.members = ['Lily', '黑C', '孔明']
         master.set_card_weight([names, [3, 1, 1.1]])
 
         # pre-processing: e.g. set templates, only once
         if pre_process:
             logger.info(f'pre-process for {master.quest_name}...')
-            T.read_templates('img/battles/jp-charlotte/')
+            T.read_templates('img/battles/j-charlotte/')
 
             # LOC.relocate((0, 0, 1920 - 1, 1080 - 1))
 

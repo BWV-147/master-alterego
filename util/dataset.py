@@ -9,12 +9,74 @@ from util.base import *
 THR = 0.85  # default threshold
 
 
+class _Regions:
+    """
+    Base class to store region(length 4) or point(length 2) data at default screen size 1920*1080.
+    Attributes(except width and height are int value) must be the assembly of point and region.
+    """
+    width = 1920
+    height = 1080
+    box = (0, 0, width, height)
+
+    # for those regions differ in cn and jp version, use two private vars and getter
+    # don't use double underline "__" as prefix for attribute name, otherwise it will be ignored.
+    _test_cn = (0, 0, 100, 100)
+    _test_jp = (0, 0, 90, 90)
+
+    @property
+    def test(self):
+        return self._test_jp if config.is_jp else self._test_cn
+
+    @staticmethod
+    def relocate_one(region, new: Sequence, old: Sequence = (0, 0, 1919, 1079)):
+        assert isinstance(region, Sequence), f'region should be Sequence: {region}'
+        if not region:  # empty
+            return region
+        elif isinstance(region[0], Sequence):
+            return tuple([Regions.relocate_one(r, new, old) for r in region])
+        elif isinstance(region[0], (int, float)):
+            length = len(region)
+            assert length % 2 == 0, f'region length must be 2(point) or 4(rect): {region}'
+            if length > 4:
+                print(f'warning: more than 4 elements: {region}')
+            out = []
+            for i in range(length // 2):
+                x, y = region[i * 2:i * 2 + 2]
+                x2 = (x - old[0]) / (old[2] - old[0]) * (new[2] - new[0]) + new[0]
+                y2 = (y - old[1]) / (old[3] - old[1]) * (new[3] - new[1]) + new[1]
+                # (x,y) coordinates: in PIL it will be round then int.
+                out.append(int(round(x2)))
+                out.append(int(round(y2)))
+            return tuple(out)
+        else:
+            raise ValueError(f'elements must be numbers: {region}')
+
+    def relocate(self, box: Sequence):
+        """
+        Recursively resize regions of original class attributes not `self`.
+
+        :param box: new region located in screenshot, (x0,y0,x1,y1): 0 <= x0 < x1 < width, 0 <= y0 < y1 < height.
+                     old box always use `self.__class__.box`
+        """
+        assert len(box) == 4, f'box must be length 4: {box}'
+        self.width = int(box[2] - box[0])
+        self.height = int(box[3] - box[1])
+        for key in dir(self.__class__):
+            attr = getattr(self.__class__, key)
+            if not key.startswith('__') and isinstance(attr, Sequence):
+                setattr(self, key, self.relocate_one(attr, box, self.__class__.box))
+
+
 # database: regions & saved screenshot
-class Regions:
+class Regions(_Regions):
     """
-    Store region(length 4) or point(length 2) data at default screensize 1920*1080.
-    Properties could be a region/point or a list(1 or multi dimension) of regions/points
+    Store region(length 4) or point(length 2) data at screensize 1920*1080.
     """
+    # only width and height are standalone int, others are Sequence
+    width = 1920
+    height = 1080
+    box = (0, 0, width, height)  # left top right bottom
+
     # common, or for supervisor
     net_error = ((599, 814, 720, 872), (1138, 813, 1378, 876))
     safe_area = (1400, 40)
@@ -154,52 +216,16 @@ class Regions:
     fp_gacha_confirm = (1205, 819, 1300, 868)
     fp_gacha_result_summon = (1096, 980, 1200, 1037)
 
-    width = 1920
-    height = 1080
-    size = (0, 0, width - 1, height - 1)  # left top right bottom
-
-    def relocate(self, region):
-        """
-        Recursively resize regions. The default size is 1920*1080: region=(0,0,1920-1,1080-1)
-        :param region: region located in screen, (x0,y0,x1,y1): 0 <= x0 < x1 < width, 0 <= y0 < y1 < height
-        :return:
-        """
-        assert len(region) == 4, region
-        for key, value in Regions.__dict__.items():
-            # at most 3 layers
-            if not key.startswith('__') and isinstance(value, (int, list, tuple)):
-                # print(key, value)
-                self.__dict__[key] = Regions.iter_relocate(value, region, Regions.size)
-
-    @staticmethod
-    def iter_relocate(pt, new, old):
-        if isinstance(pt, (tuple, list)):
-            if isinstance(pt[0], int):
-                assert len(pt) % 2 == 0, pt
-                oo = []
-                for i, v in enumerate(pt):
-                    ii = i % 2
-                    oo.append(int(
-                        (v - old[ii]) / (old[2 + ii] - old[ii]) * (new[2 + ii] - new[ii]) + new[ii]
-                    ))
-                    # oo.append(int(region[ii] + (region[ii + 2] - region[ii]) / origin[ii] * o[i]))
-                return oo
-            else:
-                return [Regions.iter_relocate(k, new, old) for k in pt]
-        else:
-            print(f'skip key(type:{type(pt)}) for resize')
-
-    def gen_empty_img(self, color=(255, 0, 0)):
-        return Image.new('RGB', (self.width, self.height), color)
-
 
 class ImageTemplates:
-    directory: str
-    templates: Dict[str, Image.Image]
-
+    """
+    Store loaded template images. Image file(*.png) should be screenshots token by PIL or mss module.
+    Otherwise, image comparision may not work.
+    @DynamicAttrs
+    """
     def __init__(self, directory: str = None):
-        self.directory = directory
-        self.templates = {}
+        self.directory: str = directory
+        self.templates: Dict[str, Image.Image] = {}
         if directory is not None:
             self.read_templates(directory)
 
@@ -214,19 +240,27 @@ class ImageTemplates:
             self.templates[key] = Image.open(filepath)
         self.directory = directory
 
-    def get(self, attr, k=None):
-        # type:(Union[str, Sequence[str]],Image.Image)-> Union[Image.Image, Sequence[Image.Image], Dict]
-        if attr is None:
-            return self.templates.copy()
-        elif isinstance(attr, (list, tuple)):
-            return [self.templates[k] for k in attr]
-        elif attr in self.templates:
-            return self.templates[attr]
-        return k
-
     def __repr__(self):
         return f'{self.__class__.__name__}(dir="{self.directory}", templates={self.templates})'
 
+    def __getattr__(self, item):
+        """if @property item is not defined, then search item in self.templates"""
+        if item in self.templates:
+            return self.templates[item]
+        else:
+            raise AttributeError(f'{item} for class {self.__class__.__name__}')
+
+    def get(self, item, k=None):
+        # type:(Union[str, Sequence[str]],Image.Image)-> Union[Image.Image, Sequence[Image.Image]]
+        """get one item or a list of items"""
+        if isinstance(item, str) and item in self.templates:
+            return self.templates[item]
+        elif isinstance(item, (list, tuple)):
+            return [self.templates[i] for i in item]
+        else:
+            return k
+
+    # add these "property" to make IDE aware of these frequently-used templates
     @property
     def net_error(self):
         return self.get('net_error')
@@ -413,7 +447,7 @@ class ImageTemplates:
 # %% local test functions
 def __gen_getter(path='./'):
     """
-    generate getters for _ImageTemplates
+    generate getters for `ImgTemplates`
     """
     methods = []
 

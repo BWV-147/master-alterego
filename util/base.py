@@ -1,11 +1,11 @@
 import argparse
+import email.utils
 import smtplib
 import socket
 import threading
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from email.utils import formataddr
 # noinspection PyUnresolvedReferences
 from typing import List, Tuple, Union, Dict, Callable, Sequence, Optional
 
@@ -86,13 +86,13 @@ def send_mail(body, subject=None, receiver=None, attach_shot=True):
 
     # body
     body = f'<b>{body}</b><br><br>\n' \
-           f'<hr><b>Computer name:</b><br>{socket.getfqdn(socket.gethostname())}<br>\n'
+           f'<hr><b>Computer name:</b><br>{socket.getfqdn(socket.gethostname())}<br><hr>\n'
 
     # body.screenshot
     crash_fp = 'img/crash.jpg'
     if attach_shot:
-        body += '<hr><b>Screenshot before shutdown</b>:<br>\n' \
-                '<img src="cid:screenshot" style="width: 100%; max-width: 720px;"><br>\n'
+        body += '<b>Screenshot before shutdown</b>:<br>\n' \
+                '<img src="cid:screenshot" style="width: 100%; max-width: 720px;"><br><hr>\n'
         shot = screenshot()
         shot.save(crash_fp + '.png')  # save a backup of origin screenshot
         # shrink the image/email size
@@ -107,10 +107,11 @@ def send_mail(body, subject=None, receiver=None, attach_shot=True):
         with open(config.log_file, encoding='utf8') as fd:
             lines = fd.readlines()
             n = len(lines)
-            recent_records = ['<p>' + x.rstrip() + '</p>\n' for x in lines[-min(10, n):]]
-            body += f'<hr><b>Recent 10 logs ({config.log_file}):</b><br>\n' \
-                    '<style>.logs { font-family: "Consolas" } .logs p { margin: 0.3em auto; }</style>\n' \
-                    f'<span class="logs">\n{"".join(recent_records)}</span>'
+            # "<" should be replaced with escape characters even in <pre/>
+            recent_records = ['<pre>' + x.rstrip().replace('<', '&lt;') + '</pre>\n' for x in lines[-min(20, n):]]
+            body += f'<b>Recent 10 logs ({config.log_file}):</b><br>\n' \
+                    '<style>.logs pre { margin: 0.3em auto; font-family: "Consolas"; }</style>\n' \
+                    f'<span class="logs">\n{"".join(recent_records)}</span><hr>'
 
     print(f'Ready to send email:\n'
           f'=============== Email ===============\n'
@@ -121,8 +122,9 @@ def send_mail(body, subject=None, receiver=None, attach_shot=True):
 
     # make email
     mail['Subject'] = subject
-    mail['From'] = formataddr((config.sender_name, config.sender))
+    mail['From'] = email.utils.formataddr((config.sender_name, config.sender))
     mail['To'] = receiver
+    mail['Date'] = email.utils.formatdate(localtime=True)
     mail.attach(MIMEText(body, 'html', 'utf-8'))
 
     # send email, retry 5 times at most if failed.
