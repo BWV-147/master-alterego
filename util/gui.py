@@ -37,14 +37,14 @@ def check_sys_admin(admin=True):
     elif sys.platform == 'darwin':
         print('Allow the app(PyCharm/Terminal/...) to control your computer '
               'in "System Preferences/Security & Privacy/Accessibility",\n'
-              'or mouse events will take no effects!')
+              'or mouse events will take no effects!', file=sys.stderr)
         pass
     else:
         raise EnvironmentError(f'Unsupported system: {sys.platform}. please run in windows/macOS.')
-    sct = mss()
-    print('** Monitors information **')
-    pprint.pprint(sct.monitors)
-    print('WARNING: make sure "config.monitor/offset" is set properly')
+    with mss() as sct:
+        print('** Monitors information **')
+        pprint.pprint(sct.monitors)
+        print('WARNING: make sure "config.monitor/offset" is set properly')
 
 
 # %% mouse events
@@ -140,8 +140,8 @@ def raise_alert(alert_type=None, loops=5, wait=True):
     if alert_type is None:
         alert_type = config.alert_type
     if alert_type is True:
-        logger.info(f'alert: beep for {loops} loops.')
+        logger.debug(f'alert: beep for {loops} loops.')
         beep(2, 1, loops)
     elif isinstance(alert_type, str):
-        logger.info(f'alert: play music for {loops} loops.')
+        logger.debug(f'alert: play music for {loops} loops.')
         play_music(alert_type, loops, wait)

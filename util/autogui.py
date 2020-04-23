@@ -13,7 +13,9 @@ from .gui import *
 
 def screenshot(region: Sequence = None, filepath: str = None, monitor: int = None) -> Image.Image:
     """
-    take screenshot of multi-monitors. set python.exe and pythonw.exe high dpi first!(see README.md)
+    Take screenshot of multi-monitors.
+
+    **MUST** check_sys_admin first to set high dpi awareness, or mss will raise error.
 
     :param region: region inside monitor
     :param filepath: if not None, save to `filepath` then return
@@ -25,21 +27,21 @@ def screenshot(region: Sequence = None, filepath: str = None, monitor: int = Non
     _image = None
     size = (1920, 1080)
     with config.screenshot_lock:
-        try:
-            with mss() as sct:
+        with mss() as sct:
+            try:
                 mon = sct.monitors[monitor]
                 size = (mon['width'], mon['height'])
                 shot = sct.grab(mon)
                 _image = Image.frombytes('RGB', size, shot.rgb).crop(region)
-        except Exception as e:
-            logger.error(f'Fail to grab screenshot using mss(). Error:\n{e}')
-            if tuple(config.offset) == (0, 0):
-                # ImageGrab can only grab the main screen
-                try:
-                    _image = ImageGrab.grab()
-                except Exception as e:
-                    logger.error(f'Fail to grab screenshot using ImageGrad. Error:\n{e}')
-            logger.error(traceback.format_exc())
+            except Exception as e:
+                logger.error(f'Fail to grab screenshot using mss(). Error:\n{e}')
+                if tuple(config.offset) == (0, 0):
+                    # ImageGrab can only grab the main screen
+                    try:
+                        _image = ImageGrab.grab()
+                    except Exception as e:
+                        logger.error(f'Fail to grab screenshot using ImageGrad. Error:\n{e}')
+                logger.error(traceback.format_exc())
     if _image is None:
         # grab failed, return a empty image with single color
         _image = Image.new('RGB', size, (0, 255, 255)).crop(region)

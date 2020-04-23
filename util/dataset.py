@@ -214,7 +214,7 @@ class Regions(_Regions):
     fp_gacha10_button = (1111, 800, 1374, 886)
     fp_gacha_point = (1240, 864)
     fp_gacha_confirm = (1205, 819, 1300, 868)
-    fp_gacha_result_summon = (1096, 980, 1200, 1037)
+    fp_gacha_result_summon = (987, 983, 1302, 1035)  # gacha10again, origin is(1096, 980, 1200, 1037)
 
 
 class ImageTemplates:

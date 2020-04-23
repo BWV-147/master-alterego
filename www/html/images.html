@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title>Images - Inspector</title>
+
+    <!-- Bootstrap core CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet"/>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+
+    <!-- Favicons -->
+    <link rel="icon"
+          href="https://img.icons8.com/ultraviolet/40/000000/binoculars.png"
+          type="image/png">
+
+    <meta name="theme-color" content="#563d7c">
+
+    <!-- Custom styles for this template -->
+    <!--suppress HtmlUnknownTarget -->
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/script.js"></script>
+</head>
+<body>
+<div class="nav-placeholder"></div>
+<main role="main">
+    <div class="container" style="padding-top: 4rem">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="#">root</a></li>
+                <!--                    <li class="breadcrumb-item active" aria-current="page">Data</li>-->
+            </ol>
+        </nav>
+        <div class="list-group" id="dirTree">
+
+        </div>
+        <!-- Modal -->
+        <div class="modal fade bd-example-modal-xl" id="imageModal" tabindex="-1" role="dialog"
+             aria-labelledby="imageModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="imageModalLabel">Modal title</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <img src="" alt="image" style="max-width: 100%">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <hr>
+    </div>
+</main>
+<script>
+  window.dirTreeData = {}
+
+  $.getJSON('/getImageFolderTree', function (data) {
+    window.dirTreeData = data
+    // console.log(data)
+    let _hash = window.location.hash
+    if (_hash.startsWith('#'))
+      _hash = _hash.slice(1)
+    jumpToDirectory(data.hasOwnProperty(_hash) ? _hash : 'img')
+  })
+</script>
+<div class="footer-placeholder"></div>
+</body>
+</html>

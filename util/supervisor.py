@@ -29,7 +29,7 @@ def supervise_log_time(thread: threading.Thread, time_out=60, mail: bool = None,
         # case 2: thread finished normally - stop supervision
         if config.task_finished:
             # thread finished: all battles finished(thread exit normally)
-            logger.debug(f'Thread-{thread.ident}({thread.name}) finished. Stop supervising.')
+            logger.info(f'Thread-{thread.ident}({thread.name}) finished. Stop supervising.')
             if mail:
                 send_mail(f'[{thread.name}]Task finished.')
             # make sure thread is stopped
@@ -86,9 +86,9 @@ def supervise_log_time(thread: threading.Thread, time_out=60, mail: bool = None,
 # inspired by https://github.com/mosquito/crew/blob/master/crew/worker/thread.py
 def kill_thread(thread: threading.Thread):
     friendly_name = f'Thread-{thread.ident}({thread.name})'
-    logger.debug(f'Ready to kill {"*self* " if thread == threading.current_thread() else ""}{friendly_name}')
+    logger.info(f'Ready to kill {"*self* " if thread == threading.current_thread() else ""}{friendly_name}')
     if not thread.is_alive():
-        logger.warning(f'{friendly_name} is already not alive!')
+        logger.info(f'{friendly_name} is already not alive!')
         return
 
     res = ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(thread.ident), ctypes.py_object(SystemExit))
@@ -100,4 +100,4 @@ def kill_thread(thread: threading.Thread):
 
     while thread.is_alive():
         time.sleep(0.01)
-    logger.critical(f'{friendly_name} have been killed!')
+    logger.info(f'{friendly_name} have been killed!')

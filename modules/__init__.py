@@ -3,6 +3,7 @@ from . import drops_stat
 from . import fp_gacha
 from . import gacha
 from . import master
+from . import server
 
 __all__ = [
     'battle_base',
@@ -10,4 +11,5 @@ __all__ = [
     'fp_gacha',
     'gacha',
     'master',
+    'server'
 ]

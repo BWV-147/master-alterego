@@ -1,0 +1,65 @@
+/***************** code pre ***************/
+pre.codes {
+    background: #eff0f1;
+    border-radius: 3px;
+    border-left: 0 solid #516363;
+    width: 100%;
+    margin: 1rem 0;
+    white-space: pre-wrap;
+    padding: 20px 20px 20px 50px;
+    color: #c7d3de;
+    position: relative;
+    counter-reset: step;
+}
+
+pre.codes code {
+    line-height: 1.4em;
+    font-size: 14px;
+    color: #2f3337;
+    font-family: Consolas, "Microsoft YaHei UI", monospace;
+}
+
+pre.codes code::before {
+    content: counter(step) '.';
+    counter-increment: step;
+    color: #516363;
+    line-height: 1.4em;
+    font-size: 14px;
+    position: absolute;
+    left: 0;
+    width: 35px;
+    text-align: right;
+}
+
+/*************** end code pre *************/
+
+/**************** accordion ***************/
+/** add arrow at the right of title **/
+.breadcrumb::before{
+    content: '>';
+    color: grey;
+    width: 1.5em;
+}
+.card-title::before {
+    content: "\f107";
+    color: #333;
+    right: 1rem;
+    position: absolute;
+    font-family: "FontAwesome", serif;
+    /*font-size: large;*/
+    font-weight: bold;
+}
+
+.card-title[aria-expanded="true"]::before {
+    content: "\f106";
+}
+
+/************** end accordion *************/
+
+.unselectable {
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}

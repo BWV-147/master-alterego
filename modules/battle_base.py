@@ -68,7 +68,10 @@ class BattleBase:
                         f' (total {config.battle.finished})', extra=LOG_TIME)
             rewards = screenshot()
             craft_dropped = match_targets(rewards, T.rewards, LOC.finish_craft)
-            png_fn = f'img/_drops/rewards-{self.master.quest_name}-{time.strftime("%m%d-%H%M")}'
+            drop_dir = f'img/_drops/{self.master.quest_name}'
+            if not os.path.exists(drop_dir):
+                os.makedirs(drop_dir)
+            png_fn = os.path.join(drop_dir, f'rewards-{self.master.quest_name}-{time.strftime("%m%d-%H%M")}')
             if craft_dropped and config.battle.check_drop:
                 config.count_battle(True)
                 logger.warning(f'{config.battle.craft_num}th craft dropped!!!')
@@ -184,13 +187,14 @@ class BattleBase:
     @with_goto
     def battle_template(self, pre_process=False):
         """
+        Template of a battle.
         旧剑(75NP>=60NP)-豆爸50NP-孔明support-X-X-X
         """
         master = self.master
         T = master.T
         LOC = master.LOC
 
-        master.quest_name = 'A-Charlotte'
+        master.quest_name = 'A-Charlotte'  # should be a valid folder name
         names = master.members = ['旧剑', '豆爸', '孔明']
         master.set_card_weight(dict([(svt, [3, 1, 1.1][i]) for i, svt in enumerate(names)]))
 

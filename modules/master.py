@@ -158,7 +158,7 @@ class Master:
         if config.is_jp is True and not callable(config.battle.login_handler):
             t = time.localtime()
             if t.tm_hour == 2 and t.tm_min > 45:
-                logger.info('Around 3am, stop eating apples and battles.')
+                logger.info('Around 3am, stop eating apples and battles for jp server.')
                 config.mark_task_finish()
                 config.kill()
         for apple in apples:
@@ -186,7 +186,7 @@ class Master:
                         if page_no == 0:
                             if not eaten:
                                 str_apple = ['Colorful', 'Gold', 'Silver', 'Cropper'][apple]
-                                logger.debug(f"eating {str_apple} apple...", extra=LOG_TIME)
+                                logger.info(f"eating {str_apple} apple...", extra=LOG_TIME)
                             eaten = True
                             click(self.LOC.apples[apple], lapse=1)
                         elif page_no == 1:
@@ -212,10 +212,10 @@ class Master:
         T = self.T
         LOC = self.LOC
         logger.debug('choosing support...', extra=LOG_TIME)
-        support_page = self.T.support if img is None else img
+        support_page = T.support if img is None else img
         if switch_classes is None:
             switch_classes = (-1,)
-        wait_targets(support_page, self.LOC.support_refresh)
+        wait_targets(support_page, LOC.support_refresh)
         while numpy.mean(get_mean_color(screenshot(), LOC.loading_line)) > 200:
             time.sleep(0.2)
         refresh_times = 0
@@ -233,12 +233,13 @@ class Master:
         ]
 
         while True:
-            wait_targets(support_page, self.LOC.support_class_affinity)
+            wait_targets(support_page, LOC.support_class_affinity)
             for icon in switch_classes:
                 if icon == -1:
                     time.sleep(0.2)
                 else:
-                    click(self.LOC.support_class_icons[icon], 0.5)
+                    click(LOC.support_class_icons[icon], 0.1)
+                    click(LOC.support_scrollbar_head, 0.1)
                     logger.debug(f'switch support class to No.{icon}.')
                 move_to(LOC.support_scrollbar_start)
                 if match_targets(screenshot(), T.support, LOC.support_scrollbar_head, 0.8) \
@@ -264,13 +265,13 @@ class Master:
                         click((LOC.width / 2, LOC.support_team_icon_column[1] + y_peak))
                         logger.debug('found support.', extra=LOG_TIME)
                         while True:
-                            page_no = wait_which_target([self.T.team, self.T.wave1a],
-                                                        [self.LOC.team_cloth, self.LOC.master_skill])
+                            page_no = wait_which_target([T.team, T.wave1a],
+                                                        [LOC.team_cloth, LOC.master_skill])
                             time.sleep(0.3)
                             if page_no == 0:
                                 logger.debug('entering battle', extra=LOG_TIME)
-                                click(self.LOC.team_start_action)
-                                click(self.LOC.team_start_action)
+                                click(LOC.team_start_action)
+                                click(LOC.team_start_action)
                             elif page_no == 1:
                                 return
                     if dy_mouse != 0:
@@ -278,12 +279,13 @@ class Master:
                         time.sleep(0.2)
             # refresh support
             refresh_times += 1
-            logger.debug(f'refresh support {refresh_times} times', extra=LOG_TIME)
-            if refresh_times % 40 == 0:
+            logger.debug(f'refresh support {refresh_times} times...', extra=LOG_TIME)
+            if config.mail and refresh_times % 20 == 0:
                 send_mail(body=f'refresh support more than {refresh_times} times.')
-            wait_targets(support_page, self.LOC.support_refresh, at=0)
-            wait_targets(self.T.support_confirm, self.LOC.support_confirm_title, clicking=self.LOC.support_refresh)
-            click(self.LOC.support_refresh_confirm, lapse=1)
+            wait_targets(support_page, LOC.support_refresh, at=0)
+            wait_targets(T.support_confirm, LOC.support_confirm_title, clicking=LOC.support_refresh)
+            click(LOC.support_refresh_confirm)
+            wait_targets(support_page, LOC.support_class_affinity, lapse=0.2)
 
     def svt_skill_full(self, before, after, who, skill, friend=None, enemy=None):
         # type: (Image.Image,Image.Image,int,int,int,int)->Master
@@ -303,7 +305,7 @@ class Master:
         assert who in valid1 and skill in valid1 and friend in valid2 and enemy in valid2, (who, skill, friend, enemy)
         s = f' to friend {self.members[friend - 1]}' if friend \
             else f' to enemy {enemy}' if enemy else ''
-        logger.debug(f'Servant skill: {self.members[who - 1]}-{skill}{s}.', extra=LOG_TIME)
+        logger.info(f'Servant skill: {self.members[who - 1]}-{skill}{s}.', extra=LOG_TIME)
 
         # start
         if enemy is not None:
@@ -358,11 +360,10 @@ class Master:
             assert order_change_img is not None
         s = f' to friend {self.members[friend - 1]}' if friend else f' to enemy {enemy}' if enemy \
             else f' order change {[self.members[i - 1] for i in order_change]}' if order_change else ''
-        logger.debug(f'Master skill {skill}{s}.', extra=LOG_TIME)
+        logger.info(f'Master skill {skill}{s}.', extra=LOG_TIME)
         if order_change:
-            _temp = self.members[order_change[1] - 1]
-            self.members[order_change[1] - 1] = self.members[order_change[0] - 1]
-            self.members[order_change[0] - 1] = _temp
+            a, b = order_change[0] - 1, order_change[1] - 1
+            self.members[a], self.members[b] = self.members[b], self.members[a]
             logger.debug(f'After order change: {self.members}', extra=LOG_TIME)
 
         before = self.wave_a
@@ -418,7 +419,7 @@ class Master:
         :param no_play_card: if True, return chosen_cards but no to play cards automatically.
         :return: Optional, chosen_cards
         """
-        logger.debug(f'Auto attack: nps={nps}, mode={mode}', extra=LOG_TIME)
+        logger.info(f'Auto attack: nps={nps}, mode={mode}', extra=LOG_TIME)
         t0 = time.time()
         while not match_targets(screenshot(), self.T.cards1, self.LOC.cards_back):
             click(self.LOC.attack, lapse=0.3)  # self.LOC.attack should be not covered by self.LOC.cards_back
@@ -430,8 +431,8 @@ class Master:
                 if time.time() - t0 > 5 and allow_unknown or self.card_templates == {}:
                     # if lapse>3s, maybe someone has been died
                     chosen_cards = self.choose_cards(cards, np_cards, nps, mode=mode)
-                    logger.debug(f'unrecognized: {[f"{self.str_cards(c)}" for c in cards.values()]},'
-                                 f' nps={self.str_cards(np_cards)}', extra=LOG_TIME)
+                    logger.info(f'unrecognized: {[f"{self.str_cards(c)}" for c in cards.values()]},'
+                                f' nps={self.str_cards(np_cards)}', extra=LOG_TIME)
                     break
                 else:
                     continue
@@ -455,11 +456,11 @@ class Master:
             if match_targets(shot, target, regions):
                 # this part must before elif part
                 if cur_turn > 0:
-                    logger.debug(f'xjbd total {cur_turn} turns', extra=LOG_TIME)
+                    logger.info(f'xjbd total {cur_turn} turns', extra=LOG_TIME)
                 return turn_cards
             elif match_targets(shot, self.T.wave1a, self.LOC.master_skill):
                 cur_turn += 1
-                logger.debug(f'xjbd: turn {cur_turn}/{turns}.', extra=LOG_TIME)
+                logger.info(f'xjbd: turn {cur_turn}/{turns}.', extra=LOG_TIME)
                 time.sleep(1)
                 chosen_cards = self.auto_attack(mode=mode, nps=nps, allow_unknown=allow_unknown)
                 # self.attack([1, 2, 3])
@@ -470,7 +471,7 @@ class Master:
     # usually assist for methods above
     def attack(self, locs_or_cards: Union[List[Card], List[int]]):
         assert len(locs_or_cards) >= 3, locs_or_cards
-        logger.debug(f'Attack: cards={locs_or_cards}', extra=LOG_TIME)
+        logger.info(f'Attack: cards={locs_or_cards}', extra=LOG_TIME)
         while True:
             click(self.LOC.attack, lapse=0.2)
             if match_targets(screenshot(), self.T.cards1, self.LOC.cards_back):
@@ -499,7 +500,6 @@ class Master:
             max_th = 0
             values = []
             for card, templates in self.card_templates.items():
-                # _svt, _color = key // 10, key % 10
                 if mode == 1 and card.color == Card.NP:
                     continue
                 elif mode == 2 and card.color != Card.NP:
@@ -519,8 +519,6 @@ class Master:
                             base_line = pos[1]
                         max_th = th
                         _matched = Card(card.svt, card.color)
-            # if _matched < 0:
-            #     print(f'max matched value: {max(values):.4f}.')
             return _matched
 
         cards, np_cards = {}, {}
@@ -601,7 +599,7 @@ class Master:
         if isinstance(cards[0], Card) and len(cards) >= 3 and cards[0].svt == cards[1].svt == cards[2].svt:
             cards_str_list.append('Extra')
 
-        logger.debug(f'Played: {cards_str_list}', extra=LOG_TIME)
+        logger.info(f'Played: {cards_str_list}', extra=LOG_TIME)
         locs: List[int] = [c.loc if isinstance(c, Card) else c for c in cards]
         for loc in locs:
             # print(f'click card {loc}')

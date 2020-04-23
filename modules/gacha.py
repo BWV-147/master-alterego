@@ -1,6 +1,8 @@
 from util.autogui import *
 from util.supervisor import supervise_log_time
 
+logger.set_cur_logger('gacha')
+
 
 class Gacha:
     def __init__(self, path=None):

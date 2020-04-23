@@ -38,9 +38,10 @@ class ArgParser:
         if cls._parser is not None:
             return
         cls._parser = argparse.ArgumentParser(conflict_handler='resolve')
-        cls._parser.add_argument('-c', '--config', default='data/config.json', help='config file path.')
+        cls._parser.add_argument('-c', '--config', default='data/config.json',
+                                 help='config file path, default "data/config.json".')
         cls._parser.add_argument('-d', '--disable-supervisor', action='store_true',
-                                 help='disable supervisor (default enabled).')
+                                 help='disable supervisor, default enabled.')
 
 
 def convert_to_list(items):
@@ -138,9 +139,9 @@ def send_mail(body, subject=None, receiver=None, attach_shot=True):
                 server.login(config.sender, config.password)
                 result = server.sendmail(config.sender, receiver, mail.as_string())
                 if result == {}:
-                    logger.warning(f'send email success.')
+                    logger.info(f'send email success.')
                 else:
-                    logger.warning(f'send email failed! Error:\n{result}')
+                    logger.warning(f'send email failed! Result:\n{result}')
                 server.quit()
                 break
             except Exception:
@@ -148,7 +149,7 @@ def send_mail(body, subject=None, receiver=None, attach_shot=True):
                 raise
         except Exception as e:
             logger.warning(f'Error when sending email: {type(e)}\n{e}')
-            logger.info(f'retry sending mail in 5 seconds... ({retry_time}/5 times)')
+            logger.debug(f'retry sending mail in 5 seconds... ({retry_time}/5 times)')
             time.sleep(5)
 
 

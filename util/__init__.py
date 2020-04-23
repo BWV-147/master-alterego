@@ -4,7 +4,6 @@ from . import config
 from . import dataset
 from . import gui
 from . import log
-from . import server
 from . import supervisor
 
 __all__ = [
@@ -14,6 +13,5 @@ __all__ = [
     'dataset',
     'gui',
     'log',
-    'server',
     'supervisor',
 ]

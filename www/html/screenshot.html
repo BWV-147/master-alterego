@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title>Screenshot - Inspector</title>
+
+    <!-- Bootstrap core CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet"/>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+
+    <!-- Favicons -->
+    <link rel="icon"
+          href="https://img.icons8.com/ultraviolet/40/000000/binoculars.png"
+          type="image/png">
+
+    <meta name="theme-color" content="#563d7c">
+
+    <!-- Custom styles for this template -->
+    <!--suppress HtmlUnknownTarget -->
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/script.js"></script>
+</head>
+<body>
+<div class="nav-placeholder"></div>
+<main role="main">
+    <!-- Main jumbotron for a primary marketing message or call to action -->
+    <div class="" style="padding-top: 4rem">
+        <div class="container">
+            <div class="text-center">
+                <div class="btn btn-primary" id="refreshScreenshot">Refresh</div>
+            </div>
+            <div style="padding-top: 5px">
+                <!--suppress HtmlUnknownTarget -->
+                <img src="/getImage?path=screenshot" class="card-img-top" id="screenshot" alt="Screenshot">
+            </div>
+            <hr>
+        </div>
+    </div>
+</main>
+<script>
+  $('#refreshScreenshot').click(function () {
+    $('#screenshot').attr('src', '/getImage?path=screenshot&time=' + new Date().getTime())
+  })
+</script>
+<div class="footer-placeholder"></div>
+</body>
+</html>
