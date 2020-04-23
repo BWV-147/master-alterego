@@ -6,4 +6,3 @@
  - Python 3.7 on Windows
 
 ### TODO
- - log: config.logger

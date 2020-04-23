@@ -18,10 +18,9 @@ import sys
 from PIL import Image
 from flask import Flask, request, Response, redirect, jsonify
 
-from util.autogui import screenshot
+from util.autogui import screenshot, config
 from util.gui import check_sys_admin
 
-check_sys_admin()
 root = os.getcwd()
 filename = os.path.split(os.path.realpath(__file__))[1]
 if root.endswith('modules') and filename == 'server.py':
@@ -98,11 +97,13 @@ def get_image():
 
 
 def run_server(port=8080):
-    app.run(host='0.0.0.0', port=port, debug=False)
+    app.run(host='0.0.0.0', port=port, debug=True)
 
 
 # %%
 if __name__ == '__main__':
+    check_sys_admin()
+    config.load()
     parser = argparse.ArgumentParser()
     parser.add_argument('-p', '--port', default=8080, type=int)
     _port = parser.parse_known_intermixed_args()[0].port

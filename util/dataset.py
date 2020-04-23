@@ -227,6 +227,52 @@ class ImageTemplates:
     def __init__(self, directory: str = None):
         self.directory: str = directory
         self.templates: Dict[str, Image.Image] = {}
+        # ============ battle part ============
+        self.net_error: Optional[Image.Image] = None
+        self.apple_confirm: Optional[Image.Image] = None
+        self.apple_page: Optional[Image.Image] = None
+        self.apply_friend: Optional[Image.Image] = None
+        self.cards1: Optional[Image.Image] = None
+        self.cards2: Optional[Image.Image] = None
+        self.cards3: Optional[Image.Image] = None
+        self.cards4: Optional[Image.Image] = None
+        self.rewards: Optional[Image.Image] = None
+        self.kizuna: Optional[Image.Image] = None
+        self.order_change: Optional[Image.Image] = None
+        self.quest: Optional[Image.Image] = None
+        self.team: Optional[Image.Image] = None
+        self.restart_quest: Optional[Image.Image] = None
+        self.support: Optional[Image.Image] = None
+        self.support_confirm: Optional[Image.Image] = None
+        self.wave1a: Optional[Image.Image] = None
+        self.wave1b: Optional[Image.Image] = None
+        self.wave2a: Optional[Image.Image] = None
+        self.wave2b: Optional[Image.Image] = None
+        self.wave3a: Optional[Image.Image] = None
+        self.wave3b: Optional[Image.Image] = None
+        # ============ gacha part ============
+        self.gacha_initial: Optional[Image.Image] = None
+        self.gacha_empty: Optional[Image.Image] = None
+        self.gacha_reset_confirm: Optional[Image.Image] = None
+        self.gacha_reset_finish: Optional[Image.Image] = None
+        self.mailbox_full_alert: Optional[Image.Image] = None
+        self.mailbox_unselected1: Optional[Image.Image] = None
+        self.mailbox_unselected2: Optional[Image.Image] = None
+        self.mailbox_selected: Optional[Image.Image] = None
+        self.bag_full_alert: Optional[Image.Image] = None
+        self.bag_unselected: Optional[Image.Image] = None
+        self.bag_selected: Optional[Image.Image] = None
+        self.bag_sell_confirm: Optional[Image.Image] = None
+        self.bag_sell_finish: Optional[Image.Image] = None
+        self.shop: Optional[Image.Image] = None
+        self.shop_event_banner_list: Optional[Image.Image] = None
+        # ============ fp gacha part ============
+        self.fp_gacha_page: Optional[Image.Image] = None
+        self.fp_gacha_confirm: Optional[Image.Image] = None
+        self.fp_gacha_result: Optional[Image.Image] = None
+        self.fp_bag1_full: Optional[Image.Image] = None
+        self.fp_bag2_full: Optional[Image.Image] = None
+        # =========== End Props =========== #
         if directory is not None:
             self.read_templates(directory)
 
@@ -239,6 +285,7 @@ class ImageTemplates:
             filepath = os.path.join(directory, filename)
             key = filename[0:len(filename) - 4]
             self.templates[key] = Image.open(filepath)
+            self.__dict__[key] = self.templates[key]
         self.directory = directory
 
     def __repr__(self):
@@ -246,6 +293,7 @@ class ImageTemplates:
 
     def __getattr__(self, item):
         """if @property item is not defined, then search item in self.templates"""
+        # could be removed?
         if item in self.templates:
             return self.templates[item]
         else:
@@ -257,210 +305,7 @@ class ImageTemplates:
         if isinstance(item, str) and item in self.templates:
             return self.templates[item]
         elif isinstance(item, (list, tuple)):
+            # cannot use Sequence instead (list, tuple), str is also Sequence
             return [self.templates[i] for i in item]
         else:
             return k
-
-    # add these "property" to make IDE aware of these frequently-used templates
-    @property
-    def net_error(self):
-        return self.get('net_error')
-
-    # ================ battle ================
-    @property
-    def apple_confirm(self):
-        return self.get('apple_confirm')
-
-    @property
-    def apple_page(self):
-        return self.get('apple_page')
-
-    @property
-    def apply_friend(self):
-        return self.get('apply_friend')
-
-    @property
-    def cards(self):
-        _templates = []
-        for i in range(20):
-            key = f'cards{i + 1}'
-            if key in self.templates:
-                _templates.append(self.templates[key])
-            else:
-                break
-        return _templates
-
-    @property
-    def cards1(self):
-        return self.get('cards1')
-
-    @property
-    def cards2(self):
-        return self.get('cards2')
-
-    @property
-    def cards3(self):
-        return self.get('cards3')
-
-    @property
-    def cards4(self):
-        return self.get('cards4')
-
-    @property
-    def rewards(self):
-        return self.get('rewards')
-
-    @property
-    def kizuna(self):
-        return self.get('kizuna')
-
-    @property
-    def order_change(self):
-        return self.get('order_change')
-
-    @property
-    def quest(self):
-        return self.get('quest')
-
-    @property
-    def team(self):
-        return self.get('team')
-
-    @property
-    def restart_quest(self):
-        return self.get('restart_quest')
-
-    @property
-    def support(self):
-        return self.get('support')
-
-    @property
-    def support_confirm(self):
-        return self.get('support_confirm')
-
-    @property
-    def wave1a(self):
-        return self.get('wave1a')
-
-    @property
-    def wave1b(self):
-        return self.get('wave1b')
-
-    @property
-    def wave2a(self):
-        return self.get('wave2a')
-
-    @property
-    def wave2b(self):
-        return self.get('wave2b')
-
-    @property
-    def wave3a(self):
-        return self.get('wave3a')
-
-    @property
-    def wave3b(self):
-        return self.get('wave3b')
-
-    # ================ gacha ================
-    @property
-    def gacha_initial(self):
-        return self.get('gacha_initial')
-
-    @property
-    def gacha_empty(self):
-        return self.get('gacha_empty')
-
-    @property
-    def gacha_reset_confirm(self):
-        return self.get('gacha_reset_confirm')
-
-    @property
-    def gacha_reset_finish(self):
-        return self.get('gacha_reset_finish')
-
-    @property
-    def mailbox_full_alert(self):
-        return self.get('mailbox_full_alert')
-
-    @property
-    def mailbox_unselected1(self):
-        return self.get('mailbox_unselected1')
-
-    @property
-    def mailbox_unselected2(self):
-        return self.get('mailbox_unselected2')
-
-    @property
-    def mailbox_selected(self):
-        return self.get('mailbox_selected')
-
-    @property
-    def bag_full_alert(self):
-        return self.get('bag_full_alert')
-
-    @property
-    def bag_unselected(self):
-        return self.get('bag_unselected')
-
-    @property
-    def bag_selected(self):
-        return self.get('bag_selected')
-
-    @property
-    def bag_sell_confirm(self):
-        return self.get('bag_sell_confirm')
-
-    @property
-    def bag_sell_finish(self):
-        return self.get('bag_sell_finish')
-
-    @property
-    def shop(self):
-        return self.get('shop')
-
-    @property
-    def shop_event_banner_list(self):
-        return self.get('shop_event_banner_list')
-
-    # ================ fp gacha ================
-    @property
-    def fp_gacha_page(self):
-        return self.get('fp_gacha_page')
-
-    @property
-    def fp_gacha_confirm(self):
-        return self.get('fp_gacha_confirm')
-
-    @property
-    def fp_gacha_result(self):
-        return self.get('fp_gacha_result')
-
-    @property
-    def fp_bag1_full(self):
-        return self.get('fp_bag1_full')
-
-    @property
-    def fp_bag2_full(self):
-        return self.get('fp_bag2_full')
-
-
-# %% local test functions
-def __gen_getter(path='./'):
-    """
-    generate getters for `ImgTemplates`
-    """
-    methods = []
-
-    for filename in os.listdir(path):
-        if filename.endswith('.png'):
-            name = filename[0:-4]
-            s = f'''
-    @property
-    def {name}(self):
-        return self.get('{name}')
-        '''
-            methods.append(s)
-    print('-------generate _ImageTemplates getters------')
-    print('\n'.join(methods))
-    print('-------end generation------')
