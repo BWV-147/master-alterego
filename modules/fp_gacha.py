@@ -1,21 +1,20 @@
-from util.autogui import *
-from util.supervisor import supervise_log_time
-
-logger.set_cur_logger('gacha')
+from util.supervisor import *
+from .base_agent import BaseAgent
 
 
-class FpGacha:
+class FpGacha(BaseAgent):
     def __init__(self, path=None):
         self.T = ImageTemplates(path)
         self.LOC = Regions()
+        logger.set_cur_logger('gacha')
 
     def pre_process(self, conf=None):
+        super().pre_process(conf)
         config.load(conf)
-        check_sys_admin()
+        check_sys_setting(config.need_admin)
         self.T.read_templates(config.fp_gacha.dir)
         config.T = self.T
         config.LOC = self.LOC
-        config.log_file = f'logs/log.full.log'
 
     def start(self, supervise=True, conf=None):
         self.pre_process(conf)
@@ -25,10 +24,10 @@ class FpGacha:
         if supervise:
             t_name = os.path.basename(config.fp_gacha.dir)
             thread = threading.Thread(target=start_func, name=t_name, args=[config.fp_gacha.num], daemon=True)
-            config.running_thread = thread
             supervise_log_time(thread, 10, interval=3)
         else:
             start_func(config.fp_gacha.num)
+        self.post_process()
 
     def draw(self, num=100):
         """

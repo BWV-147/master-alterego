@@ -1,21 +1,18 @@
-from util.autogui import *
-from util.supervisor import supervise_log_time
-
-logger.set_cur_logger('gacha')
+from util.supervisor import *
+from .base_agent import BaseAgent
 
 
-class Gacha:
+class Gacha(BaseAgent):
     def __init__(self, path=None):
         self.T = ImageTemplates(path)
         self.LOC = Regions()
+        logger.set_cur_logger('gacha')
 
     def pre_process(self, conf=None):
-        config.load(conf)
-        check_sys_admin()
+        super().pre_process(conf)
         self.T.read_templates(config.gacha.dir)
         config.T = self.T
         config.LOC = self.LOC
-        config.log_file = f'logs/log.full.log'
 
     def start(self, supervise=True, conf=None):
         self.pre_process(conf)
@@ -30,10 +27,10 @@ class Gacha:
         if supervise:
             t_name = os.path.basename(config.gacha.dir)
             thread = threading.Thread(target=start_func, name=t_name, args=args, daemon=True)
-            config.running_thread = thread
             supervise_log_time(thread, 120, interval=3)
         else:
             start_func(*args)
+        self.post_process()
 
     def draw(self, num=100):
         logger.info('draw: starting...', extra=LOG_TIME)
@@ -106,7 +103,7 @@ class Gacha:
             if page_no == 0:
                 logger.info('check mailbox items...', extra=LOG_TIME)
                 drag_no = 0
-                if skipped_drag_num > MAX_SKIP_NUM:  # not item_checked:
+                if skipped_drag_num > MAX_SKIP_NUM:  # no item checked:
                     logger.debug(f'no item available, stop cleaning.', extra=LOG_TIME)
                     wait_targets(T.mailbox_unselected1, LOC.mailbox_get_all_action)
                     click(self.LOC.mailbox_back)

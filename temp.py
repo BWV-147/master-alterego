@@ -1,10 +1,11 @@
 # %%
 from modules.master import *
 
-check_sys_admin()
+check_sys_setting()
 
 # %%
-base_path = 'img/battles/a-charlotte/'  # 'img/gacha-jp'
+# base_path = 'img/battles/a-charlotte/'  # 'img/gacha-jp'
+base_path: Optional[str] = None  # avoid running temp.py directly
 
 
 # %%

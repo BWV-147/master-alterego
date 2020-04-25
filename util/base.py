@@ -1,23 +1,13 @@
+"""Basic functions or classes, should be independent of others"""
 import argparse
-import email.utils
-import smtplib
-import socket
-import threading
-from email.mime.image import MIMEImage
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-# noinspection PyUnresolvedReferences
-from typing import List, Tuple, Union, Dict, Callable, Sequence, Optional
-
-import numpy
-
-from .log import *
+import sys
+import time
+from typing import List, Tuple, Union, Dict, Callable, Sequence, Optional  # noqas
 
 
 class ArgParser:
-    _parser: argparse.ArgumentParser = None
-
     def __init__(self, args: list = None):
+        self._parser: Optional[argparse.ArgumentParser] = None
         self._init_parser()
         self.supervise = None
         self.config = None
@@ -33,15 +23,14 @@ class ArgParser:
     def parser(self):
         return self._parser
 
-    @classmethod
-    def _init_parser(cls):
-        if cls._parser is not None:
+    def _init_parser(self):
+        if self._parser is not None:
             return
-        cls._parser = argparse.ArgumentParser(conflict_handler='resolve')
-        cls._parser.add_argument('-c', '--config', default='data/config.json',
-                                 help='config file path, default "data/config.json".')
-        cls._parser.add_argument('-d', '--disable-supervisor', action='store_true',
-                                 help='disable supervisor, default enabled.')
+        self._parser = argparse.ArgumentParser(conflict_handler='resolve')
+        self._parser.add_argument('-c', '--config', default='data/config.json',
+                                  help='config file path, default "data/config.json".')
+        self._parser.add_argument('-d', '--disable-supervisor', action='store_true',
+                                  help='disable supervisor, default enabled.')
 
 
 def convert_to_list(items):
@@ -62,95 +51,11 @@ def get_center_coord(xy: Sequence):
         raise ValueError(f'xy=${xy}: len(xy) should be 2 or 4.')
 
 
-def send_mail(body, subject=None, receiver=None, attach_shot=True):
-    from .autogui import screenshot
-    # check email params
-    if receiver is None:
-        receiver = config.receiver
-    if None in (receiver, config.sender, config.password):
-        logger.warning(f'Incomplete email config:\n'
-                       f'======== Incomplete Email Settings ========\n'
-                       f' - receiver: {receiver}\n'
-                       f' - sender  : {config.sender}\n'
-                       f' - password:{"*****" if config.password else "None"}\n'
-                       f'===========================================\n')
-        return
-
-    mail = MIMEMultipart()
-
-    # subject
-    if subject is None:
-        subject = f'{body[0:50]}...' if len(body) > 50 else body
-    if threading.current_thread().name != 'MainThread':
-        subject = f'[{threading.current_thread().name}]{subject}'
-    subject = f'{time.strftime("[%H:%M]")}{subject}'
-
-    # body
-    body = f'<b>{body}</b><br><br>\n' \
-           f'<hr><b>Computer name:</b><br>{socket.getfqdn(socket.gethostname())}<br><hr>\n'
-
-    # body.screenshot
-    crash_fp = 'img/crash.jpg'
-    if attach_shot:
-        body += '<b>Screenshot before shutdown</b>:<br>\n' \
-                '<img src="cid:screenshot" style="width: 100%; max-width: 720px;"><br><hr>\n'
-        shot = screenshot()
-        shot.save(crash_fp + '.png')  # save a backup of origin screenshot
-        # shrink the image/email size
-        shot.resize((numpy.array(shot.size) / 1.5).astype('int')).save(crash_fp, format='jpeg', quality=40)
-        with open(crash_fp, 'rb') as fd:
-            image = MIMEImage(fd.read())
-            image.add_header('Content-ID', '<screenshot>')
-            mail.attach(image)
-
-    # body.recent_log
-    if config.log_file and os.path.exists(config.log_file):
-        with open(config.log_file, encoding='utf8') as fd:
-            lines = fd.readlines()
-            n = len(lines)
-            # "<" should be replaced with escape characters even in <pre/>
-            recent_records = ['<pre>' + x.rstrip().replace('<', '&lt;') + '</pre>\n' for x in lines[-min(20, n):]]
-            body += f'<b>Recent 10 logs ({config.log_file}):</b><br>\n' \
-                    '<style>.logs pre { margin: 0.3em auto; font-family: "Consolas"; }</style>\n' \
-                    f'<span class="logs">\n{"".join(recent_records)}</span><hr>'
-
-    print(f'Ready to send email:\n'
-          f'=============== Email ===============\n'
-          f' - Subject  : {subject}\n'
-          f' - Receiver : {receiver}\n'
-          f' - Body html:\n{body}\n'
-          f'================ End ================\n')
-
-    # make email
-    mail['Subject'] = subject
-    mail['From'] = email.utils.formataddr((config.sender_name, config.sender))
-    mail['To'] = receiver
-    mail['Date'] = email.utils.formatdate(localtime=True)
-    mail.attach(MIMEText(body, 'html', 'utf-8'))
-
-    # send email, retry 5 times at most if failed.
-    retry_time = 0
-    while retry_time < 5:
-        retry_time += 1
-        try:
-            server = smtplib.SMTP_SSL(config.server_host, config.server_port)
-            # server.set_debuglevel(1)
-            try:
-                server.login(config.sender, config.password)
-                result = server.sendmail(config.sender, receiver, mail.as_string())
-                if result == {}:
-                    logger.info(f'send email success.')
-                else:
-                    logger.warning(f'send email failed! Result:\n{result}')
-                server.quit()
-                break
-            except Exception:
-                server.quit()
-                raise
-        except Exception as e:
-            logger.warning(f'Error when sending email: {type(e)}\n{e}')
-            logger.debug(f'retry sending mail in 5 seconds... ({retry_time}/5 times)')
-            time.sleep(5)
+def is_interactive_mode():
+    if sys.__dict__.get('ps1') or sys.argv[0].endswith('pydevconsole.py'):
+        # interactive interpreter: 1-python default, 2-pycharm interactive console,
+        return True
+    return False
 
 
 class Timer:

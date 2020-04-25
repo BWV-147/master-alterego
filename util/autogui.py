@@ -1,55 +1,22 @@
 """Image related processing"""
-import traceback
+import io
 
 import cv2
+import numpy
 from PIL import ImageGrab
+from mss import mss
 from scipy.signal import find_peaks
 from skimage.feature import match_template as sk_match_template
 from skimage.metrics import structural_similarity
 
 from .dataset import *
 from .gui import *
+from .log import *
+
+MSS = mss()
 
 
-def screenshot(region: Sequence = None, filepath: str = None, monitor: int = None) -> Image.Image:
-    """
-    Take screenshot of multi-monitors.
-
-    **MUST** check_sys_admin first to set high dpi awareness, or mss will raise error.
-
-    :param region: region inside monitor
-    :param filepath: if not None, save to `filepath` then return
-    :param monitor: 0-total size of all monitors, 1-main, 2-second monitor
-    :return: PIL.Image.Image
-    """
-    if monitor is None:
-        monitor = config.monitor
-    _image = None
-    size = (1920, 1080)
-    with config.screenshot_lock:
-        with mss() as sct:
-            try:
-                mon = sct.monitors[monitor]
-                size = (mon['width'], mon['height'])
-                shot = sct.grab(mon)
-                _image = Image.frombytes('RGB', size, shot.rgb).crop(region)
-            except Exception as e:
-                logger.error(f'Fail to grab screenshot using mss(). Error:\n{e}')
-                if tuple(config.offset) == (0, 0):
-                    # ImageGrab can only grab the main screen
-                    try:
-                        _image = ImageGrab.grab()
-                    except Exception as e:
-                        logger.error(f'Fail to grab screenshot using ImageGrad. Error:\n{e}')
-                logger.error(traceback.format_exc())
-    if _image is None:
-        # grab failed, return a empty image with single color
-        _image = Image.new('RGB', size, (0, 255, 255)).crop(region)
-    if filepath is not None:
-        _image.save(filepath)
-    return _image
-
-
+# %% image processing
 def get_mean_color(img: Image.Image, region: Sequence):
     if len(region) == 2:
         return img.getpixel(region)
@@ -93,6 +60,22 @@ def cal_sim(img1: Image.Image, img2: Image.Image, region=None, method='ssim') ->
     return sim
 
 
+def compress_image(image: Image.Image, scale=1, _format='jpeg', quality=-1, output: str = 'buffer'):
+    """
+    Compress image to io buffer(output='buffer') or a new Image object(output='pil').
+    """
+    output = output.lower()
+    image1 = image.resize((int(image.width * scale), int(image.height * scale)))
+    buffer = io.BytesIO()
+    image1.save(buffer, _format, quality=quality)
+    if output == 'buffer':
+        return buffer
+    else:
+        image2: Image.Image = Image.open(buffer)
+        return image2
+
+
+# %% automatic
 def _fix_length(images: Union[Image.Image, Sequence[Image.Image]], regions: Sequence):
     # fix to equal length of images and regions
     if isinstance(images, Image.Image):
@@ -112,6 +95,44 @@ def _fix_length(images: Union[Image.Image, Sequence[Image.Image]], regions: Sequ
         else:
             assert False, f'lengths should be equal or 1:\n {(images, regions)}'
     return images, regions
+
+
+def screenshot(region: Sequence = None, filepath: str = None, monitor: int = None) -> Image.Image:
+    """
+    Take screenshot of multi-monitors.
+
+    **MUST** check_sys_setting first to set high dpi awareness, or mss will raise error.
+
+    :param region: region inside monitor
+    :param filepath: if not None, save to `filepath` then return
+    :param monitor: 0-total size of all monitors, 1-main, 2-second monitor
+    :return: PIL.Image.Image
+    """
+    if monitor is None:
+        monitor = config.monitor
+    _image = None
+    size = (1920, 1080)  # default size
+    with config.screenshot_lock:
+        with mss() as sct:
+            try:
+                mon = sct.monitors[monitor]
+                size = (mon['width'], mon['height'])
+                shot = sct.grab(mon)
+                _image = Image.frombytes('RGB', size, shot.rgb).crop(region)
+            except Exception as e:
+                logger.error(f'Fail to grab screenshot using mss(). Error:\n{e}')
+                if tuple(config.offset) == (0, 0):
+                    # ImageGrab can only grab the main screen
+                    try:
+                        _image = ImageGrab.grab()
+                    except Exception as e:
+                        logger.error(f'Fail to grab screenshot using ImageGrad. Error:\n{e}')
+    if _image is None:
+        # grab failed, return a empty image with single color
+        _image = Image.new('RGB', size, (0, 255, 255)).crop(region)
+    if filepath is not None:
+        _image.save(filepath)
+    return _image
 
 
 def match_one_target(img: Image.Image, target: Image.Image, region: Sequence, threshold: float = THR) -> bool:

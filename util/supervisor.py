@@ -1,8 +1,11 @@
+from .addon import *
 from .autogui import *
+from .log import *
 
 
 def supervise_log_time(thread: threading.Thread, time_out=60, mail: bool = None, interval=10, alert_type: bool = None):
     assert thread is not None, thread
+    config.running_thread = thread
     if mail is None:
         mail = config.mail
     if alert_type is None:
@@ -81,23 +84,3 @@ def supervise_log_time(thread: threading.Thread, time_out=60, mail: bool = None,
             logger.info('exit supervisor after killing thread.')
             break
     raise_alert(alert_type, loops=5)
-
-
-# inspired by https://github.com/mosquito/crew/blob/master/crew/worker/thread.py
-def kill_thread(thread: threading.Thread):
-    friendly_name = f'Thread-{thread.ident}({thread.name})'
-    logger.info(f'Ready to kill {"*self* " if thread == threading.current_thread() else ""}{friendly_name}')
-    if not thread.is_alive():
-        logger.info(f'{friendly_name} is already not alive!')
-        return
-
-    res = ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(thread.ident), ctypes.py_object(SystemExit))
-    if res == 0:
-        raise ValueError('nonexistent thread id')
-    elif res > 1:
-        ctypes.pythonapi.PyThreadState_SetAsyncExc(thread.ident, None)
-        raise SystemError('PyThreadState_SetAsyncExc failed')
-
-    while thread.is_alive():
-        time.sleep(0.01)
-    logger.info(f'{friendly_name} have been killed!')

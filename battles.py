@@ -43,14 +43,11 @@ class FreeBattle(BattleBase):
         if config.battle.jump_battle:
             config.battle.jump_battle = False
             logger.warning('goto label.h')
-            # noinspection PyStatementEffect
-            goto.h
+            goto.h  # noqas
 
-        # # noinspection PyStatementEffect
-        # label.h  # make sure master.set_waves(a,b) is called
+        # label.h  # noqas  # make sure master.set_waves(a,b) is called
         # master.set_waves(T.waveXa, T.waveXb)
-        # noinspection PyStatementEffect
-        label.h
+        label.h  # noqas
 
         wait_targets(T.support, LOC.support_refresh)
         support = True
@@ -132,14 +129,11 @@ class FreeBattle(BattleBase):
         if config.battle.jump_battle:
             config.battle.jump_battle = False
             logger.warning('goto label.h')
-            # noinspection PyStatementEffect
-            goto.h
+            goto.h  # noqas
 
-        # # noinspection PyStatementEffect
-        # label.h  # make sure master.set_waves(a,b) is called
+        # label.h  # noqas  # make sure master.set_waves(a,b) is called
         # master.set_waves(T.waveXa, T.waveXb)
-        # noinspection PyStatementEffect
-        label.h
+        label.h  # noqas
 
         wait_targets(T.support, LOC.support_refresh)
         support = True
@@ -218,14 +212,11 @@ class FreeBattle(BattleBase):
         if config.battle.jump_battle:
             config.battle.jump_battle = False
             logger.warning('goto label.h')
-            # noinspection PyStatementEffect
-            goto.h
+            goto.h  # noqas
 
-        # # noinspection PyStatementEffect
-        # label.h  # make sure master.set_waves(a,b) is called
+        # label.h  # noqas  # make sure master.set_waves(a,b) is called
         # master.set_waves(T.waveXa, T.waveXb)
-        # noinspection PyStatementEffect
-        label.h
+        label.h  # noqas
 
         wait_targets(T.support, LOC.support_refresh)
         support = True

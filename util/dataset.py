@@ -1,10 +1,12 @@
 """Data definition, constants
 Coordination: using PIL coordination, (x,y), (left,top,right,bottom), e.g. (0,0,1920-1,1080-1)
 """
+import os
 
 from PIL import Image
 
 from .base import *
+from .config import *
 
 THR = 0.85  # default threshold
 

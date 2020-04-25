@@ -1,3 +1,5 @@
+__all__ = ['Config', 'config']
+
 import json
 import os
 import threading
@@ -56,6 +58,8 @@ class Config(_BaseConfig):
         self.mail = False  # whether to send_mail
         self.alert_type = False  # bool: beep, str: ring tone, alert if supervisor found errors or task finish.
         self.manual_operation_time = 60 * 10  # seconds.
+        self.www_host_port = None  # set [host='0.0.0.0', port=8080] to run www server, if None, not to run server
+        self.need_admin = True
 
         # ================= battle part =================
         self.battle = BattleConfig()
@@ -63,12 +67,12 @@ class Config(_BaseConfig):
         self.fp_gacha = FpGachaConfig()
         # ================= Email part ==================
         # make sure the security of password.
-        self.receiver = None
-        self.sender = None
-        self.sender_name = None
-        self.password = None
-        self.server_host = None
-        self.server_port = None
+        self.mail_receiver = None
+        self.mail_sender = None
+        self.mail_sender_name = None
+        self.mail_password = None
+        self.mail_server_host = None
+        self.mail_server_port = None
 
         # ================= ignored =================
         self.fp = fp
@@ -89,9 +93,11 @@ class Config(_BaseConfig):
 
     def load(self, fp=None):
         # should only load config at the start of thread,
-        # thus task_finish set to False after loaded.
+        # runtime properties are set to default (mainly for interactive console, may load more than once).
         self.fp = fp or self.fp or 'data/config.json'
         self.task_finished = False
+        self.T = self.LOC = self.running_thread = None
+        self.temp.clear()
         return super().load(self.fp)
 
     def save(self, fp=None):
@@ -121,9 +127,14 @@ class Config(_BaseConfig):
         self.task_finished = True
 
     def kill(self):
-        if self.running_thread is not None:
-            from .supervisor import kill_thread
-            kill_thread(self.running_thread)
+        """
+        If program run in multi-threading, supervisor or child thread call this to kill child thread.\n
+        But if run in single-threading(no supervisor thus running_thread is None), just kill MainThread self.
+
+        Ke
+        """
+        from .addon import kill_thread
+        kill_thread(self.running_thread or threading.current_thread())
 
 
 # sub member of Config
@@ -136,7 +147,6 @@ class BattleConfig(_BaseConfig):
         self.check_drop = True  # check craft dropped or not, if True, make sure rewards.png contains the dropped craft.
         self.apples = []  # invalid: stop, 0-colorful, 1-gold, 2-sliver, 3-cropper, 4-zihuiti
         self.jump_battle = False  # goto decoration in Battle.battle_func
-        self.jump_start = False  # goto decoration in Battle.start
         self.login_handler = None  # JP: re-login at 3am(UTC+08)
         self.sell_when_battle = 0  # usually used in hunting event
 

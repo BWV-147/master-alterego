@@ -22,9 +22,9 @@ $(document).ready(function () {
  * @param {string} logName log's name without directory path
  * @param {int} num recent log numbers to download
  */
-function downloadAndShowLog(logName, num) {
+function downloadAndShowLog(logName, num=0) {
   let logs = []
-  $.get('/getRecentLog', {'name': logName, 'num': num || ''}, function (result) {
+  $.get('/getRecentLog', {'name': logName, 'num': num}, function (result) {
     if (result === '')
       logs = [`There is no log in ${logName}.`]
     else

@@ -1,3 +1,4 @@
+from . import addon
 from . import autogui
 from . import base
 from . import config
@@ -7,6 +8,7 @@ from . import log
 from . import supervisor
 
 __all__ = [
+    'addon',
     'autogui',
     'base',
     'config',

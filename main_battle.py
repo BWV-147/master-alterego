@@ -1,5 +1,6 @@
 # %%
 from battles import Battle, ArgParser
+from util.autogui import config, screenshot  # noqas
 
 # %%
 if __name__ == '__main__':

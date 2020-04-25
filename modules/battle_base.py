@@ -1,18 +1,16 @@
-# noinspection PyPackageRequirements
-from goto import with_goto
+from goto import with_goto  # noqas
 
-from util.supervisor import supervise_log_time
+from util.supervisor import *
+from .base_agent import BaseAgent
 from .master import *
 
 
-class BattleBase:
+class BattleBase(BaseAgent):
     def __init__(self):
         self.master = Master()
 
     def pre_process(self, conf=None):
-        config.load(conf)
-        check_sys_admin()
-        config.log_file = 'logs/log.full.log'
+        super().pre_process(conf)
         battle_func = getattr(self, config.battle.battle_func)
         battle_func(True)
         config.T = self.master.T
@@ -28,11 +26,6 @@ class BattleBase:
         while finished_num < max_num:
             finished_num += 1
             logger.info(f'>>>>> Battle "{self.master.quest_name}" No.{finished_num}/{max_num} <<<<<', extra=LOG_TIME)
-            if config.battle.jump_start:
-                config.battle.jump_start = False
-                logger.warning('in start: goto label.g')
-                # noinspection PyStatementEffect
-                goto.g
             if not config.battle.jump_battle:
                 while True:
                     shot = screenshot()
@@ -71,6 +64,7 @@ class BattleBase:
             drop_dir = f'img/_drops/{self.master.quest_name}'
             if not os.path.exists(drop_dir):
                 os.makedirs(drop_dir)
+            # png_fn without suffix
             png_fn = os.path.join(drop_dir, f'rewards-{self.master.quest_name}-{time.strftime("%m%d-%H%M")}')
             if craft_dropped and config.battle.check_drop:
                 config.count_battle(True)
@@ -103,8 +97,6 @@ class BattleBase:
                     click(LOC.apply_friend_deny)
                     logger.debug('not to apply friend')
                 time.sleep(0.5)
-            # noinspection PyStatementEffect
-            label.g
         logger.info(f'>>>>> All {finished_num} battles "{self.master.quest_name}" finished. <<<<<')
         if config.mail:
             send_mail(f'All {finished_num} battles "{self.master.quest_name}" finished')
@@ -137,10 +129,10 @@ class BattleBase:
                                               "battle_num": config.battle.num,
                                               "apples": config.battle.apples},
                                       daemon=True)
-            config.running_thread = thread
             supervise_log_time(thread, 90, interval=3)
         else:
             self._start(battle_func=battle_func, battle_num=config.battle.num, apples=config.battle.apples)
+        self.post_process()
 
     def sell(self, num=100):
         """
@@ -224,14 +216,11 @@ class BattleBase:
         if config.battle.jump_battle:
             config.battle.jump_battle = False
             logger.warning('goto label.h')
-            # noinspection PyStatementEffect
-            goto.h
+            goto.h # noqas
 
-        # # noinspection PyStatementEffect
-        # label.h  # make sure master.set_waves(a,b) is called
+        # label.h  # noqas  # make sure master.set_waves(a,b) is called
         # master.set_waves(T.waveXa, T.waveXb)
-        # noinspection PyStatementEffect
-        label.h
+        label.h  # noqas
 
         wait_targets(T.support, LOC.support_refresh)
         support = True

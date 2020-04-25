@@ -2,8 +2,8 @@
 Master class
 additional, Card class included.
 """
+from util.addon import *
 from util.autogui import *
-from util.supervisor import send_mail
 
 
 class Card:

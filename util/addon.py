@@ -1,0 +1,234 @@
+__all__ = [
+    'send_mail',
+    'beep',
+    'play_music',
+    'raise_alert',
+    'check_sys_setting',
+    'kill_thread',
+    'threading',
+    'os'
+]
+
+import ctypes
+import email.utils
+import os
+import smtplib
+import socket
+import sys
+import threading
+import time
+from email.mime.image import MIMEImage
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
+import numpy
+
+if 'PYGAME_HIDE_SUPPORT_PROMPT' not in os.environ:
+    os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
+import pygame
+from .config import config
+from .log import *
+
+
+# %% email
+def send_mail(body, subject=None, receiver=None, attach_shot=True):
+    from .autogui import screenshot
+    # check email params
+    if receiver is None:
+        receiver = config.mail_receiver
+    if None in (receiver, config.mail_sender, config.mail_password):
+        logger.warning(f'Incomplete email config:\n'
+                       f'======== Incomplete Email Settings ========\n'
+                       f' - receiver: {receiver}\n'
+                       f' - sender  : {config.mail_sender}\n'
+                       f' - password:{"*****" if config.mail_password else "None"}\n'
+                       f'===========================================\n')
+        return
+
+    mail = MIMEMultipart()
+
+    # subject
+    if subject is None:
+        subject = f'{body[0:50]}...' if len(body) > 50 else body
+    if threading.current_thread().name != 'MainThread':
+        subject = f'[{threading.current_thread().name}]{subject}'
+    subject = f'{time.strftime("[%H:%M]")}{subject}'
+
+    # body
+    body = f'<b>{body}</b><br><br>\n' \
+           f'<hr><b>Computer name:</b><br>{socket.getfqdn(socket.gethostname())}<br><hr>\n'
+
+    # body.screenshot
+    crash_fp = 'img/crash.jpg'
+    if attach_shot:
+        body += '<b>Screenshot before shutdown</b>:<br>\n' \
+                '<img src="cid:screenshot" style="width: 100%; max-width: 720px;"><br><hr>\n'
+        shot = screenshot()
+        shot.save(crash_fp + '.png')  # save a backup of origin screenshot
+        # shrink the image/email size
+        shot.resize((numpy.array(shot.size) / 1.5).astype('int')).save(crash_fp, format='jpeg', quality=40)
+        with open(crash_fp, 'rb') as fd:
+            image = MIMEImage(fd.read())
+            image.add_header('Content-ID', '<screenshot>')
+            mail.attach(image)
+
+    # body.recent_log
+    if logger.log_filepath and os.path.exists(logger.log_filepath):
+        with open(logger.log_filepath, encoding='utf8') as fd:
+            lines = fd.readlines()
+            n = len(lines)
+            # "<" should be replaced with escape characters even in <pre/>
+            recent_records = ['<pre>' + x.rstrip().replace('<', '&lt;') + '</pre>\n' for x in lines[-min(20, n):]]
+            body += f'<b>Recent 10 logs ({logger.log_filepath}):</b><br>\n' \
+                    '<style>.logs pre { margin: 0.3em auto; font-family: "Consolas"; }</style>\n' \
+                    f'<span class="logs">\n{"".join(recent_records)}</span><hr>'
+
+    print(f'Ready to send email:\n'
+          f'=============== Email ===============\n'
+          f' - Subject  : {subject}\n'
+          f' - Receiver : {receiver}\n'
+          f' - Body html:\n{body}\n'
+          f'================ End ================\n')
+
+    # make email
+    mail['Subject'] = subject
+    mail['From'] = email.utils.formataddr((config.mail_sender_name, config.mail_sender))
+    mail['To'] = receiver
+    mail['Date'] = email.utils.formatdate(localtime=True)
+    mail.attach(MIMEText(body, 'html', 'utf-8'))
+
+    # send email, retry 5 times at most if failed.
+    retry_time = 0
+    while retry_time < 5:
+        retry_time += 1
+        try:
+            server = smtplib.SMTP_SSL(config.mail_server_host, config.mail_server_port)
+            # server.set_debuglevel(1)
+            try:
+                server.login(config.mail_sender, config.mail_password)
+                result = server.sendmail(config.mail_sender, receiver, mail.as_string())
+                if result == {}:
+                    logger.info(f'send email success.')
+                else:
+                    logger.warning(f'send email failed! Result:\n{result}')
+                server.quit()
+                break
+            except Exception:
+                server.quit()
+                raise
+        except Exception as e:
+            logger.warning(f'Error when sending email: {type(e)}\n{e}')
+            logger.debug(f'retry sending mail in 5 seconds... ({retry_time}/5 times)')
+            time.sleep(5)
+
+
+# %% sound related.
+def beep(duration: float, interval: float = 1, loops=1):
+    if loops >= 0:
+        # make sure at least play once
+        loops += 1
+    if sys.platform == 'win32':
+        import winsound
+        while loops != 0:
+            loops -= 1
+            winsound.Beep(600, int(duration * 1000))
+            time.sleep(interval)
+    else:
+        while loops != 0:
+            loops -= 1
+            t0 = time.time()
+            while time.time() - t0 < duration:
+                sys.stdout.write('\a')
+            time.sleep(interval)
+        sys.stdout.flush()
+
+
+def play_music(filename, loops=1, wait=True):
+    pygame.mixer.init()
+    pygame.mixer.music.load(filename)
+    pygame.mixer.music.set_volume(0.5)
+    pygame.mixer.music.play(loops)
+    if wait:
+        while pygame.mixer.music.get_busy():
+            time.sleep(0.1)
+
+
+def raise_alert(alert_type=None, loops=5, wait=True):
+    """
+    :param alert_type: bool: beep, str: ring tone, alert if supervisor found errors or task finish.
+    :param loops: if loops == -1, infinite loop
+    :param wait: wait music to finish. only for music rather beep.
+    """
+    if alert_type is None:
+        alert_type = config.alert_type
+    if alert_type is True:
+        logger.debug(f'alert: beep for {loops} loops.')
+        beep(2, 1, loops)
+    elif isinstance(alert_type, str):
+        logger.debug(f'alert: play music for {loops} loops.')
+        play_music(alert_type, loops, wait)
+
+
+# %% system
+def check_sys_setting(admin=True):
+    if sys.platform == 'win32':
+        # check admin permission & set process dpi awareness
+        # please run cmd/powershell or Pycharm as administrator.
+        # SetProcessDpiAwareness: see
+        # https://docs.microsoft.com/zh-cn/windows/win32/api/shellscalingapi/ne-shellscalingapi-process_dpi_awareness
+        # print('set process dpi awareness = PROCESS_PER_MONITOR_DPI_AWARE')
+        ctypes.windll.shcore.SetProcessDpiAwareness(2)
+        if ctypes.windll.shell32.IsUserAnAdmin() == 0:
+            if admin:
+                print('Please run cmd/Pycharm as admin to click inside programs with admin permission(e.g. MuMu).')
+                # To run a new process as admin, no effect in Pycharm's Python Console mode.
+                # print('applying admin permission in a new process, and no effect when in console mode.')
+                # ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, __file__, None, 1)
+                raise PermissionError('Please run as administrator!')
+            else:
+                print('Running without admin permission.\n'
+                      'Operations (e.g. click) within admin programs will take no effects!')
+        else:
+            # print('already admin')
+            pass
+    elif sys.platform == 'darwin':
+        print('Allow the app(PyCharm/Terminal/...) to control your computer '
+              'in "System Preferences/Security & Privacy/Accessibility",\n'
+              'or mouse events will take no effects!', file=sys.stderr)
+        pass
+    else:
+        raise EnvironmentError(f'Unsupported system: {sys.platform}. please run in windows/macOS.')
+    # with mss() as sct:
+    #     print('** Monitors information **')
+    #     pprint.pprint(sct.monitors)
+    #     print('WARNING: make sure "config.monitor/offset" is set properly')
+
+
+def kill_thread(thread: threading.Thread):
+    """
+    Support killing thread both in terminal and interactive console.
+
+    In terminal:
+        - sys.exit() only raise error to exit child **THREAD** (exit process if only main thread),
+          while os._exit() exit **PROCESS** without cleaning (not recommended).
+        - multiprocessing: can use process.terminate() or sys.exit()
+    In interactive console:
+        - both sys.exit() and os._exit() will exit console, so it's not the better choice.
+        - multiprocessing is not supported in console.
+    """
+    friendly_name = f'Thread-{thread.ident}({thread.name})'
+    logger.info(f'Ready to kill {"*self* " if thread == threading.current_thread() else ""}{friendly_name}')
+    if not thread.is_alive():
+        logger.info(f'{friendly_name} is already not alive!')
+        return
+
+    res = ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(thread.ident), ctypes.py_object(SystemExit))
+    if res == 0:
+        raise ValueError('nonexistent thread id')
+    elif res > 1:
+        ctypes.pythonapi.PyThreadState_SetAsyncExc(thread.ident, None)
+        raise SystemError('PyThreadState_SetAsyncExc failed')
+
+    while thread.is_alive():
+        time.sleep(0.01)
+    logger.info(f'{friendly_name} have been killed!')
