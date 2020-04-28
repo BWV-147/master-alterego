@@ -116,9 +116,9 @@ def screenshot(region: Sequence = None, filepath: str = None, monitor: int = Non
         with mss() as sct:
             try:
                 mon = sct.monitors[monitor]
-                size = (mon['width'], mon['height'])
                 shot = sct.grab(mon)
-                _image = Image.frombytes('RGB', size, shot.rgb).crop(region)
+                size = shot.size
+                _image = Image.frombytes('RGB', size, shot.bgra, 'raw', 'BGRX').crop(region)
             except Exception as e:
                 logger.error(f'Fail to grab screenshot using mss(). Error:\n{e}')
                 if tuple(config.offset) == (0, 0):

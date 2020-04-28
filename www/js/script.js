@@ -13,6 +13,24 @@ $(document).ready(function () {
     </div></footer>`)
 })
 
+/**
+ * @param {string} string source string
+ * @param {string} chars chars to be trimmed
+ * @param {int} pos 0: trim both, -1: trim left, 1: trim right
+ */
+function trimChar(string, chars = ' \n\t\r', pos = 0) {
+  if (pos <= 0) {
+    while (string.length > 0 && chars.indexOf(string[0]) >= 0) {
+      string = string.substring(1);
+    }
+  }
+  if (pos >= 0) {
+    while (string.length > 0 && chars.indexOf(string[string.length - 1]) >= 0) {
+      string = string.substring(0, string.length - 1);
+    }
+  }
+  return string;
+}
 
 /**
  * log related
@@ -22,7 +40,7 @@ $(document).ready(function () {
  * @param {string} logName log's name without directory path
  * @param {int} num recent log numbers to download
  */
-function downloadAndShowLog(logName, num=0) {
+function downloadAndShowLog(logName, num = 0) {
   let logs = []
   $.get('/getRecentLog', {'name': logName, 'num': num}, function (result) {
     if (result === '')
@@ -131,7 +149,7 @@ function showLogsAtPage(data, index, perPage) {
   let startNo = -(totalPages - index) * perPage,
     endNo = startNo + perPage
   let shownLogs = data.slice(Math.max(startNo, -data.length), endNo === 0 ? undefined : endNo)
-  console.log(`show ${shownLogs.length} logs at page ${index}`)
+  // console.log(`show ${shownLogs.length} logs at page ${index}`)
   let $panel = $('pre.codes'),
     $codes = $panel.find('code')
   if ($codes.length !== perPage) {
@@ -154,29 +172,36 @@ function showLogsAtPage(data, index, perPage) {
  * show directory folder/file structure
  * @param {string} path key in window.dirTreeData, same as relative filepath on server
  */
-function jumpToDirectory(path) {
+function jumpToDirectory(path = '') {
+  if (path === '.') path = ''
+  path = trimChar(path, '\\ ')
   window.location.hash = '#' + path
+  curPath = path
   let folders = path.split(/[/\\]+/)
-  let items = []
+  let items = [`<li class="breadcrumb-item"><a data-path="" href="#">root</a></li>`]
   for (let i = 0; i < folders.length - 1; i++) {
     let nodePath = folders.slice(0, i + 1).join('\\')
     items.push(`<li class="breadcrumb-item"><a data-path="${nodePath}" href="#${nodePath}">${folders[i]}</a></li>`)
   }
   items.push(`<li class="breadcrumb-item active" aria-current="page">${folders[folders.length - 1]}</li>`)
-  $('.breadcrumb').html(items.join('')).find('a').click(function () {
+  $('ol.breadcrumb').html(items.join('')).find('a').click(function () {
     jumpToDirectory($(this).data('path'))
   })
+  listDir(window.dirTreeData[path])
+}
+
+function listDir(data) {
   let treeNodes = []
-  $.each(window.dirTreeData[path]['folders'], function (index, value) {
-    treeNodes.push(`<a data-path="${path + '\\' + value}" class="list-group-item list-group-item-action">
+  $.each(data.folders, function (index, value) {
+    treeNodes.push(`<a data-path="${curPath + '\\' + value}" class="list-group-item list-group-item-action">
         <svg class="bi bi-folder" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
           <path d="M9.828 4a3 3 0 01-2.12-.879l-.83-.828A1 1 0 006.173 2H2.5a1 1 0 00-1 .981L1.546 4h-1L.5 3a2 2 0 012-2h3.672a2 2 0 011.414.586l.828.828A2 2 0 009.828 3v1z"/>
           <path fill-rule="evenodd" d="M13.81 4H2.19a1 1 0 00-.996 1.09l.637 7a1 1 0 00.995.91h10.348a1 1 0 00.995-.91l.637-7A1 1 0 0013.81 4zM2.19 3A2 2 0 00.198 5.181l.637 7A2 2 0 002.826 14h10.348a2 2 0 001.991-1.819l.637-7A2 2 0 0013.81 3H2.19z" clip-rule="evenodd"/>
         </svg> ${value}</a>`)
   })
-  $.each(window.dirTreeData[path]['files'], function (index, value) {
+  $.each(data.files, function (index, value) {
     treeNodes.push(
-      `<button data-path="${path + '\\' + value}" type="button" class="list-group-item list-group-item-action"
+      `<button data-path="${curPath + '\\' + value}" type="button" class="list-group-item list-group-item-action"
             data-toggle="modal" data-target="#imageModal">${value}</button>`)
   })
   $('#dirTree').html(treeNodes.join(''))
@@ -186,6 +211,22 @@ function jumpToDirectory(path) {
   $('#dirTree button').click(function () {
     let imgPath = $(this).data('path')
     $('#imageModalLabel').text($(this).text())
-    $('#imageModal .modal-body img').attr('src', '/getImage?path=' + imgPath)
+    $('#imageModal .modal-body img').attr('src', '/getFile?path=' + imgPath)
   })
+
+}
+
+function onSearch(string) {
+  string = string.trim()
+  let data = window.dirTreeData[curPath]
+  if (string === '') {
+    listDir(data)
+  } else {
+    let files = []
+    for (const filename of data.files) {
+      if (filename.indexOf(string) >= 0)
+        files.push(filename)
+    }
+    listDir({'folders': data.folders, 'files': files})
+  }
 }

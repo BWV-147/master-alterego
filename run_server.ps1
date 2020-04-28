@@ -1,3 +1,3 @@
 cd "$PSScriptRoot"
 .\venv\Scripts\Activate.ps1
-python util\server.py $args
+python modules\server.py $args

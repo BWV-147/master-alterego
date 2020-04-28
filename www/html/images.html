@@ -30,14 +30,18 @@
 <div class="nav-placeholder"></div>
 <main role="main">
     <div class="container" style="padding-top: 4rem">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="#">root</a></li>
-                <!--                    <li class="breadcrumb-item active" aria-current="page">Data</li>-->
-            </ol>
-        </nav>
+        <div class="row">
+            <nav aria-label="breadcrumb" class="col-sm-12 col-lg-10">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="#">root</a></li>
+                    <!-- <li class="breadcrumb-item active" aria-current="page">Data</li>-->
+                </ol>
+            </nav>
+            <label class="col-sm-12 col-lg-2">
+                <input id="searchInput" class="form-control" type="text" placeholder="Search">
+            </label>
+        </div>
         <div class="list-group" id="dirTree">
-
         </div>
         <!-- Modal -->
         <div class="modal fade bd-example-modal-xl" id="imageModal" tabindex="-1" role="dialog"
@@ -51,7 +55,7 @@
                         </button>
                     </div>
                     <div class="modal-body text-center">
-                        <img src="" alt="image" style="max-width: 100%">
+                        <img src="" alt="image">
                     </div>
                 </div>
             </div>
@@ -61,14 +65,17 @@
 </main>
 <script>
   window.dirTreeData = {}
-
+  let curPath = ''
   $.getJSON('/getImageFolderTree', function (data) {
     window.dirTreeData = data
     // console.log(data)
     let _hash = window.location.hash
     if (_hash.startsWith('#'))
       _hash = _hash.slice(1)
-    jumpToDirectory(data.hasOwnProperty(_hash) ? _hash : 'img')
+    jumpToDirectory(data.hasOwnProperty(_hash) ? _hash : '')
+  })
+  $('#searchInput').change(function () {
+    onSearch($(this).val())
   })
 </script>
 <div class="footer-placeholder"></div>

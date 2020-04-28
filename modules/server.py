@@ -11,49 +11,38 @@ On windows, host="::" ony bind ipv6, and host="0.0.0.0" only bind ipv4.
 __all__ = ['app']
 
 import argparse
+import imghdr
 import logging
 import os
 import sys
 from logging.handlers import RotatingFileHandler
 
 from PIL import Image
-from flask import Flask, request, Response, redirect, jsonify
+from flask import Flask, request, Response, redirect, jsonify, abort, send_from_directory
+
+ROOT = os.getcwd()
+if ROOT.endswith('modules'):
+    # if server.py is run directly, cwd is "root/modules"
+    ROOT = os.path.dirname(ROOT)
+    os.chdir(ROOT)
+    print(f'Change working directory to: {ROOT}')
+if os.path.normpath(ROOT) not in [os.path.normpath(p) for p in sys.path]:
+    sys.path.insert(0, ROOT)
 
 from util.autogui import screenshot, compress_image
 from util.log import LOG_FORMATTER
 
+app = Flask('flask.app', root_path=os.path.join(ROOT, 'www'), static_folder='/', static_url_path='/')
 
-def get_root_path():
-    _root = os.getcwd()
-    if _root.endswith('modules'):
-        # if server.py is run directly, cwd is "root/modules"
-        _root = os.path.dirname(_root)
-        os.chdir(_root)
-        sys.path.append(_root)
-        print(f'Change working directory to: {_root}')
-    return _root
-
-
-def config_server_logger(flask_app):
-    werkzeug_logger = logging.getLogger('werkzeug')
-    werkzeug_logger.addHandler(logging.StreamHandler())
-    for _logger in (werkzeug_logger, flask_app.logger):  # type:logging.Logger
-        _logger.setLevel(logging.DEBUG)
-        fh = RotatingFileHandler(os.path.join(ROOT, 'logs', f'{_logger.name}.log'),
-                                 encoding='utf8', maxBytes=1024 * 1024, backupCount=2)
-        fh.setFormatter(LOG_FORMATTER)
-        _logger.addHandler(fh)
-
-
-def create_app():
-    www_root = os.path.join(ROOT, 'www')
-    _app = Flask('flask.app', root_path=www_root, static_folder='/', static_url_path='/')
-    config_server_logger(_app)
-    return _app
-
-
-ROOT = get_root_path()
-app = create_app()
+# app.logger has default StreamHandler
+werkzeug_logger = logging.getLogger('werkzeug')
+werkzeug_logger.addHandler(logging.StreamHandler())
+for _logger in (werkzeug_logger, app.logger):  # type:logging.Logger
+    _logger.setLevel(logging.DEBUG)
+    fh = RotatingFileHandler(os.path.join(ROOT, 'logs', f'{_logger.name}.log'),
+                             encoding='utf8', maxBytes=1024 * 1024, backupCount=2)
+    fh.setFormatter(LOG_FORMATTER)
+    _logger.addHandler(fh)
 
 
 @app.route('/')
@@ -94,22 +83,29 @@ def get_image_folder_tree():
     img_folder = os.path.join(ROOT, 'img')
     start = os.path.realpath('.')
     for dir_path, dir_names, filenames in os.walk(img_folder):
-        key = os.path.relpath(os.path.realpath(dir_path), start)
+        key = os.path.relpath(os.path.realpath(dir_path), img_folder)
+        if key == '.':
+            key = ''
         key = key.strip('\\/').replace('/', '\\')
         tree[key] = {'files': sorted(filenames, reverse='_drops' in key), 'folders': sorted(dir_names)}
     return jsonify(tree)
 
 
-@app.route('/getImage')
-def get_image():
+@app.route('/getFile')
+def get_file():
+    """Return text file or Image(compressed)"""
     filepath = request.args.get('path')
-    if filepath == 'screenshot':
+    if filepath.lower() == 'screenshot':
         image = screenshot()
-    elif not os.path.exists(filepath):
-        return Response('404 Not found.', 404)
     else:
-        image = Image.open(filepath)
-    return Response(compress_image(image, 0.75).getvalue(), mimetype="image/jpeg")
+        filepath = os.path.join('img', filepath)
+        if not os.path.isfile(filepath):
+            return abort(404)
+        elif imghdr.what(filepath):
+            image = Image.open(filepath)
+        else:
+            return send_from_directory('.', filepath)
+    return Response(compress_image(image).getvalue(), mimetype="image/jpeg")
 
 
 # %%

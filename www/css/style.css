@@ -35,11 +35,12 @@ pre.codes code::before {
 
 /**************** accordion ***************/
 /** add arrow at the right of title **/
-.breadcrumb::before{
+nav.breadcrumb::before {
     content: '>';
     color: grey;
     width: 1.5em;
 }
+
 .card-title::before {
     content: "\f107";
     color: #333;
@@ -52,6 +53,10 @@ pre.codes code::before {
 
 .card-title[aria-expanded="true"]::before {
     content: "\f106";
+}
+
+#imageModal .modal-body img {
+    max-width: 100%;
 }
 
 /************** end accordion *************/
