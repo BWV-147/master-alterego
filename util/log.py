@@ -29,7 +29,7 @@ class DispatcherFilter(logging.Filter):
         config.temp['record'] = record
         if getattr(record, 'log_time', False) is True:
             # key-value in `extra` are converted to record's attributes
-            config.log_time = time.time()
+            config.update_time()
         if self.dispatch_handler is None:
             return True
         else:

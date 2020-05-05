@@ -173,7 +173,7 @@ class Master:
                 # zihuiti: sleep 1 hour to check again whether ap enough
                 click(self.LOC.apple_close)
                 logger.info('Zihuiti: waiting...')
-                config.log_time += 3600
+                config.update_time(config.manual_operation_time)
                 time.sleep(3600)
                 break
             elif apple in (0, 1, 2, 3):
@@ -287,8 +287,8 @@ class Master:
             click(LOC.support_refresh_confirm)
             wait_targets(support_page, LOC.support_class_affinity, lapse=0.2)
 
-    def svt_skill_full(self, before, after, who, skill, friend=None, enemy=None):
-        # type: (Image.Image,Image.Image,int,int,int,int)->Master
+    def svt_skill_full(self, before, after, who, skill, friend=None, enemy=None, no_wait=False):
+        # type: (Image.Image,Image.Image,int,int,int,int,bool)->Master
         """
         Release servant skill to <self/all friends/all enemies>.
 
@@ -298,6 +298,7 @@ class Master:
         :param skill: which skill to release.
         :param friend: which friend
         :param enemy: which enemy
+        :param no_wait: if True, not to wait `after`
         :return: master self.
         """
         # validation
@@ -312,8 +313,8 @@ class Master:
             click(self.LOC.enemies[enemy - 1])
         region = self.LOC.skills[who - 1][skill - 1]
         # wait_which_target(self.T.wave1a, self.LOC.master_skill)
-        wait_targets(before, region, at=0)
-        while match_targets(screenshot(), before, region):
+        wait_targets(before, region, at=True)
+        while match_targets(screenshot(), before, region, 0.7):
             # some times need to
             click(region, 0.1)
         if friend is not None:
@@ -321,7 +322,7 @@ class Master:
             # TODO: match select target shot, same as master_skill
             time.sleep(0.5)
             click(self.LOC.skill_to_target[friend - 1])
-        if after is not None:
+        if after is not None and no_wait is False:
             wait_targets(after, region)
         return self
 
@@ -333,8 +334,8 @@ class Master:
         self.wave_b = after
         return self
 
-    def svt_skill(self, who: int, skill: int, friend: int = None, enemy: int = None):
-        self.svt_skill_full(self.wave_a, self.wave_b, who, skill, friend, enemy)
+    def svt_skill(self, who: int, skill: int, friend: int = None, enemy: int = None, no_wait=False):
+        self.svt_skill_full(self.wave_a, self.wave_b, who, skill, friend, enemy, no_wait)
         return self
 
     def master_skill(self, skill, friend=None, enemy=None, order_change=None, order_change_img=None):
@@ -604,3 +605,9 @@ class Master:
         for loc in locs:
             # print(f'click card {loc}')
             click(self.LOC.cards[loc - 1], lapse=0.3)
+        time.sleep(1)
+        if match_targets(screenshot(), self.T.cards1, self.LOC.cards_back):
+            # if np card is not clicked, try again
+            for loc in locs:
+                if loc in (6, 7, 8):
+                    click(self.LOC.cards[loc - 1], lapse=0.3)

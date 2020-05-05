@@ -123,10 +123,10 @@ def send_mail(body, subject=None, receiver=None, attach_shot=True):
 
 
 # %% sound related.
-def beep(duration: float, interval: float = 1, loops=1):
-    if loops >= 0:
-        # make sure at least play once
-        loops += 1
+def beep(duration: float, interval: float = 1, loops: int = 1):
+    """Beep `duration` seconds then mute `interval` seconds for loops."""
+    if loops == 0:
+        loops = 1
     if sys.platform == 'win32':
         import winsound
         while loops != 0:
@@ -156,7 +156,7 @@ def play_music(filename, loops=1, wait=True):
 def raise_alert(alert_type=None, loops=5, wait=True):
     """
     :param alert_type: bool: beep, str: ring tone, alert if supervisor found errors or task finish.
-    :param loops: if loops == -1, infinite loop
+    :param loops: if loops <0, infinite loop, else loop at least once.
     :param wait: wait music to finish. only for music rather beep.
     """
     if alert_type is None:

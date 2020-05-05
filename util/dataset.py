@@ -81,7 +81,7 @@ class Regions(_Regions):
 
     # common, or for supervisor
     net_error = ((599, 814, 720, 872), (1138, 813, 1378, 876))
-    safe_area = (1400, 40)
+    safe_area = (1460, 100)  # for battle
     menu_button = (1659, 974, 1911, 1074)
 
     # ---------- gacha part ----------
@@ -169,6 +169,8 @@ class Regions(_Regions):
 
     team_start_action = (1655, 973, 1902, 1052)
     team_cloth = (20, 980, 263, 1054)
+
+    battle_master_avatar = (1706, 77, 1854, 189)
     wave_num = (1293, 18, 1320, 54)
     enemies_all = (0, 0, 1080, 128)
     enemies = ((0, 0, 120, 130), (360, 0, 480, 130), (720, 0, 840, 130))  # skill_to_enemies

@@ -3,6 +3,7 @@ __all__ = ['Config', 'config']
 import json
 import os
 import threading
+import time
 
 
 class _BaseConfig:
@@ -58,7 +59,7 @@ class Config(_BaseConfig):
         self.mail = False  # whether to send_mail
         self.alert_type = False  # bool: beep, str: ring tone, alert if supervisor found errors or task finish.
         self.manual_operation_time = 60 * 10  # seconds.
-        self.www_host_port = None  # set [host='0.0.0.0', port=8080] to run www server, if None, not to run server
+        self.www_host_port = None  # default [host='0.0.0.0', port=8080] to run www server. If None, not to run server
         self.need_admin = True
 
         # ================= battle part =================
@@ -80,13 +81,11 @@ class Config(_BaseConfig):
         self.LOC = None
         self.log_time = 0  # record the time of last logging.info/debug..., set NO_LOG_TIME outside battle progress
         self.task_finished = False  # all battles finished, set to True before child process exist.
-        self.log_file = 'logs/log.full.log'  # filepath of logger when send_mail review the recent logs.
         self.running_thread = None
         self.screenshot_lock = threading.Lock()  # raise exception if two threads take screenshots at same time
         self.temp = {}  # save temp vars at runtime
 
-        self._ignored = ['fp', 'T', 'LOC', 'log_time', 'task_finished', 'log_file',
-                         'running_thread', 'screenshot_lock', 'temp']
+        self._ignored = ['fp', 'T', 'LOC', 'log_time', 'task_finished', 'running_thread', 'screenshot_lock', 'temp']
         # load config
         if fp:
             self.load()
@@ -121,6 +120,12 @@ class Config(_BaseConfig):
             self.battle.craft_num += 1
             self.battle.craft_history[str(self.battle.craft_num)] = self.battle.finished
         self.save()
+
+    def update_time(self, dt: float = 0):
+        self.log_time = time.time() + dt
+
+    def get_dt(self):
+        return time.time() - self.log_time
 
     def mark_task_finish(self):
         self.save()

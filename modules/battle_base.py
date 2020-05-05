@@ -119,7 +119,7 @@ class BattleBase(BaseAgent):
         logger.info('starting battle...', extra=LOG_TIME)
         time.sleep(2)
         battle_func = getattr(self, config.battle.battle_func)
-        t_name: str = battle_func.__name__.replace('_', '-').capitalize()
+        t_name: str = battle_func.__name__.replace('_', '-').title()
         if config.battle.num <= 0:
             logger.warning(f'no battle, exit.')
             return
@@ -148,7 +148,7 @@ class BattleBase(BaseAgent):
         if num <= 0:
             logger.warning('please sell items manually and return to gacha page!')
             time.sleep(2)
-            config.log_time = time.time() + config.manual_operation_time  # min for manual operation
+            config.update_time(config.manual_operation_time)  # min for manual operation
             raise_alert()
             return
         while True:
@@ -216,7 +216,7 @@ class BattleBase(BaseAgent):
         if config.battle.jump_battle:
             config.battle.jump_battle = False
             logger.warning('goto label.h')
-            goto.h # noqas
+            goto.h  # noqas
 
         # label.h  # noqas  # make sure master.set_waves(a,b) is called
         # master.set_waves(T.waveXa, T.waveXb)
@@ -226,7 +226,7 @@ class BattleBase(BaseAgent):
         support = True
         if support:
             master.choose_support(match_svt=True, match_ce=True, match_ce_max=True, match_skills=True,
-                                  switch_classes=(5, 0))
+                                  switch_classes=(5, 0), friend_only=False)
         else:
             logger.debug('please choose support manually!')
 

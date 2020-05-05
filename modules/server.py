@@ -81,7 +81,6 @@ def get_recent_log():
 def get_image_folder_tree():
     tree = {}
     img_folder = os.path.join(ROOT, 'img')
-    start = os.path.realpath('.')
     for dir_path, dir_names, filenames in os.walk(img_folder):
         key = os.path.relpath(os.path.realpath(dir_path), img_folder)
         if key == '.':

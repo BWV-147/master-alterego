@@ -86,7 +86,7 @@ class Gacha(BaseAgent):
         if num < 0:
             logger.warning('please clean mailbox manually and return to gacha page!')
             time.sleep(2)
-            config.log_time = time.time() + config.manual_operation_time  # n min for manual operation
+            config.update_time(config.manual_operation_time)  # n min for manual operation
             raise_alert()
             return
         drag_num = config.gacha.clean_drag_times
@@ -161,7 +161,7 @@ class Gacha(BaseAgent):
         if num <= 0:
             logger.warning('please sell items manually and return to gacha page!')
             time.sleep(2)
-            config.log_time = time.time() + config.manual_operation_time  # min for manual operation
+            config.update_time(config.manual_operation_time)  # min for manual operation
             raise_alert()
         else:
             no = 0

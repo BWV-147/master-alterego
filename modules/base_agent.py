@@ -1,7 +1,6 @@
 import threading
 
 from util.addon import check_sys_setting
-from util.autogui import screenshot
 from util.base import is_interactive_mode
 from util.config import *
 from .server import app
@@ -13,8 +12,7 @@ class BaseAgent:
     def pre_process(self, conf):
         config.load(conf)
         check_sys_setting(config.need_admin)
-        screenshot()  # run in main thread as least once
-        if isinstance(config.www_host_port, (list, tuple)):
+        if config.www_host_port is not None:
             self.run_sever(*config.www_host_port)
 
     def post_process(self):

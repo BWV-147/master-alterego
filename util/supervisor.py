@@ -3,7 +3,8 @@ from .autogui import *
 from .log import *
 
 
-def supervise_log_time(thread: threading.Thread, time_out=60, mail: bool = None, interval=10, alert_type: bool = None):
+def supervise_log_time(thread, time_out=60, mail=None, interval=10, alert_type=None, alert_loops=15):
+    # type: (threading.Thread,float,bool,float,bool,int)->None
     assert thread is not None, thread
     config.running_thread = thread
     if mail is None:
@@ -12,21 +13,21 @@ def supervise_log_time(thread: threading.Thread, time_out=60, mail: bool = None,
         alert_type = config.alert_type
 
     def _overtime():
-        return time.time() - config.log_time > time_out
+        return config.get_dt() > time_out
 
     logger.info(f'start supervising thread {thread.name}...')
     thread.start()
     while not thread.is_alive():
         time.sleep(0.01)
     logger.info(f'Thread-{thread.ident}({thread.name}) started...')
-    config.log_time = time.time()
+    config.update_time()
     # from here, every logging should have arg: NO_LOG_TIME, otherwise endless loop.
-    loops = MAX_LOOPS = 15
+    loops = alert_loops
     while True:
         # every case: stop or continue
         # case 1: all right - continue supervision
         if thread.is_alive() and not _overtime():
-            loops = MAX_LOOPS  # reset loops
+            loops = alert_loops  # reset loops
             time.sleep(interval)
             continue
         # case 2: thread finished normally - stop supervision
@@ -49,21 +50,25 @@ def supervise_log_time(thread: threading.Thread, time_out=60, mail: bool = None,
             if match_targets(shot, img_net, loc_net[0]) and match_targets(shot, img_net, loc_net[1]):
                 logger.warning('Network error! click "retry" button')
                 click(loc_net[1], lapse=3)
-                config.log_time += 60
+                config.update_time(60)
                 continue
+
         # case 4: re-login after 3am in jp server
         # if match menu button, click save_area until match quest1234, click 1234
         if callable(config.battle.login_handler):
             if match_targets(screenshot(), T.quest, LOC.menu_button):
                 config.battle.login_handler()
+
         # case 5: unrecognized error - waiting user to handle (in 2*loops seconds)
-        if loops == MAX_LOOPS:
+        print(f'loops={loops}')
+        if loops == alert_loops:
             logger.warning(f'Something wrong, please solve it, or it will be force stopped...\n'
                            f' - thread  alive: {thread.is_alive()}.\n'
                            f' - task finished: {config.task_finished}.\n'
                            f' - last log time: {time.asctime()}')
         if loops >= 0:
-            print(f'\r{loops}...\r', end='\r')
+            # print(f'{loops}...\r', end='')
+            print(f'loops={loops}')
         else:
             logger.warning(f'Time out, it will be force stopped...')
         loops -= 1

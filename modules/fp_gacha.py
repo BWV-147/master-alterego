@@ -24,7 +24,7 @@ class FpGacha(BaseAgent):
         if supervise:
             t_name = os.path.basename(config.fp_gacha.dir)
             thread = threading.Thread(target=start_func, name=t_name, args=[config.fp_gacha.num], daemon=True)
-            supervise_log_time(thread, 10, interval=3)
+            supervise_log_time(thread, 10, interval=3, alert_loops=3)
         else:
             start_func(config.fp_gacha.num)
         self.post_process()
@@ -41,8 +41,8 @@ class FpGacha(BaseAgent):
         loops = 0
         while loops < num:
             # print(f'\r loop {loops:<4d}', end='')
-            config.log_time = time.time()
-            if loops % 5 == 0:
+            config.update_time()
+            if loops % 10 == 0:
                 logger.debug(f'fp gacha {loops}/{num}...', extra=LOG_TIME)
             loops += 1
             # wait_targets(T.fp_gacha_page, LOC.fp_gacha_logo, at=LOC.fp_gacha_point)
@@ -51,11 +51,11 @@ class FpGacha(BaseAgent):
                                         clicking=LOC.fp_gacha_point, interval=0.05)
             if page_no == 0:
                 click(LOC.fp_gacha_result_summon)
-                config.log_time = time.time()
+                config.update_time()
                 config.count_fp_gacha()
             elif page_no > 0:
                 logger.info(f'bag {page_no} full, sell or enhance manually.', extra=LOG_TIME)
-                config.log_time = time.time() + config.manual_operation_time
+                config.update_time(config.manual_operation_time)
                 raise_alert(loops=1)
                 wait_targets(T.fp_gacha_result, LOC.fp_gacha_logo)
                 logger.info('back to fp gacha.', extra=LOG_TIME)
