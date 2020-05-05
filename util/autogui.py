@@ -101,8 +101,6 @@ def screenshot(region: Sequence = None, filepath: str = None, monitor: int = Non
     """
     Take screenshot of multi-monitors.
 
-    **MUST** check_sys_setting first to set high dpi awareness, or mss will raise error.
-
     :param region: region inside monitor
     :param filepath: if not None, save to `filepath` then return
     :param monitor: 0-total size of all monitors, 1-main, 2-second monitor
@@ -112,21 +110,20 @@ def screenshot(region: Sequence = None, filepath: str = None, monitor: int = Non
         monitor = config.monitor
     _image = None
     size = (1920, 1080)  # default size
-    with config.screenshot_lock:
-        with mss() as sct:
-            try:
-                mon = sct.monitors[monitor]
-                shot = sct.grab(mon)
-                size = shot.size
-                _image = Image.frombytes('RGB', size, shot.bgra, 'raw', 'BGRX').crop(region)
-            except Exception as e:
-                logger.error(f'Fail to grab screenshot using mss(). Error:\n{e}')
-                if tuple(config.offset) == (0, 0):
-                    # ImageGrab can only grab the main screen
-                    try:
-                        _image = ImageGrab.grab()
-                    except Exception as e:
-                        logger.error(f'Fail to grab screenshot using ImageGrad. Error:\n{e}')
+    with mss() as sct:
+        try:
+            mon = sct.monitors[monitor]
+            shot = sct.grab(mon)
+            size = shot.size
+            _image = Image.frombytes('RGB', size, shot.bgra, 'raw', 'BGRX').crop(region)
+        except Exception as e:
+            logger.error(f'Fail to grab screenshot using mss(). Error:\n{e}')
+            if tuple(config.offset) == (0, 0):
+                # ImageGrab can only grab the main screen
+                try:
+                    _image = ImageGrab.grab()
+                except Exception as e:
+                    logger.error(f'Fail to grab screenshot using ImageGrad. Error:\n{e}')
     if _image is None:
         # grab failed, return a empty image with single color
         _image = Image.new('RGB', size, (0, 255, 255)).crop(region)

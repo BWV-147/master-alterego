@@ -82,10 +82,9 @@ class Config(_BaseConfig):
         self.log_time = 0  # record the time of last logging.info/debug..., set NO_LOG_TIME outside battle progress
         self.task_finished = False  # all battles finished, set to True before child process exist.
         self.running_thread = None
-        self.screenshot_lock = threading.Lock()  # raise exception if two threads take screenshots at same time
         self.temp = {}  # save temp vars at runtime
 
-        self._ignored = ['fp', 'T', 'LOC', 'log_time', 'task_finished', 'running_thread', 'screenshot_lock', 'temp']
+        self._ignored = ['fp', 'T', 'LOC', 'log_time', 'task_finished', 'running_thread', 'temp']
         # load config
         if fp:
             self.load()
