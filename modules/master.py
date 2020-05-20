@@ -113,11 +113,14 @@ class Master:
                 params[-1].append((pairs[2 * i], int(pairs[2 * i + 1])))
         self.set_cards(svt, *params, images=ImageTemplates(_folder))
 
-    def set_card_weight(self, weights: Dict[str, Union[float, List]], color_weight: str = 'QAB'):
+    def set_card_weight(self, weights: Union[Sequence, Dict[str, Union[float, List]]], color_weight: str = 'QAB'):
         """
         :param weights: [names,weights] or {name:weights}.
         :param color_weight: used when weight size
         """
+        if isinstance(weights, Sequence):
+            assert len(weights[0]) == len(weights[1]), weights
+            weights = dict([(x, y) for x, y in zip(weights[0], weights[1])])
         color_weight = color_weight.upper()
         assert 'ABQ' == ''.join(sorted('QAB')), f'invalid color_weight: {color_weight}'
         self.card_weights.clear()

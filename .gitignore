@@ -1,11 +1,10 @@
-# custom files
+# User-defined
 !**/.gitkeep
 data/
 *.png
 *.jpg
 *.log.*
 /**/*.json
-*/.idea
 test*.py
 
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio and WebStorm
