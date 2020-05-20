@@ -16,6 +16,37 @@ class BattleBase(BaseAgent):
         config.T = self.master.T
         config.LOC = self.master.LOC
 
+    def start(self, supervise=True, conf=None, force_jump=False):
+        """
+        Start battle.
+
+        :param supervise: if True, start battle in child thread, else directly.
+        :param conf: config filename, default data/config.json.
+        :param force_jump: if True, set True for config.battle.jump_battle, do nothing if False.
+                            Just a convenient way to jump other then edit config file.
+        :return:
+        """
+        self.pre_process(conf)
+        if force_jump:
+            config.battle.jump_battle = True
+        logger.info('starting battle...', extra=LOG_TIME)
+        time.sleep(2)
+        battle_func = getattr(self, config.battle.battle_func)
+        t_name: str = battle_func.__name__.replace('_', '-').title()
+        if config.battle.num <= 0:
+            logger.warning(f'no battle, exit.')
+            return
+        if supervise:
+            thread = threading.Thread(target=self._start, name=t_name,
+                                      kwargs={"battle_func": battle_func,
+                                              "battle_num": config.battle.num,
+                                              "apples": config.battle.apples},
+                                      daemon=True)
+            supervise_log_time(thread, 90, interval=3)
+        else:
+            self._start(battle_func=battle_func, battle_num=config.battle.num, apples=config.battle.apples)
+        self.post_process()
+
     @with_goto
     def _start(self, battle_func, battle_num, apples=None):
         T = self.master.T
@@ -103,37 +134,6 @@ class BattleBase(BaseAgent):
         config.mark_task_finish()
         return
 
-    def start(self, supervise=True, conf=None, force_jump=False):
-        """
-        Start battle.
-
-        :param supervise: if True, start battle in child thread, else directly.
-        :param conf: config filename, default data/config.json.
-        :param force_jump: if True, set True for config.battle.jump_battle, do nothing if False.
-                            Just a convenient way to jump other then edit config file.
-        :return:
-        """
-        self.pre_process(conf)
-        if force_jump:
-            config.battle.jump_battle = True
-        logger.info('starting battle...', extra=LOG_TIME)
-        time.sleep(2)
-        battle_func = getattr(self, config.battle.battle_func)
-        t_name: str = battle_func.__name__.replace('_', '-').title()
-        if config.battle.num <= 0:
-            logger.warning(f'no battle, exit.')
-            return
-        if supervise:
-            thread = threading.Thread(target=self._start, name=t_name,
-                                      kwargs={"battle_func": battle_func,
-                                              "battle_num": config.battle.num,
-                                              "apples": config.battle.apples},
-                                      daemon=True)
-            supervise_log_time(thread, 90, interval=3)
-        else:
-            self._start(battle_func=battle_func, battle_num=config.battle.num, apples=config.battle.apples)
-        self.post_process()
-
     def sell(self, num=100):
         """
         Sell before entering quest if bag is full. Usually used in hunting events. Back to support page finally.
@@ -188,7 +188,7 @@ class BattleBase(BaseAgent):
 
         master.quest_name = 'A-Charlotte'  # should be a valid folder name
         names = master.members = ['旧剑', '豆爸', '孔明']
-        master.set_card_weight(dict([(svt, [3, 1, 1.1][i]) for i, svt in enumerate(names)]))
+        master.set_card_weight(dict(zip(names, [3, 1, 1.1])))
 
         # pre-processing: e.g. set templates, only once
         if pre_process:
@@ -223,42 +223,44 @@ class BattleBase(BaseAgent):
         label.h  # noqas
 
         wait_targets(T.support, LOC.support_refresh)
-        support = True
-        if support:
-            master.choose_support(match_svt=True, match_ce=True, match_ce_max=True, match_skills=True,
-                                  switch_classes=(5, 0), friend_only=False)
-        else:
-            logger.debug('please choose support manually!')
+        # use different process with different support servant
+        # noinspection PyUnusedLocal
+        support = master.choose_support(match_svt=True, match_ce=True, match_ce_max=True, match_skills=True,
+                                        switch_classes=(5, 0), friend_only=False,
+                                        images=[master.T.support, master.T.support])
+
+        # logger.debug('please choose support manually!')  # print hint if choose manually
 
         # wave 1
         wait_targets(T.wave1a, LOC.loc_wave, 0.7)
         logger.debug(f'Quest {master.quest_name} started...')
         logger.debug('wave 1...')
-        master.set_waves(T.wave1a, T.wave1b)
-        master.svt_skill(3, 2)
-        master.svt_skill(3, 3)
-        master.svt_skill(3, 1, 2)
-        master.svt_skill(2, 2)
-        master.auto_attack(nps=7)
+        with master.set_waves(T.wave1a, T.wave1b):
+            # skills must place in with-statement, or use svt_skill_full/master_skill_full
+            master.svt_skill(3, 2)
+            master.svt_skill(3, 3)
+            master.svt_skill(3, 1, 2)
+            master.svt_skill(2, 2)
+            master.auto_attack(nps=7)
 
         # wave 2
         wait_targets(T.wave2a, LOC.loc_wave, 0.7)
         logger.debug('wave 2...')
-        master.set_waves(T.wave2a, T.wave2b)
-        master.svt_skill(2, 1)
-        master.master_skill(2, 2)
-        master.auto_attack(nps=7)
-        # chosen_cards = master.auto_attack(nps=6, no_play_card=True)
-        # master.play_cards([chosen_cards[i] for i in (2, 0, 1)])
+        with master.set_waves(T.wave2a, T.wave2b):
+            master.svt_skill(2, 1)
+            master.master_skill(2, 2)
+            master.auto_attack(nps=7)
+            # chosen_cards = master.auto_attack(nps=6, no_play_card=True)
+            # master.play_cards([chosen_cards[i] for i in (2, 0, 1)])
 
         # wave 3
         wait_targets(T.wave3a, LOC.loc_wave, 0.7)
         logger.debug('wave 3...')
-        master.set_waves(T.wave3a, T.wave3b)
-        master.svt_skill(1, 3)
-        master.svt_skill(1, 1)
-        master.svt_skill(1, 2)
-        master.auto_attack(nps=6, mode='alter')
+        with master.set_waves(T.wave3a, T.wave3b):
+            master.svt_skill(1, 3)
+            master.svt_skill(1, 1)
+            master.svt_skill(1, 2)
 
+        master.auto_attack(nps=6, mode='alter')
         master.xjbd(T.kizuna, LOC.kizuna, mode='alter', allow_unknown=True)
         return

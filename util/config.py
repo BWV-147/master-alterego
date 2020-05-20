@@ -61,6 +61,7 @@ class Config(_BaseConfig):
         self.manual_operation_time = 60 * 10  # seconds.
         self.www_host_port = None  # default [host='0.0.0.0', port=8080] to run www server. If None, not to run server
         self.need_admin = True
+        self.hide_when_finish = True  # for MuMu emulator, "alt+z" to hide window.
 
         # ================= battle part =================
         self.battle = BattleConfig()

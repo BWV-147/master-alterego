@@ -1,8 +1,11 @@
 import threading
 
+import pyautogui
+
 from util.addon import check_sys_setting
 from util.base import is_interactive_mode
 from util.config import *
+from util.log import logger
 from .server import app
 
 
@@ -19,7 +22,10 @@ class BaseAgent:
         # server thread should be daemon, make it possible to be terminated by Ctrl-C
         # in terminal: keep app running until ctrl-C pressed => call thread.join() in post processing
         # in interactive: main thread is always alive, join() is not needed, we can terminate it manually.
+        if config.hide_when_finish:
+            pyautogui.hotkey('alt', 'z')  # hide window for mumu emulator
         if not is_interactive_mode() and self._server_thread.is_alive():
+            logger.info('keep running server...')
             self._server_thread.join()
 
     @classmethod

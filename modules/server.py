@@ -30,7 +30,6 @@ if os.path.normpath(ROOT) not in [os.path.normpath(p) for p in sys.path]:
     sys.path.insert(0, ROOT)
 
 from util.autogui import screenshot, compress_image
-from util.log import LOG_FORMATTER
 
 app = Flask('flask.app', root_path=os.path.join(ROOT, 'www'), static_folder='/', static_url_path='/')
 
@@ -41,7 +40,10 @@ for _logger in (werkzeug_logger, app.logger):  # type:logging.Logger
     _logger.setLevel(logging.DEBUG)
     fh = RotatingFileHandler(os.path.join(ROOT, 'logs', f'{_logger.name}.log'),
                              encoding='utf8', maxBytes=1024 * 1024, backupCount=2)
-    fh.setFormatter(LOG_FORMATTER)
+    fh.setFormatter(logging.Formatter(
+        style='{',
+        datefmt="%m-%d %H:%M:%S",
+        fmt='{asctime} - {filename}[line:{lineno:>3d}] - {levelname:<5s}: [{threadName}] {message}'))
     _logger.addHandler(fh)
 
 

@@ -144,7 +144,7 @@ class Regions(_Regions):
     # 2 supports one time，support[svt][skill]
     loading_line = (10, 1057, 70, 1060)
     support_team_icon = (1637, 320, 1767, 384)
-    support_team_icon_column = (1637, 245, 1767, 1000)
+    support_team_column = (1637, 245, 1767, 1000)
     support_class_icons = [(117, 175, 165, 209), (218, 175, 266, 209), (319, 175, 367, 209), (420, 175, 468, 209),
                            (521, 175, 569, 209), (622, 175, 670, 209), (723, 175, 771, 209), (824, 175, 872, 209),
                            (925, 175, 973, 209), (1026, 175, 1074, 209)]  # All, 7 common class, extra, mix
@@ -168,7 +168,8 @@ class Regions(_Regions):
     support_scroll = ((1860, 520), (1860, 640), (760, 880))
 
     team_start_action = (1655, 973, 1902, 1052)
-    team_cloth = (20, 980, 263, 1054)
+    team_cloth = (20, 980, 263, 1054)  # with close icon inside
+    team_cloth_button = (148, 986, 263, 1054)  # without cloth
 
     battle_master_avatar = (1706, 77, 1854, 189)
     wave_num = (1293, 18, 1320, 54)
@@ -180,7 +181,7 @@ class Regions(_Regions):
         [(539, 823, 599, 908), (680, 823, 740, 908), (821, 823, 881, 908)],
         [(1017, 823, 1077, 908), (1158, 823, 1218, 908), (1299, 823, 1359, 908)]
     ]
-    skill_target_X = (430, 600, 580, 750)  # 第一个人
+    skill_targets_close = (1614, 195, 1678, 256)
     skill_to_target = ((490, 700), (970, 700), (1429, 700))
     master_skill = (1736, 440, 1841, 507)
     master_skills = ((1319, 427, 1404, 512), (1450, 427, 1535, 512), (1581, 427, 1666, 512))
@@ -248,6 +249,7 @@ class ImageTemplates:
         self.restart_quest: Optional[Image.Image] = None
         self.support: Optional[Image.Image] = None
         self.support_confirm: Optional[Image.Image] = None
+        self.skill_targets: Optional[Image.Image] = None
         self.wave1a: Optional[Image.Image] = None
         self.wave1b: Optional[Image.Image] = None
         self.wave2a: Optional[Image.Image] = None

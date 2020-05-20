@@ -41,6 +41,8 @@ capture('support_confirm')
 # %% !!!
 capture('team')
 # %% !!!
+capture('skill_targets')
+# %% !!!
 capture('wave1a')
 # %% !!!
 capture('wave1b')

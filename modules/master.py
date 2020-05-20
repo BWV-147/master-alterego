@@ -2,6 +2,8 @@
 Master class
 additional, Card class included.
 """
+import contextlib
+
 from util.addon import *
 from util.autogui import *
 
@@ -61,8 +63,8 @@ class Master:
         self.LOC = Regions()
         self.card_templates: Dict[Card, List[Image.Image]] = {}
         self.card_weights: Dict[Card, float] = {}
-        self.wave_a = None
-        self.wave_b = None
+        self._wave_a = None
+        self._wave_b = None
 
     def set_cards(self, svt, np, quick, arts, buster, images=None):
         # type:(str,Sequence,Sequence,Sequence,Sequence,ImageTemplates)->None
@@ -111,14 +113,11 @@ class Master:
                 params[-1].append((pairs[2 * i], int(pairs[2 * i + 1])))
         self.set_cards(svt, *params, images=ImageTemplates(_folder))
 
-    def set_card_weight(self, weights: Union[Sequence, Dict[str, Union[float, List]]], color_weight: str = 'QAB'):
+    def set_card_weight(self, weights: Dict[str, Union[float, List]], color_weight: str = 'QAB'):
         """
         :param weights: [names,weights] or {name:weights}.
         :param color_weight: used when weight size
         """
-        if isinstance(weights, Sequence):
-            assert len(weights[0]) == len(weights[1]), weights
-            weights = dict([(x, y) for x, y in zip(weights[0], weights[1])])
         color_weight = color_weight.upper()
         assert 'ABQ' == ''.join(sorted('QAB')), f'invalid color_weight: {color_weight}'
         self.card_weights.clear()
@@ -194,56 +193,64 @@ class Master:
                         elif page_no == 2:
                             return
 
-    def choose_support(self, match_svt=True, match_ce=False, match_ce_max=False, match_skills=None, img=None,
-                       switch_classes=None, friend_only=False):
-        # type:(bool,bool,bool,bool,Image.Image,Sequence,bool)->None
+    def choose_support(self, match_svt=True, match_ce=False, match_ce_max=False, match_skills=None, switch_classes=None,
+                       friend_only=False, images=None):
+        # type:(bool,bool,bool,bool,Sequence,bool,List[Image.Image])->int
         """
-        Choose the **first** support in T.support from the whole support list, drag scrollbar to show all supports.
+        Choose the **first** friend in support templates `images`(default T.support) from the whole support list,
+        drag scrollbar to show all friends. Finally return the index of which support template is chosen.
 
         :param match_svt: match the whole rect of 3 skills
         :param match_ce: whether match CE, please set to False if jp server since CE could be filtered in jp server
         :param match_ce_max: whether match CE max star
         :param match_skills: match every skill icon
-        :param img: support page img
         :param switch_classes: e.g. (0,5,...) means switch between ALL and CASTER.
-                        ALL=0, Saber-Berserker=1-7, extra=8, Mixed=9. if empty, set (-1,), click Regions.safe_area
-        :param friend_only: only choose friends' support if true
+                        If empty or None, keep current support class.
+                        ALL=0, Saber-Berserker=1-7, extra=8, Mixed=9.
+        :param friend_only: only choose friends' support
+        :param images: support page images, default [T.support]
+        :return: index of which support template in `images` is chosen
         """
         T = self.T
         LOC = self.LOC
         logger.debug('choosing support...', extra=LOG_TIME)
-        support_page = T.support if img is None else img
+        supports = images if images else [T.support]
+        support0 = supports[0]
         if switch_classes is None:
             switch_classes = (-1,)
-        wait_targets(support_page, LOC.support_refresh)
+        wait_targets(support0, LOC.support_refresh)
         while numpy.mean(get_mean_color(screenshot(), LOC.loading_line)) > 200:
             time.sleep(0.2)
         refresh_times = 0
 
-        def _is_match_offset(_shot, old_loc, _offset):
-            return match_targets(_shot.crop(numpy.add(old_loc, [0, _offset, 0, _offset])), T.support.crop(old_loc))
+        def _is_match_offset(_support, _shot, old_loc, _offset):
+            return match_targets(_shot.crop(numpy.add(old_loc, [0, _offset, 0, _offset])), _support.crop(old_loc))
 
+        # lambda functions: function(support, screenshot, offset) -> matched or not
         matches = [
-            lambda _shot, _offset: not match_ce or _is_match_offset(_shot, LOC.support_ce[0], _offset),
-            lambda _shot, _offset: not match_ce_max or _is_match_offset(_shot, LOC.support_ce_max[0], _offset),
-            lambda _shot, _offset: not match_svt or _is_match_offset(_shot, LOC.support_skill[0], _offset),
-            lambda _shot, _offset: not match_skills or False not in [_is_match_offset(_shot, loc, _offset) for loc in
-                                                                     LOC.support_skills[0]],
-            lambda _shot, _offset: not friend_only or _is_match_offset(_shot, LOC.support_friend_icon, _offset),
+            lambda _p, _s, _o: not match_ce or _is_match_offset(_p, _s, LOC.support_ce[0], _o),
+            lambda _p, _s, _o: not match_ce_max or _is_match_offset(_p, _s, LOC.support_ce_max[0], _o),
+            lambda _p, _s, _o: not match_svt or _is_match_offset(_p, _s, LOC.support_skill[0], _o),
+            lambda _p, _s, _o: not match_skills or False not in [_is_match_offset(_p, _s, loc, _o) for loc in
+                                                                 LOC.support_skills[0]],
+            lambda _p, _s, _o: not friend_only or _is_match_offset(_p, _s, LOC.support_friend_icon, _o),
         ]
 
         while True:
-            wait_targets(support_page, LOC.support_class_affinity)
-            for icon in switch_classes:
-                if icon == -1:
+            wait_targets(support0, LOC.support_class_affinity)
+            for class_icon in switch_classes:
+                if class_icon == -1:
                     time.sleep(0.2)
                 else:
-                    click(LOC.support_class_icons[icon], 0.1)
+                    click(LOC.support_class_icons[class_icon], 0.1)
                     click(LOC.support_scrollbar_head, 0.1)
-                    logger.debug(f'switch support class to No.{icon}.')
+                    class_name = ['All', 'Saber', 'Archer', 'Lancer', 'Rider',
+                                  'Caster', 'Assassin', 'Berserker', 'Extra'][class_icon]
+                    logger.debug(f'switch support class to No.{class_icon}-{class_name}.')
                 move_to(LOC.support_scrollbar_start)
-                if match_targets(screenshot(), T.support, LOC.support_scrollbar_head, 0.8) \
-                        and numpy.mean(T.support.getpixel(get_center_coord(LOC.support_scrollbar_head))) > 200:
+                shot = screenshot()
+                if match_targets(shot, support0, LOC.support_scrollbar_head, 0.8) \
+                        and numpy.mean(shot.getpixel(get_center_coord(LOC.support_scrollbar_head))) > 200:
                     drag_points = 6
                     dy_mouse = (LOC.support_scrollbar_end[1] - LOC.support_scrollbar_start[1]) // (drag_points - 1)
                 else:
@@ -251,29 +258,34 @@ class Master:
                     dy_mouse = 0
                 for drag_point in range(drag_points):
                     shot = screenshot()
-                    y_peaks = search_peaks(shot.crop(LOC.support_team_icon_column),
-                                           T.support.crop(LOC.support_team_icon))
+                    y_peaks = search_peaks(shot.crop(LOC.support_team_column), support0.crop(LOC.support_team_icon))
                     for y_peak in y_peaks:
-                        y_offset = y_peak - (LOC.support_team_icon[1] - LOC.support_team_icon_column[1])
-                        matched = True
-                        for func in matches:
-                            matched = func(shot, y_offset)
-                            if not matched:
+                        y_offset = y_peak - (LOC.support_team_icon[1] - LOC.support_team_column[1])
+                        matched = False
+                        matched_support = -1
+                        for support_index, support in enumerate(supports):
+                            for func in matches:
+                                matched = func(support, shot, y_offset)
+                                if not matched:  # one condition not match-> false next support image
+                                    break
+                            if matched:  # one support matched
+                                matched_support = support_index
                                 break
-                        if not matched:
+                        if not matched:  # this friend not match any support, next friend
                             continue
-                        click((LOC.width / 2, LOC.support_team_icon_column[1] + y_peak))
+                        click((LOC.width / 2, LOC.support_team_column[1] + y_peak))
                         logger.debug('found support.', extra=LOG_TIME)
                         while True:
                             page_no = wait_which_target([T.team, T.wave1a],
-                                                        [LOC.team_cloth, LOC.master_skill])
+                                                        [LOC.team_cloth_button, LOC.master_skill])
                             time.sleep(0.3)
                             if page_no == 0:
                                 logger.debug('entering battle', extra=LOG_TIME)
                                 click(LOC.team_start_action)
                                 click(LOC.team_start_action)
                             elif page_no == 1:
-                                return
+                                return matched_support
+                    # no friends matched, drag downward
                     if dy_mouse != 0:
                         pyautogui.dragRel(0, dy_mouse, 0.2)
                         time.sleep(0.2)
@@ -282,10 +294,32 @@ class Master:
             logger.debug(f'refresh support {refresh_times} times...', extra=LOG_TIME)
             if config.mail and refresh_times % 20 == 0:
                 send_mail(body=f'refresh support more than {refresh_times} times.')
-            wait_targets(support_page, LOC.support_refresh, at=0)
+            wait_targets(support0, LOC.support_refresh, at=0)
             wait_targets(T.support_confirm, LOC.support_confirm_title, clicking=LOC.support_refresh)
             click(LOC.support_refresh_confirm)
-            wait_targets(support_page, LOC.support_class_affinity, lapse=0.2)
+            wait_targets(support0, LOC.support_class_affinity, lapse=0.2)
+
+    @contextlib.contextmanager
+    def set_waves(self, before: Image.Image, after: Image.Image = None):
+        """
+        Usage: `with self.set_waves(before, after): pass`. Set wave_a and wave_b before every wave or
+        after order change/stella.
+
+        Don't jump_battle into with statement.
+        """
+        self._wave_a = before
+        self._wave_b = after
+        try:
+            yield self
+        except:  # noqas
+            raise
+        finally:
+            self._wave_a = None
+            self._wave_b = None
+
+    def svt_skill(self, who: int, skill: int, friend: int = None, enemy: int = None, no_wait=False):
+        self.svt_skill_full(self._wave_a, self._wave_b, who, skill, friend, enemy, no_wait)
+        return self
 
     def svt_skill_full(self, before, after, who, skill, friend=None, enemy=None, no_wait=False):
         # type: (Image.Image,Image.Image,int,int,int,int,bool)->Master
@@ -302,6 +336,7 @@ class Master:
         :return: master self.
         """
         # validation
+        assert before is not None, 'provide "before" wave_a template or use inside "with set_waves()"'
         valid1, valid2 = (1, 2, 3), (1, 2, 3, None)
         assert who in valid1 and skill in valid1 and friend in valid2 and enemy in valid2, (who, skill, friend, enemy)
         s = f' to friend {self.members[friend - 1]}' if friend \
@@ -313,36 +348,28 @@ class Master:
             click(self.LOC.enemies[enemy - 1])
         region = self.LOC.skills[who - 1][skill - 1]
         # wait_which_target(self.T.wave1a, self.LOC.master_skill)
-        wait_targets(before, region, at=True)
-        while match_targets(screenshot(), before, region, 0.7):
-            # some times need to
-            click(region, 0.1)
-        if friend is not None:
-            # it should also match the saved screenshot, but...
-            # TODO: match select target shot, same as master_skill
-            time.sleep(0.5)
+        wait_targets(before, region, at=0, lapse=1)
+        if friend is None:
+            while match_targets(screenshot(), before, region, 0.7):
+                # some times need to
+                click(region, 1)
+        else:
+            while not match_targets(screenshot(), self.T.skill_targets, self.LOC.skill_targets_close, 0.7):
+                click(region, 1)
             click(self.LOC.skill_to_target[friend - 1])
         if after is not None and no_wait is False:
             wait_targets(after, region)
         return self
 
-    def set_waves(self, before: Image.Image, after: Image.Image = None):
-        """
-        Set wave_a and wave_b before every wave start. Especially, after order change/stella/jump_battle.
-        """
-        self.wave_a = before
-        self.wave_b = after
-        return self
-
-    def svt_skill(self, who: int, skill: int, friend: int = None, enemy: int = None, no_wait=False):
-        self.svt_skill_full(self.wave_a, self.wave_b, who, skill, friend, enemy, no_wait)
-        return self
-
     def master_skill(self, skill, friend=None, enemy=None, order_change=None, order_change_img=None):
-        # type:(int,int,int,Tuple[int,int],Image.Image)->Master
+        return self.master_skill_full(self._wave_a, skill, friend, enemy, order_change, order_change_img)
+
+    def master_skill_full(self, before, skill, friend=None, enemy=None, order_change=None, order_change_img=None):
+        # type:(Image.Image,int,int,int,Tuple[int,int],Image.Image)->Master
         """
         Release master skill to friend/enemy. Especially, order change if order_change is not None.
 
+        :param before: wave a
         :param skill: 1~3
         :param friend: 1~3
         :param enemy: 1~3
@@ -350,6 +377,7 @@ class Master:
         :param order_change_img: if None, use `self.T.order_change`
         :return: master self
         """
+        assert before is not None, 'provide "before" wave_a template or use inside "with set_waves()"'
         valid, valid2 = (1, 2, 3), (1, 2, 3, None)
         assert skill in valid and friend in valid2 and enemy in valid2, (skill, friend, enemy)
         if order_change is not None:
@@ -367,7 +395,6 @@ class Master:
             self.members[a], self.members[b] = self.members[b], self.members[a]
             logger.debug(f'After order change: {self.members}', extra=LOG_TIME)
 
-        before = self.wave_a
         region = self.LOC.master_skills[skill - 1]
         if enemy is not None:
             click(self.LOC.enemies[enemy - 1])
@@ -384,6 +411,7 @@ class Master:
         if friend is not None:
             # it should also match the saved screenshot, but...
             time.sleep(0.3)
+            wait_targets(self.T.skill_targets, self.LOC.skill_targets_close, 0.7, lapse=0.3)
             click(self.LOC.skill_to_target[friend - 1])
         elif order_change is not None:
             wait_targets(order_change_img, self.LOC.order_change[0])
