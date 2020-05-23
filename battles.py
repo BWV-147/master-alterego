@@ -1,4 +1,10 @@
-"""Store battle_func for different battles"""
+"""Store battle_func for different battles
+
+- for card template of common used servants who have 3+dress sets of models(e.g. Kongming/CBA/Merlin),
+  save all models' cards info(json) and templates into the same folder(e.g. `img/cards/jp/`).
+  Then use `master.set_cards_from_json()` to load it.
+- ensure the same app version(current & saved screenshots): e.g. command card's text might differ.
+"""
 from modules.battle_base import *
 
 
@@ -352,9 +358,55 @@ class SFree(BattleBase):
 
 # noinspection PyPep8Naming,DuplicatedCode
 class Battle(JFree, AFree, SFree):
-    """
-    - it's better to load card templates from json if friend's support(need to parse card) has 3/4 sets of dress,
-      e.g. Kongming, Merlin(3+1 dress), Skadi
-    - ensure the same app version: e.g. command card might differ.
-    """
-    pass
+    def a_barbatos(self, pre_process=False):
+        """
+        师傅(黑杯)-马大(牛魔王)-梅莉support-X-X-X
+        """
+        master = self.master
+        T = master.T
+        LOC = master.LOC
+
+        master.quest_name = 'A-Barbatos'
+        names = master.members = ['师傅', '马大', '梅林']
+        master.set_card_weight(dict(zip(names, [3, 1, 2])))
+
+        # pre-processing: e.g. set templates, only once
+        if pre_process:
+            logger.debug(f'pre-process for {master.quest_name}...')
+            T.read_templates('img/battles/a-barbatos')
+
+            # -----------------------    NP    Quick    Arts   Buster -----------
+            master.set_cards(names[0], (1, 6), (3, 2), (2, 4), (3, 1))
+            master.set_cards(names[1], (1, 0), (1, 4), (1, 2), (2, 2))
+            master.set_cards_from_json(names[2], 'img/cards/android/cards-android.json', '梅林')
+            return
+
+        # battle part
+        if config.battle.jump_battle:
+            config.battle.jump_battle = False
+            logger.warning('goto label.h')
+            goto.h  # noqas
+
+        # label.h  # noqas  # make sure master.set_waves(a,b) is called
+        # master.set_waves(T.waveXa, T.waveXb)
+        label.h  # noqas
+
+        wait_targets(T.support, LOC.support_refresh)
+        master.choose_support(match_svt=True, match_ce=True, match_ce_max=True, match_skills=True,
+                              switch_classes=(5, 0), friend_only=False)
+
+        # wave 1
+        wait_targets(T.wave1a, LOC.loc_wave, 0.7)
+        logger.debug(f'Quest {master.quest_name} started...')
+        logger.debug('wave 1...')
+        with master.set_waves(T.wave1a, T.wave1b):
+            master.svt_skill(3, 1)
+            master.svt_skill(1, 1)
+            master.svt_skill(3, 3, 1)
+            master.svt_skill(2, 2)
+            master.svt_skill(2, 3)
+            master.master_skill(2, 1)
+            master.auto_attack(nps=7)
+
+        master.xjbd(T.kizuna, LOC.kizuna, mode='alter', allow_unknown=True)
+        return

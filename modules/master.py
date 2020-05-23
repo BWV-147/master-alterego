@@ -174,9 +174,10 @@ class Master:
             elif apple == 4:
                 # zihuiti: sleep 1 hour to check again whether ap enough
                 click(self.LOC.apple_close)
-                logger.info('Zihuiti: waiting...')
-                config.update_time(config.manual_operation_time)
-                time.sleep(3600)
+                dt = 3600
+                logger.info(f'AP recover: waiting for {dt//60} min...')
+                config.update_time(dt)
+                time.sleep(dt)
                 break
             elif apple in (0, 1, 2, 3):
                 if match_targets(screenshot(), self.T.apple_page, self.LOC.apples[apple]):
@@ -342,7 +343,7 @@ class Master:
         assert before is not None, 'provide "before" wave_a template or use inside "with set_waves()"'
         valid1, valid2 = (1, 2, 3), (1, 2, 3, None)
         assert who in valid1 and skill in valid1 and friend in valid2 and enemy in valid2, (who, skill, friend, enemy)
-        s = f' to friend {self.members[friend - 1]}' if friend \
+        s = f' to {self.members[friend - 1]}' if friend \
             else f' to enemy {enemy}' if enemy else ''
         logger.info(f'Servant skill: {self.members[who - 1]}-{skill}{s}.', extra=LOG_TIME)
 
