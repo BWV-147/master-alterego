@@ -1,5 +1,6 @@
 """Store battle_func for different battles
 
+- wrap @with_goto to enable goto and label statement.
 - for card template of common used servants who have 3+dress sets of models(e.g. Kongming/CBA/Merlin),
   save all models' cards info(json) and templates into the same folder(e.g. `img/cards/jp/`).
   Then use `master.set_cards_from_json()` to load it.
@@ -30,7 +31,7 @@ class AFree(BattleBase):
 
             # LOC.relocate((0, 0, 1920 - 1, 1080 - 1))
 
-            # -----------------------    NP    Quick    Arts   Buster -----------
+            # --------------  name       NP    Quick    Arts   Buster -----------
             master.set_cards(names[0], (3, 6), (3, 2), (2, 4), (3, 1))
             master.set_cards(names[1], (1, 7), (1, 4), (1, 2), (2, 2))
             master.set_cards_from_json(names[2], 'img/cards/android/cards-android.json', '孔明')
@@ -115,7 +116,7 @@ class JFree(BattleBase):
 
             # LOC.relocate((0, 0, 1920 - 1, 1080 - 1))
 
-            # -----------------------    NP    Quick    Arts   Buster -----------
+            # --------------  name       NP    Quick    Arts   Buster -----------
             master.set_cards(names[0], (1, 6), (1, 3), (2, 1), (2, 4))
             master.set_cards(names[1], (1, 7), (2, 5), (1, 1), (2, 3))
             master.set_cards_from_json(names[2], 'img/cards/jp/cards-jp.json', '孔明')
@@ -194,7 +195,7 @@ class JFree(BattleBase):
 
             # LOC.relocate((0, 0, 1920 - 1, 1080 - 1))
 
-            # -----------------------    NP    Quick    Arts   Buster -----------
+            # --------------  name       NP    Quick    Arts   Buster -----------
             master.set_cards(names[0], (1, 6), (2, 3), (1, 2), (2, 5))
             master.set_cards(names[1], (1, 7), (3, 2), (1, 4), (1, 3))
             master.set_cards_from_json(names[2], 'img/cards/jp/cards-jp.json', '孔明')
@@ -273,7 +274,7 @@ class JFree(BattleBase):
 
             # LOC.relocate((0, 0, 1920 - 1, 1080 - 1))
 
-            # -----------------------    NP    Quick    Arts   Buster -----------
+            # --------------  name       NP    Quick    Arts   Buster -----------
             # master.set_cards(names[0], (), (), (), ())
             master.set_cards(names[1], (4, 7), (2, 1), (1, 2), (3, 1))
             master.set_cards(names[2], (1, 8), (2, 5), (1, 5), (1, 1))
@@ -358,6 +359,7 @@ class SFree(BattleBase):
 
 # noinspection PyPep8Naming,DuplicatedCode
 class Battle(JFree, AFree, SFree):
+    @with_goto
     def a_barbatos(self, pre_process=False):
         """
         师傅(黑杯)-马大(牛魔王)-梅莉support-X-X-X
@@ -368,16 +370,16 @@ class Battle(JFree, AFree, SFree):
 
         master.quest_name = 'A-Barbatos'
         names = master.members = ['师傅', '马大', '梅林']
-        master.set_card_weight(dict(zip(names, [3, 1, 2])))
+        master.set_card_weight(dict(zip(names, [2.05, 1, 2])))
 
         # pre-processing: e.g. set templates, only once
         if pre_process:
             logger.debug(f'pre-process for {master.quest_name}...')
             T.read_templates('img/battles/a-barbatos')
 
-            # -----------------------    NP    Quick    Arts   Buster -----------
-            master.set_cards(names[0], (1, 6), (3, 2), (2, 4), (3, 1))
-            master.set_cards(names[1], (1, 0), (1, 4), (1, 2), (2, 2))
+            # --------------  name       NP    Quick    Arts   Buster -----------
+            master.set_cards(names[0], (1, 6), (2, 1), (1, 2), (1, 1))
+            master.set_cards(names[1], (1, 0), (2, 4), (1, 3), (3, 2))
             master.set_cards_from_json(names[2], 'img/cards/android/cards-android.json', '梅林')
             return
 
@@ -393,7 +395,7 @@ class Battle(JFree, AFree, SFree):
 
         wait_targets(T.support, LOC.support_refresh)
         master.choose_support(match_svt=True, match_ce=True, match_ce_max=True, match_skills=True,
-                              switch_classes=(5, 0), friend_only=False)
+                              switch_classes=(0, 5), friend_only=False, images=[master.T.support2])
 
         # wave 1
         wait_targets(T.wave1a, LOC.loc_wave, 0.7)
@@ -406,7 +408,7 @@ class Battle(JFree, AFree, SFree):
             master.svt_skill(2, 2)
             master.svt_skill(2, 3)
             master.master_skill(2, 1)
-            master.auto_attack(nps=7)
+            master.auto_attack(nps=6)
 
-        master.xjbd(T.kizuna, LOC.kizuna, mode='alter', allow_unknown=True)
+        master.xjbd(T.kizuna, LOC.kizuna, allow_unknown=True)
         return

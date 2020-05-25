@@ -84,14 +84,14 @@ class Regions(_Regions):
     safe_area = (1460, 100)  # for battle
     menu_button = (1659, 974, 1911, 1074)
 
-    # ---------- gacha part ----------
-    gacha_point = (600, 650)
-    gacha_tab = (1009, 188, 1213, 228)
-    gacha_10_initial = (483, 630, 800, 774)
-    gacha_reset_action = (1546, 337, 1863, 394)
-    gacha_reset_confirm = (1097, 813, 1416, 879)
-    gacha_reset_finish = (800, 811, 1113, 878)
-    gacha_empty = (285, 631, 524, 780)  # used when no ticket left
+    # ---------- lottery part ----------
+    lottery_point = (600, 650)
+    lottery_tab = (1009, 188, 1213, 228)
+    lottery_10_initial = (483, 630, 800, 774)
+    lottery_reset_action = (1546, 337, 1863, 394)
+    lottery_reset_confirm = (1097, 813, 1416, 879)
+    lottery_reset_finish = (800, 811, 1113, 878)
+    lottery_empty = (285, 631, 524, 780)  # used when no ticket left
     # move to mailbox
     mailbox_full_confirm = (1112, 822, 1463, 873)
 
@@ -110,8 +110,8 @@ class Regions(_Regions):
     mailbox_drag_end = (1070, 250)
     box_history = (365, 30, 522, 102)
     # from mailbox move to bag/enhancement
-    bag_full_sell_action = (471, 689, 565, 740)
-    bag_full_enhance_action = (907, 689, 1008, 736)
+    bag_full_sell_button = (471, 689, 565, 740)
+    bag_full_enhance_button = (907, 689, 1008, 736)
 
     # in bag
     bag_back = (49, 34, 242, 100)
@@ -130,8 +130,8 @@ class Regions(_Regions):
     # ---------- battle part ----------
     apply_friend = (1692, 521, 1826, 588)
     apply_friend_deny = (464, 913)
-    quest = (966, 295, 1149, 417)  # (937, 240, 1848, 360)
-    quest_outer = (966, 246, 1149, 427)
+    quest = (966, 295, 1149, 350)  # (937, 240, 1848, 360)
+    quest_outer = (966, 246, 1149, 360)
     quest_c = (1600, 265)
     quest_master_avatar = (91, 835, 242, 997)
     # rewards = (1680, 33, 1868, 91)
@@ -221,6 +221,12 @@ class Regions(_Regions):
     fp_gacha_confirm = (1205, 819, 1300, 868)
     fp_gacha_result_summon = (987, 983, 1302, 1035)  # gacha10again, origin is(1096, 980, 1200, 1037)
 
+    fp_bag_full_title = (569, 225, 660, 275)
+    fp_bag_full_sell_button = (471, 689, 565, 740)
+    fp_bag_full_enhance_button = (907, 689, 1008, 736)
+    fp_bag_full_archive_button = (1283, 689, 1518, 736)
+    fp_bag_full_close_button = (913, 823, 1007, 871)
+
 
 class ImageTemplates:
     """
@@ -256,11 +262,11 @@ class ImageTemplates:
         self.wave2b: Optional[Image.Image] = None
         self.wave3a: Optional[Image.Image] = None
         self.wave3b: Optional[Image.Image] = None
-        # ============ gacha part ============
-        self.gacha_initial: Optional[Image.Image] = None
-        self.gacha_empty: Optional[Image.Image] = None
-        self.gacha_reset_confirm: Optional[Image.Image] = None
-        self.gacha_reset_finish: Optional[Image.Image] = None
+        # ============ lottery part ============
+        self.lottery_initial: Optional[Image.Image] = None
+        self.lottery_empty: Optional[Image.Image] = None
+        self.lottery_reset_confirm: Optional[Image.Image] = None
+        self.lottery_reset_finish: Optional[Image.Image] = None
         self.mailbox_full_alert: Optional[Image.Image] = None
         self.mailbox_unselected1: Optional[Image.Image] = None
         self.mailbox_unselected2: Optional[Image.Image] = None

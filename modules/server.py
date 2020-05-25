@@ -49,7 +49,7 @@ for _logger in (werkzeug_logger, app.logger):  # type:logging.Logger
 
 @app.route('/')
 def index():
-    return 'hello world'
+    return redirect('/html/index.html')
 
 
 @app.route('/favicon.ico')
@@ -107,6 +107,18 @@ def get_file():
         else:
             return send_from_directory('.', filepath)
     return Response(compress_image(image).getvalue(), mimetype="image/jpeg")
+
+
+@app.route('/shutdown')
+def shutdown_task():
+    """Shutdown running task."""
+    from util.config import config
+    from util.addon import kill_thread
+    if config.running_thread and config.running_thread.is_alive():
+        kill_thread(config.running_thread)
+        return f'Task has been terminated.\nThread: {config.running_thread}'
+    else:
+        return f'No running task.\nThread: {config.running_thread}'
 
 
 # %%

@@ -102,8 +102,8 @@ def screenshot(region: Sequence = None, filepath: str = None, monitor: int = Non
     Take screenshot of multi-monitors.
 
     :param region: region inside monitor
-    :param filepath: if not None, save to `filepath` then return
-    :param monitor: 0-total size of all monitors, 1-main, 2-second monitor
+    :param filepath: if not None, save to `filepath` then return Image
+    :param monitor: 0-total size of all monitors, >0: monitor N, shown in system settings
     :return: PIL.Image.Image
     """
     if monitor is None:
@@ -125,7 +125,7 @@ def screenshot(region: Sequence = None, filepath: str = None, monitor: int = Non
                 except Exception as e:
                     logger.error(f'Fail to grab screenshot using ImageGrad. Error:\n{e}')
     if _image is None:
-        # grab failed, return a empty image with single color
+        # grab failed, return an empty image with single color
         _image = Image.new('RGB', size, (0, 255, 255)).crop(region)
     if filepath is not None:
         _image.save(filepath)

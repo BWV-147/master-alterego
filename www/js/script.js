@@ -32,6 +32,15 @@ function trimChar(string, chars = ' \n\t\r', pos = 0) {
   return string;
 }
 
+
+function shutdown() {
+  if (confirm('Are you sure to shutdown running task in server?')===true){
+    $.get('/shutdown', function (result) {
+      alert('Shutdown result: ' + result.toString())
+    })
+  }
+}
+
 /**
  * log related
  */

@@ -9,34 +9,33 @@ class BattleBase(BaseAgent):
     def __init__(self):
         self.master = Master()
 
-    def pre_process(self, conf=None):
-        super().pre_process(conf)
-        battle_func = getattr(self, config.battle.battle_func)
-        battle_func(True)
-        config.T = self.master.T
-        config.LOC = self.master.LOC
-
-    def start(self, supervise=True, conf=None, force_jump=False):
+    def start(self, supervise=True, cfg=None, force_jump=False):
         """
         Start battle.
 
         :param supervise: if True, start battle in child thread, else directly.
-        :param conf: config filename, default data/config.json.
+        :param cfg: config filename, default data/config.json.
         :param force_jump: if True, set True for config.battle.jump_battle, do nothing if False.
                             Just a convenient way to jump other then edit config file.
         :return:
         """
-        self.pre_process(conf)
+        # pre-processing
+        self.pre_process(cfg)
+        battle_func = getattr(self, config.battle.battle_func)
+        battle_func(True)
+        config.T = self.master.T
+        config.LOC = self.master.LOC
         if force_jump:
             config.battle.jump_battle = True
-        logger.info('starting battle...', extra=LOG_TIME)
-        time.sleep(2)
-        battle_func = getattr(self, config.battle.battle_func)
-        t_name: str = battle_func.__name__.replace('_', '-').title()
         if config.battle.num <= 0:
             logger.warning(f'no battle, exit.')
             return
+
+        # starting
+        logger.info('starting battle...', extra=LOG_TIME)
+        time.sleep(2)
         if supervise:
+            t_name: str = battle_func.__name__.replace('_', '-').title()
             thread = threading.Thread(target=self._start, name=t_name,
                                       kwargs={"battle_func": battle_func,
                                               "battle_num": config.battle.num,
@@ -44,6 +43,7 @@ class BattleBase(BaseAgent):
                                       daemon=True)
             supervise_log_time(thread, 90, interval=3)
         else:
+            config.running_thread = threading.current_thread()
             self._start(battle_func=battle_func, battle_num=config.battle.num, apples=config.battle.apples)
         self.post_process()
 
@@ -56,7 +56,8 @@ class BattleBase(BaseAgent):
         max_num = battle_num
         while finished_num < max_num:
             finished_num += 1
-            logger.info(f'>>>>> Battle "{self.master.quest_name}" No.{finished_num}/{max_num} <<<<<', extra=LOG_TIME)
+            logger.info(f'========= Battle "{self.master.quest_name}" No.{finished_num}/{max_num} =========',
+                        extra=LOG_TIME)
             if not config.battle.jump_battle:
                 while True:
                     shot = screenshot()
@@ -68,10 +69,10 @@ class BattleBase(BaseAgent):
                     elif match_targets(shot, T.apple_page, LOC.apple_close):
                         self.master.eat_apple(apples)
                     elif T.get('bag_full_alert') is not None \
-                            and match_targets(shot, T.bag_full_alert, LOC.bag_full_sell_action):
+                            and match_targets(shot, T.bag_full_alert, LOC.bag_full_sell_button):
                         # usually used in hunting events.
                         logger.info('bag full, to sell...')
-                        click(LOC.bag_full_sell_action)
+                        click(LOC.bag_full_sell_button)
                         self.sell(config.battle.sell_when_battle)
                     elif match_targets(shot, T.restart_quest, LOC.restart_quest_yes):
                         click(LOC.restart_quest_yes)
@@ -87,9 +88,9 @@ class BattleBase(BaseAgent):
             click(LOC.rewards_show_num, lapse=1)
             # check reward_page has CE dropped or not
             dt = timer.lapse()
-            logger.info(f'--- Battle {finished_num}/{max_num} finished,'
-                        f' time = {int(dt // 60)} min {int(dt % 60)} sec.'
-                        f' (total {config.battle.finished})', extra=LOG_TIME)
+            logger.info(f'Battle {finished_num}/{max_num} finished, '
+                        f'time = {int(dt // 60)} min {int(dt % 60)} sec. '
+                        f'(total {config.battle.finished})', extra=LOG_TIME)
             rewards = screenshot()
             craft_dropped = match_targets(rewards, T.rewards, LOC.finish_craft)
             drop_dir = f'img/_drops/{self.master.quest_name}'
@@ -146,7 +147,7 @@ class BattleBase(BaseAgent):
         print('Make sure the bag **FILTER** only shows "Experience Cards"/"Zhong Huo"!')
         no = 0
         if num <= 0:
-            logger.warning('please sell items manually and return to gacha page!')
+            logger.warning('please sell items manually and return to support page!')
             time.sleep(2)
             config.update_time(config.manual_operation_time)  # min for manual operation
             raise_alert()
@@ -197,7 +198,7 @@ class BattleBase(BaseAgent):
 
             # LOC.relocate((0, 0, 1920 - 1, 1080 - 1))
 
-            # -----------------------    NP    Quick    Arts   Buster -----------
+            # --------------  name       NP    Quick    Arts   Buster -----------
             master.set_cards(names[0], (3, 6), (1, 5), (1, 3), (3, 3))
             master.set_cards(names[1], (1, 7), (2, 2), (1, 1), (2, 4))
             master.set_cards_from_json(names[2], 'img/cards/android/cards-android.json', '孔明')

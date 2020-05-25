@@ -4,6 +4,7 @@ import json
 import os
 import threading
 import time
+from typing import Optional
 
 
 class _BaseConfig:
@@ -54,8 +55,9 @@ class Config(_BaseConfig):
         # ================= sys config =================
         self.id = None
         self.is_jp = False  # difference between jp and cn server
-        self.monitor = 1  # >=1, check mss().monitors to see monitor info, 0 is total size
-        self.offset = (0, 0)  # xy offset for mouse click event, relative to MAIN monitor's origin
+        # Attention: MAIN monitor is not always monitor 1.
+        self.monitor = 1  # >=1, check sct.monitors to see monitor info, 0 is all monitors in one screenshot
+        self.offset = (0, 0)  # xy offset relative to MAIN monitor's origin for mouse click
         self.mail = False  # whether to send_mail
         self.alert_type = False  # bool: beep, str: ring tone, alert if supervisor found errors or task finish.
         self.manual_operation_time = 60 * 10  # seconds.
@@ -65,7 +67,7 @@ class Config(_BaseConfig):
 
         # ================= battle part =================
         self.battle = BattleConfig()
-        self.gacha = GachaConfig()
+        self.lottery = LotteryConfig()
         self.fp_gacha = FpGachaConfig()
         # ================= Email part ==================
         # make sure the security of password.
@@ -82,7 +84,7 @@ class Config(_BaseConfig):
         self.LOC = None
         self.log_time = 0  # record the time of last logging.info/debug..., set NO_LOG_TIME outside battle progress
         self.task_finished = False  # all battles finished, set to True before child process exist.
-        self.running_thread = None
+        self.running_thread: Optional[threading.Thread] = None
         self.temp = {}  # save temp vars at runtime
 
         self._ignored = ['fp', 'T', 'LOC', 'log_time', 'task_finished', 'running_thread', 'temp']
@@ -103,9 +105,9 @@ class Config(_BaseConfig):
         fp = fp or self.fp
         return super().save(fp)
 
-    def count_gacha(self):
-        self.gacha.finished += 1
-        self.gacha.num -= 1
+    def count_lottery(self):
+        self.lottery.finished += 1
+        self.lottery.num -= 1
         self.save()
 
     def count_fp_gacha(self):
@@ -150,7 +152,7 @@ class BattleConfig(_BaseConfig):
         self.num = 1  # max battle num once running, auto decrease
         self.finished = 0  # all finished battles sum, auto increase, don't edit
         self.check_drop = True  # check craft dropped or not, if True, make sure rewards.png contains the dropped craft.
-        self.apples = []  # invalid: stop, 0-colorful, 1-gold, 2-sliver, 3-cropper, 4-zihuiti
+        self.apples = []  # invalid: stop, 0-rainbow, 1-gold, 2-sliver, 3-cropper, 4-zihuiti, 5-manually(wait ~7min)
         self.jump_battle = False  # goto decoration in Battle.battle_func
         self.login_handler = None  # JP: re-login at 3am(UTC+08)
         self.sell_when_battle = 0  # usually used in hunting event
@@ -165,12 +167,12 @@ class BattleConfig(_BaseConfig):
         self._ignored = ['login_handler', ]
 
 
-class GachaConfig(_BaseConfig):
+class LotteryConfig(_BaseConfig):
     def __init__(self):
         super().__init__()
         self.dir = None
         self.start_func = 'draw'  # draw->clean->sell
-        self.num = 10  # gacha num running once, auto decrease
+        self.num = 10  # lottery num running once, auto decrease
         self.finished = 1  # auto increase， don't edit
         self.clean_num = 100  # < max_num - 10 - retained_num
         self.clean_drag_times = 20  # max drag times during clean mailbox

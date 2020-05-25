@@ -1,7 +1,9 @@
 # %%
-from modules.master import *
+from util.addon import check_sys_setting
+from util.autogui import *
 
 check_sys_setting()
+config.load()
 
 # %%
 # base_path = 'img/battles/a-charlotte/'  # 'img/gacha-jp'
@@ -22,7 +24,7 @@ def capture(fn: str):
 
 # %%
 def save_rewards(quest_name):
-    fn = f'img/_drops/rewards-{quest_name}-{time.strftime("%m%d-%H%M")}.png'
+    fn = f'img/_drops/{quest_name}/rewards-{quest_name}-{time.strftime("%m%d-%H%M")}.png'
     print(f'Save "{fn}"')
     screenshot().save(fn)
 
@@ -41,9 +43,9 @@ capture('support_confirm')
 # %% !!!
 capture('team')
 # %% !!!
-capture('skill_targets')
-# %% !!!
 capture('wave1a')
+# %% !!!
+capture('skill_targets')
 # %% !!!
 capture('wave1b')
 # %% !!!
@@ -91,14 +93,14 @@ capture('cards8')
 # %%
 capture('cards9')
 
-# %% -------------- gacha part --------------
-capture('gacha_initial')
+# %% -------------- lottery part --------------
+capture('lottery_initial')
 # %%
-capture('gacha_empty')
+capture('lottery_empty')
 # %%
-capture('gacha_reset_confirm')
+capture('lottery_reset_confirm')
 # %%
-capture('gacha_reset_finish')
+capture('lottery_reset_finish')
 # %%
 capture('mailbox_full_alert')
 # %% sliver card ×1

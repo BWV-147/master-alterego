@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="">
     <meta name="author" content="">
-    <title>Screenshot - Inspector</title>
+    <title>Home - Inspector</title>
 
     <!-- Bootstrap core CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
@@ -32,22 +32,9 @@
     <!-- Main jumbotron for a primary marketing message or call to action -->
     <div class="" style="padding-top: 4rem">
         <div class="container">
-            <div class="text-center">
-                <div class="btn btn-primary" id="refreshScreenshot">Refresh</div>
-            </div>
-            <div style="padding-top: 5px">
-                <!--suppress HtmlUnknownTarget -->
-                <img src="/getFile?path=screenshot" class="card-img-top" id="screenshot" alt="Screenshot">
-            </div>
-            <hr>
         </div>
     </div>
 </main>
-<script>
-  $('#refreshScreenshot').click(function () {
-    $('#screenshot').attr('src', '/getFile?path=screenshot&time=' + new Date().getTime())
-  })
-</script>
 <div class="footer-placeholder"></div>
 </body>
 </html>
