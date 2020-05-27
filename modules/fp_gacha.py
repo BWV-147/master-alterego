@@ -22,7 +22,7 @@ class FpGacha(BaseAgent):
         if supervise:
             t_name = os.path.basename(config.fp_gacha.dir)
             thread = threading.Thread(target=start_func, name=t_name, args=[config.fp_gacha.num], daemon=True)
-            supervise_log_time(thread, 10, interval=3, alert_loops=3)
+            supervise_log_time(thread, 20, interval=3, alert_loops=3)
         else:
             config.running_thread = threading.current_thread()
             start_func(config.fp_gacha.num)
@@ -35,36 +35,140 @@ class FpGacha(BaseAgent):
         T = self.T
         LOC = self.LOC
 
-        wait_targets(T.fp_gacha_result, [LOC.fp_gacha_logo])
+        wait_targets(T.gacha_fp_result, [LOC.gacha_fp_logo])
         logger.info('draw: starting...', extra=LOG_TIME)
         loops = 0
         while loops < num:
-            # print(f'\r loop {loops:<4d}', end='')
             config.update_time()
             if loops % 10 == 0:
                 logger.debug(f'fp gacha {loops}/{num}...')
             # wait_targets(T.fp_gacha_page, LOC.fp_gacha_logo, at=LOC.fp_gacha_point)
-            page_no = wait_which_target([T.fp_gacha_result, T.fp_bag2_full],
-                                        [LOC.fp_gacha_result_summon, LOC.bag_full_sell_button],
-                                        clicking=LOC.fp_gacha_point, interval=0.05)
+            page_no = wait_which_target([T.gacha_fp_result, T.gacha_fp_bag2_full],
+                                        [LOC.gacha_fp_result_summon, LOC.bag_full_sell_button],
+                                        clicking=LOC.gacha_fp_point, interval=0.05)
             if page_no == 0:
                 loops += 1
-                click(LOC.fp_gacha_result_summon)
+                click(LOC.gacha_fp_result_summon)
                 config.update_time()
                 config.count_fp_gacha()
-            elif page_no > 0:
-                if match_targets(screenshot(), T.fp_bag1_full, LOC.fp_bag_full_title):
+            else:
+                bag_no = wait_which_target([T.gacha_fp_bag1_full, T.gacha_fp_bag2_full], LOC.fp_bag_full_title)
+                if bag_no == 0:
                     logger.info('servant bag full, make sure only show *LOW RARITY<=3* servants.')
                     click(LOC.fp_bag_full_sell_button)
-                    pass
-                elif match_targets(screenshot(), T.fp_bag2_full, LOC.fp_bag_full_title):
+                    self.sell(config.fp_gacha.sell_num)
+                else:
                     logger.info('CE bag full, make sure only show *LOW RARITY<=2* CE.')
                     click(LOC.fp_bag_full_enhance_button)
-                    pass
-
-                logger.info(f'bag {page_no} full, sell or enhance manually.', extra=LOG_TIME)
-                config.update_time(config.manual_operation_time)
-                raise_alert(loops=1)
-                wait_targets(T.fp_gacha_result, LOC.fp_gacha_logo)
-                logger.info('back to fp gacha.', extra=LOG_TIME)
+                    self.enhance_ce(config.fp_gacha.enhance_num)
+                wait_targets(T.shop, LOC.menu_button, at=0)
+                wait_targets(T.menu, LOC.menu_gacha_button, at=0)
+                while True:
+                    wait_targets(T.gacha_quartz_page, LOC.gacha_help, lapse=0.2)
+                    shot = screenshot()
+                    if match_targets(shot, T.gacha_quartz_page, LOC.gacha_quartz_logo):
+                        click(LOC.gacha_arrow_left)
+                    elif match_targets(shot, T.gacha_fp_page, LOC.gacha_fp_logo):
+                        logger.debug('back to fp gacha page')
+                        break
         config.mark_task_finish()
+
+    def sell(self, num=100, up_time=2):
+        """
+        Start at sell page, end at shop page. (click BACK once at last)
+
+        :param num: num<0: manual mode; num=0: don't sell, go back directly; num>0: sell times.
+        :param up_time: drag up_time at end point
+        :return:
+        """
+        T, LOC = self.T, self.LOC
+        logger.info('shop: selling...', extra=LOG_TIME)
+        wait_targets(T.bag_unselected, LOC.bag_svt_tab)
+        print('Make sure the correct setting of **FILTER**')
+        if num <= 0:
+            logger.info('need manual operation!')
+            time.sleep(2)
+            config.update_time(config.manual_operation_time)  # min for manual operation
+            raise_alert()
+            wait_targets(T.shop, LOC.menu_button)
+            return
+
+        no = 0
+        while True:
+            wait_targets(T.bag_unselected, [LOC.bag_svt_tab, LOC.bag_sell_action])
+            if no < num:
+                drag(LOC.bag_select_start, LOC.bag_select_middle, 0.6, 0.5, None, 0)
+                drag(LOC.bag_select_middle, LOC.bag_select_end, 1, None, up_time)
+            page_no = wait_which_target([T.bag_selected, T.bag_unselected],
+                                        [LOC.bag_sell_action, LOC.bag_sell_action])
+            if page_no == 0:
+                no += 1
+                logger.info(f'sell: {no} times...', extra=LOG_TIME)
+                click(LOC.bag_sell_action)
+                wait_targets(T.bag_sell_confirm, LOC.bag_sell_confirm, at=0)
+                wait_targets(T.bag_sell_finish, LOC.bag_sell_finish, at=0)
+            else:
+                if no == 0:
+                    logger.warning('svt bag full but nothing can be sold! waiting manual operation.')
+                    config.update_time(config.manual_operation_time)
+                    raise_alert()
+                    wait_targets(T.shop, LOC.menu_button)
+                    return
+                logger.info('all sold.', extra=LOG_TIME)
+                click(LOC.bag_back)
+                wait_targets(T.shop, LOC.menu_button)
+                return
+
+    def enhance_ce(self, num=100):
+        T, LOC = self.T, self.LOC
+        logger.info('enhance ce', extra=LOG_TIME)
+        if num <= 0:
+            logger.info('need manual operation!')
+            time.sleep(2)
+            config.update_time(config.manual_operation_time)  # min for manual operation
+            raise_alert()
+            wait_targets(T.shop, LOC.menu_button)
+            return
+        no = 0
+        while True:
+            wait_targets(T.ce_enhance_empty, LOC.ce_enhance_help)
+            if no >= num:
+                click(LOC.bag_back)
+                wait_targets(T.shop, LOC.menu_button)
+                return
+            target_selected = wait_which_target([T.ce_enhance_empty, T.ce_enhance_page], LOC.ce_target_box)
+            if target_selected == 0:
+                logger.debug('choose enhancement target', extra=LOG_TIME)
+                click(LOC.ce_target_box)
+                wait_targets(T.ce_select_target, LOC.ce_select_mode)
+                shot = screenshot()
+                for box in LOC.ce_targets:
+                    if match_targets(shot, T.ce_select_target, box):
+                        click(box)
+                        break
+            wait_targets(T.ce_enhance_page, LOC.ce_target_box, at=LOC.ce_select_items_box)
+            wait_targets(T.ce_items_unselected, LOC.ce_select_button)
+            drag(LOC.ce_select_start, LOC.ce_select_middle, 0.5, 0.5, None, 0)
+            drag(LOC.ce_select_middle, LOC.ce_select_end, 0.1, None, 0.2)
+            item_selected = wait_which_target([T.ce_items_unselected, T.ce_items_selected], LOC.ce_select_button)
+            if item_selected == 0:
+                logger.info('no ce left', extra=LOG_TIME)
+                if no == 0:
+                    logger.warning('ce bag full but nothing can be enhanced! waiting manual operation.')
+                    config.update_time(config.manual_operation_time)
+                    raise_alert()
+                    wait_targets(T.shop, LOC.menu_button)
+                    return
+                click(LOC.bag_back)
+                wait_targets(T.ce_enhance_empty, LOC.ce_enhance_help)
+                click(LOC.bag_back)
+                wait_targets(T.shop, LOC.menu_button)
+                return
+            else:
+                click(LOC.ce_select_button)
+                wait_targets(T.ce_enhance_page, LOC.ce_enhance_lv2)
+                click(LOC.ce_enhance_button)
+                wait_targets(T.ce_enhance_confirm, LOC.ce_enhance_confirm, at=0)
+                wait_targets(T.ce_enhance_empty, LOC.ce_enhance_lv2, clicking=LOC.ce_enhance_button)
+                no += 1
+                logger.debug(f'enhance {no}', extra=LOG_TIME)

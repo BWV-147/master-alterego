@@ -82,7 +82,6 @@ class Regions(_Regions):
     # common, or for supervisor
     net_error = ((599, 814, 720, 872), (1138, 813, 1378, 876))
     safe_area = (1460, 100)  # for battle
-    menu_button = (1659, 974, 1911, 1074)
 
     # ---------- lottery part ----------
     lottery_point = (600, 650)
@@ -113,14 +112,36 @@ class Regions(_Regions):
     bag_full_sell_button = (471, 689, 565, 740)
     bag_full_enhance_button = (907, 689, 1008, 736)
 
+    # menu
+    menu_button = (1659, 974, 1911, 1074)
+    menu_enhance_button = (486, 933, 588, 1011)
+    menu_gacha_button = (758, 933, 860, 1011)
+    menu_shop_button = (1030, 933, 1132, 1011)
     # in bag
     bag_back = (49, 34, 242, 100)
+    bag_svt_tab = (107, 152, 193, 191)
     bag_select_start = (200, 350)
+    bag_select_middle = (1416, 350)
     bag_select_end = (1416, 1050)
     bag_sell_action = (1600, 975, 1870, 1047)
     bag_sell_confirm = (1181, 912, 1340, 968)
     bag_sell_finish = (875, 908, 1045, 966)
 
+    # ce enhance
+    ce_enhance_button = (1587, 988, 1645, 1051)
+    ce_enhance_help = (640, 1014, 705, 1050)
+    ce_target_box = (211, 520, 373, 687)
+    ce_select_mode = (5, 319, 88, 411)
+    ce_targets = [(1307, 362, 1356, 382), (1107, 362, 1156, 382), (908, 362, 957, 382), (708, 362, 757, 382),
+                  (509, 362, 558, 382), (309, 362, 358, 382), (110, 362, 159, 382)]
+
+    ce_select_items_box = (600, 300, 700, 400)
+    ce_select_button = (1680, 980, 1777, 1040)
+    ce_select_start = (210, 590)
+    ce_select_middle = (1407, 590)
+    ce_select_end = (1407, 1025)
+    ce_enhance_lv2 = (1253, 671, 1322, 717)
+    ce_enhance_confirm = (1203, 855, 1316, 913)
     # from bag to drawer
     shop_sell = (1352, 465, 1723, 552)
     shop_event_item_exchange = (1352, 239, 1723, 322)
@@ -215,11 +236,13 @@ class Regions(_Regions):
     # friend_point = (460, 810, 580, 880)
 
     # ============= fp gacha ================
-    fp_gacha_logo = (962, 22, 1050, 100)
-    fp_gacha10_button = (1111, 800, 1374, 886)
-    fp_gacha_point = (1240, 864)
-    fp_gacha_confirm = (1205, 819, 1300, 868)
-    fp_gacha_result_summon = (987, 983, 1302, 1035)  # gacha10again, origin is(1096, 980, 1200, 1037)
+    gacha_fp_logo = (981, 41, 1028, 86)
+    gacha_quartz_logo = (567, 41, 612, 76)
+    gacha_help = (111, 899, 198, 944)
+    gacha_fp_10_button = (1111, 800, 1374, 886)
+    gacha_fp_point = (1240, 864)  # click point
+    gacha_fp_confirm = (1205, 819, 1300, 868)
+    gacha_fp_result_summon = (987, 983, 1302, 1035)  # gacha10again, origin is(1096, 980, 1200, 1037)
 
     fp_bag_full_title = (569, 225, 660, 275)
     fp_bag_full_sell_button = (471, 689, 565, 740)
@@ -227,12 +250,15 @@ class Regions(_Regions):
     fp_bag_full_archive_button = (1283, 689, 1518, 736)
     fp_bag_full_close_button = (913, 823, 1007, 871)
 
+    gacha_arrow_left = (77, 539)
+    gacha_arrow_right = (1850, 539)
+
 
 class ImageTemplates:
     """
     Store loaded template images. Image file(*.png) should be screenshots token by PIL or mss module.
     Otherwise, image comparision may not work.
-    @DynamicAttrs
+    @xDyxnxaxmxixcAttrs
     """
 
     def __init__(self, directory: str = None):
@@ -279,11 +305,20 @@ class ImageTemplates:
         self.shop: Optional[Image.Image] = None
         self.shop_event_banner_list: Optional[Image.Image] = None
         # ============ fp gacha part ============
-        self.fp_gacha_page: Optional[Image.Image] = None
-        self.fp_gacha_confirm: Optional[Image.Image] = None
-        self.fp_gacha_result: Optional[Image.Image] = None
-        self.fp_bag1_full: Optional[Image.Image] = None
-        self.fp_bag2_full: Optional[Image.Image] = None
+        self.gacha_quartz_page: Optional[Image.Image] = None
+        self.gacha_fp_page: Optional[Image.Image] = None
+        self.gacha_fp_confirm: Optional[Image.Image] = None
+        self.gacha_fp_result: Optional[Image.Image] = None
+        self.gacha_fp_bag1_full: Optional[Image.Image] = None
+        self.gacha_fp_bag2_full: Optional[Image.Image] = None
+        self.menu: Optional[Image.Image] = None
+        self.ce_enhance_empty = None
+        self.ce_select_target = None
+        self.ce_items_unselected = None
+        self.ce_items_selected = None
+        self.ce_enhance_page = None
+        self.ce_enhance_confirm = None
+
         # =========== End Props =========== #
         if directory is not None:
             self.read_templates(directory)

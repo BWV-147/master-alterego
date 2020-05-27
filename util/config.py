@@ -186,6 +186,8 @@ class FpGachaConfig(_BaseConfig):
         self.dir = None
         self.num = 0
         self.finished = 0
+        self.sell_num = 10
+        self.enhance_num = 100
 
 
 config = Config()

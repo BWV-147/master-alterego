@@ -60,7 +60,6 @@ def supervise_log_time(thread, time_out=60, mail=None, interval=10, alert_type=N
                 config.battle.login_handler()
 
         # case 5: unrecognized error - waiting user to handle (in 2*loops seconds)
-        print(f'loops={loops}')
         if loops == alert_loops:
             logger.warning(f'Something wrong, please solve it, or it will be force stopped...\n'
                            f' - thread  alive: {thread.is_alive()}.\n'

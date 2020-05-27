@@ -34,7 +34,7 @@ def move_to(xy: Sequence):
     pyautogui.moveTo(x, y)
 
 
-def drag(start: Sequence, end: Sequence, duration=1.0, down_time=0.0, up_time=0.0, lapse=0.5):
+def drag(start: Sequence, end: Sequence, duration=1.0, down_time=1.0, up_time=0.0, lapse=0.5):
     """
     :param start: (x1,y1)
     :param end: (x2,y2) both absolute coordinate
