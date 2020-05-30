@@ -4,6 +4,7 @@ from .base_agent import BaseAgent
 
 class Lottery(BaseAgent):
     def __init__(self, path=None):
+        super().__init__()
         self.T = ImageTemplates(path)
         self.LOC = Regions()
         logger.set_cur_logger('gacha')
@@ -20,7 +21,6 @@ class Lottery(BaseAgent):
         logger.info(f'start lottery({start_func.__name__})...', extra=LOG_TIME)
         args = {self.draw.__name__: [config.lottery.num],
                 self.clean.__name__: [config.lottery.clean_num],
-                self.sell.__name__: [config.lottery.sell_times]
                 }[start_func.__name__]
         time.sleep(2)
         if supervise:
@@ -74,7 +74,6 @@ class Lottery(BaseAgent):
     def clean(self, num: int = 100):
         """
         Pay attention if cleaning before mailbox is full.
-        TODO: if num = numpy.INF, use get_all_items action.
 
         :param num: max item num to get out from mailbox, if <0: manual mode. num < (box_max_num - 10 - retained_num)
         """
@@ -144,46 +143,10 @@ class Lottery(BaseAgent):
             elif page_no == 1:
                 logger.info('bag full.')
                 click(LOC.bag_full_sell_button)
-                self.sell(config.lottery.sell_times)
+                self.sell(config.lottery.sell_times, 1, 4)
+                wait_targets(T.shop, LOC.shop_event_item_exchange, at=0)
+                wait_targets(T.shop_event_banner_list,
+                             LOC.shop_event_banner_list[config.lottery.event_banner_no], at=True)
+                wait_targets(T.lottery_initial, LOC.lottery_10_initial, clicking=LOC.lottery_tab)
+                logger.info('from shop back to lottery', extra=LOG_TIME)
                 return
-
-    def sell(self, num=100):
-        """
-        Back to lottery_initial page finally.
-
-        :param num: num<0: manual mode; num=0: don't sell, go back directly; num>0: sell times.
-        :return:
-        """
-        T = self.T
-        LOC = self.LOC
-        logger.info('shop: selling...', extra=LOG_TIME)
-        print('Make sure the bag **FILTER** only shows "Experience Cards"/"Zhong Huo"!')
-        if num <= 0:
-            logger.warning('please sell items manually and return to lottery page!')
-            time.sleep(2)
-            config.update_time(config.manual_operation_time)  # min for manual operation
-            raise_alert()
-        else:
-            no = 0
-            while True:
-                wait_targets(T.bag_unselected, LOC.bag_sell_action)
-                if no < num:
-                    drag(LOC.bag_select_start, LOC.bag_select_end, duration=1, down_time=1, up_time=4)
-                page_no = wait_which_target([T.bag_selected, T.bag_unselected],
-                                            [LOC.bag_sell_action, LOC.bag_sell_action])
-                if page_no == 0:
-                    no += 1
-                    logger.info(f'sell: {no} times...', extra=LOG_TIME)
-                    click(LOC.bag_sell_action)
-                    wait_targets(T.bag_sell_confirm, LOC.bag_sell_confirm, at=True)
-                    wait_targets(T.bag_sell_finish, LOC.bag_sell_finish, at=0)
-                else:
-                    logger.info('all sold.', extra=LOG_TIME)
-                    click(LOC.bag_back)
-                    wait_targets(T.shop, LOC.shop_event_item_exchange, at=0)
-                    wait_targets(T.shop_event_banner_list,
-                                 LOC.shop_event_banner_list[config.lottery.event_banner_no], at=True)
-                    wait_targets(T.lottery_initial, LOC.lottery_10_initial, clicking=LOC.lottery_tab)
-                    break
-        wait_targets(T.lottery_initial, LOC.lottery_10_initial)
-        logger.info('from shop back to lottery', extra=LOG_TIME)

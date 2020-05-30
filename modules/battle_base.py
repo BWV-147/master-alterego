@@ -1,13 +1,16 @@
 from goto import with_goto  # noqas
 
 from util.supervisor import *
-from .base_agent import BaseAgent
+from .base_agent import *
 from .master import *
 
 
 class BattleBase(BaseAgent):
     def __init__(self):
+        super().__init__()
         self.master = Master()
+        self.T = self.master.T
+        self.LOC = self.master.LOC
 
     def start(self, supervise=True, cfg=None, force_jump=False):
         """
@@ -23,8 +26,8 @@ class BattleBase(BaseAgent):
         self.pre_process(cfg)
         battle_func = getattr(self, config.battle.battle_func)
         battle_func(True)
-        config.T = self.master.T
-        config.LOC = self.master.LOC
+        config.T = self.T
+        config.LOC = self.LOC
         if force_jump:
             config.battle.jump_battle = True
         if config.battle.num <= 0:
@@ -49,8 +52,8 @@ class BattleBase(BaseAgent):
 
     @with_goto
     def _start(self, battle_func, battle_num, apples=None):
-        T = self.master.T
-        LOC = self.master.LOC
+        T = self.T
+        LOC = self.LOC
         timer = Timer()
         finished_num = 0
         max_num = battle_num
@@ -73,7 +76,10 @@ class BattleBase(BaseAgent):
                         # usually used in hunting events.
                         logger.info('bag full, to sell...')
                         click(LOC.bag_full_sell_button)
-                        self.sell(config.battle.sell_when_battle)
+                        self.sell(config.battle.sell_num, 1, 3)
+                        wait_targets(T.shop, LOC.menu_button, at=LOC.bag_back)
+                        wait_targets(T.quest, LOC.quest, LOC.quest_c)
+                        logger.debug('from shop back to supporting', extra=LOG_TIME)
                     elif match_targets(shot, T.restart_quest, LOC.restart_quest_yes):
                         click(LOC.restart_quest_yes)
                         logger.debug('restart the same battle')
@@ -133,47 +139,6 @@ class BattleBase(BaseAgent):
         if config.mail:
             send_mail(f'All {finished_num} battles "{self.master.quest_name}" finished')
         config.mark_task_finish()
-        return
-
-    def sell(self, num=100):
-        """
-        Sell before entering quest if bag is full. Usually used in hunting events. Back to support page finally.
-
-        :param num: selling times. 100~=ALL
-        """
-        T = self.master.T
-        LOC = self.master.LOC
-        logger.info('shop: selling...', extra=LOG_TIME)
-        print('Make sure the bag **FILTER** only shows "Experience Cards"/"Zhong Huo"!')
-        no = 0
-        if num <= 0:
-            logger.warning('please sell items manually and return to support page!')
-            time.sleep(2)
-            config.update_time(config.manual_operation_time)  # min for manual operation
-            raise_alert()
-            return
-        while True:
-            wait_targets(T.bag_unselected, LOC.bag_sell_action)
-            drag(LOC.bag_select_start, LOC.bag_select_end, duration=1, down_time=1, up_time=3)
-            page_no = wait_which_target([T.bag_selected, T.bag_unselected], [LOC.bag_sell_action, LOC.bag_sell_action])
-            if page_no == 0:
-                no += 1
-                logger.debug(f'sell {no} times.', extra=LOG_TIME)
-                click(LOC.bag_sell_action)
-                wait_targets(T.bag_sell_confirm, LOC.bag_sell_confirm, at=0)
-                wait_targets(T.bag_sell_finish, LOC.bag_sell_finish, at=0)
-                if no >= num:
-                    break
-            elif page_no == 1:
-                logger.debug('all items are sold.', extra=LOG_TIME)
-                break
-        wait_targets(T.bag_unselected, LOC.bag_sell_action)
-        click(LOC.bag_back)
-        wait_targets(T.shop, LOC.shop_event_item_exchange)
-        click(LOC.bag_back)
-        wait_targets(T.quest, LOC.quest)
-        click(LOC.quest_c)
-        logger.debug('from shop back to supporting', extra=LOG_TIME)
         return
 
     # noinspection DuplicatedCode

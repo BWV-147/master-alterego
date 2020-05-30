@@ -155,7 +155,7 @@ class BattleConfig(_BaseConfig):
         self.apples = []  # invalid: stop, 0-rainbow, 1-gold, 2-sliver, 3-cropper, 4-zihuiti, 5-manually(wait ~7min)
         self.jump_battle = False  # goto decoration in Battle.battle_func
         self.login_handler = None  # JP: re-login at 3am(UTC+08)
-        self.sell_when_battle = 0  # usually used in hunting event
+        self.sell_num = 0  # usually used in hunting event
 
         self.craft_num = 0
         self.craft_history = {}

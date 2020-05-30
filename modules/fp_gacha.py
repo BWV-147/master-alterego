@@ -4,6 +4,7 @@ from .base_agent import BaseAgent
 
 class FpGacha(BaseAgent):
     def __init__(self, path=None):
+        super().__init__()
         self.T = ImageTemplates(path)
         self.LOC = Regions()
         logger.set_cur_logger('gacha')
@@ -56,7 +57,7 @@ class FpGacha(BaseAgent):
                 if bag_no == 0:
                     logger.info('servant bag full, make sure only show *LOW RARITY<=3* servants.')
                     click(LOC.fp_bag_full_sell_button)
-                    self.sell(config.fp_gacha.sell_num)
+                    self.sell(config.fp_gacha.sell_num, 1, 4)
                 else:
                     logger.info('CE bag full, make sure only show *LOW RARITY<=2* CE.')
                     click(LOC.fp_bag_full_enhance_button)
@@ -72,52 +73,6 @@ class FpGacha(BaseAgent):
                         logger.debug('back to fp gacha page')
                         break
         config.mark_task_finish()
-
-    def sell(self, num=100, up_time=2):
-        """
-        Start at sell page, end at shop page. (click BACK once at last)
-
-        :param num: num<0: manual mode; num=0: don't sell, go back directly; num>0: sell times.
-        :param up_time: drag up_time at end point
-        :return:
-        """
-        T, LOC = self.T, self.LOC
-        logger.info('shop: selling...', extra=LOG_TIME)
-        wait_targets(T.bag_unselected, LOC.bag_svt_tab)
-        print('Make sure the correct setting of **FILTER**')
-        if num <= 0:
-            logger.info('need manual operation!')
-            time.sleep(2)
-            config.update_time(config.manual_operation_time)  # min for manual operation
-            raise_alert()
-            wait_targets(T.shop, LOC.menu_button)
-            return
-
-        no = 0
-        while True:
-            wait_targets(T.bag_unselected, [LOC.bag_svt_tab, LOC.bag_sell_action])
-            if no < num:
-                drag(LOC.bag_select_start, LOC.bag_select_middle, 0.6, 0.5, None, 0)
-                drag(LOC.bag_select_middle, LOC.bag_select_end, 1, None, up_time)
-            page_no = wait_which_target([T.bag_selected, T.bag_unselected],
-                                        [LOC.bag_sell_action, LOC.bag_sell_action])
-            if page_no == 0:
-                no += 1
-                logger.info(f'sell: {no} times...', extra=LOG_TIME)
-                click(LOC.bag_sell_action)
-                wait_targets(T.bag_sell_confirm, LOC.bag_sell_confirm, at=0)
-                wait_targets(T.bag_sell_finish, LOC.bag_sell_finish, at=0)
-            else:
-                if no == 0:
-                    logger.warning('svt bag full but nothing can be sold! waiting manual operation.')
-                    config.update_time(config.manual_operation_time)
-                    raise_alert()
-                    wait_targets(T.shop, LOC.menu_button)
-                    return
-                logger.info('all sold.', extra=LOG_TIME)
-                click(LOC.bag_back)
-                wait_targets(T.shop, LOC.menu_button)
-                return
 
     def enhance_ce(self, num=100):
         T, LOC = self.T, self.LOC

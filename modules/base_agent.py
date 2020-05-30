@@ -1,16 +1,16 @@
 import threading
 
-import pyautogui
-
-from util.addon import check_sys_setting
-from util.base import is_interactive_mode
-from util.config import *
-from util.log import logger
+from util.addon import check_sys_setting, raise_alert
+from util.autogui import *
 from .server import app
 
 
 class BaseAgent:
     _server_thread: threading.Thread = None
+
+    def __init__(self):
+        self.T = None
+        self.LOC = None
 
     def pre_process(self, cfg):
         config.load(cfg)
@@ -42,3 +42,46 @@ class BaseAgent:
         cls._server_thread = threading.Thread(target=app.run, name='flask_app_server', args=[host, port], daemon=False)
         cls._server_thread.start()
         app.logger.info(f'server started: {cls._server_thread}')
+
+    def sell(self, num=100, duration=1, up_time=1):
+        """
+        Start at sell svt page, at last click BACK once to the page with menu button.
+        If num<=0: manual mode; num>0: sell times.
+        """
+        T, LOC = self.T, self.LOC
+        logger.info('selling...', extra=LOG_TIME)
+        wait_targets(T.bag_unselected, LOC.bag_svt_tab)
+        print('Make sure the correct setting of **FILTER**')
+        if num <= 0:
+            logger.info('need manual operation!')
+            time.sleep(2)
+            config.update_time(config.manual_operation_time)  # min for manual operation
+            raise_alert()
+            wait_targets(T.shop, LOC.menu_button)
+            return
+
+        no = 0
+        while True:
+            wait_targets(T.bag_unselected, [LOC.bag_svt_tab, LOC.bag_sell_action])
+            if no < num:
+                drag(LOC.bag_select_start, LOC.bag_select_middle, 0.6, 0.5, None, 0)
+                drag(LOC.bag_select_middle, LOC.bag_select_end, duration, None, up_time)
+            page_no = wait_which_target([T.bag_selected, T.bag_unselected],
+                                        [LOC.bag_sell_action, LOC.bag_sell_action])
+            if page_no == 0:
+                no += 1
+                logger.info(f'sell: {no} times...', extra=LOG_TIME)
+                click(LOC.bag_sell_action)
+                wait_targets(T.bag_sell_confirm, LOC.bag_sell_confirm, at=0)
+                wait_targets(T.bag_sell_finish, LOC.bag_sell_finish, at=0)
+            else:
+                if no == 0:
+                    logger.warning('svt bag full but nothing can be sold! waiting manual operation.')
+                    config.update_time(config.manual_operation_time)
+                    raise_alert()
+                    wait_targets(T.shop, LOC.menu_button)
+                    return
+                logger.info('all sold.', extra=LOG_TIME)
+                click(LOC.bag_back)
+                wait_targets(T.shop, LOC.menu_button)
+                return
