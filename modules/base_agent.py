@@ -1,3 +1,4 @@
+import platform
 import threading
 
 from util.addon import check_sys_setting, raise_alert
@@ -24,24 +25,30 @@ class BaseAgent:
         # in interactive: main thread is always alive, join() is not needed, we can terminate it manually.
         if config.hide_when_finish:
             pyautogui.hotkey('alt', 'z')  # hide window for MuMu emulator
+            _os = platform.system().lower()
+            if _os == 'windows':
+                pyautogui.hotkey('win', 'd')
         if not is_interactive_mode() and self._server_thread.is_alive():
             logger.info('keep running server...')
-            self._server_thread.join()
-
-    @classmethod
-    def terminate_server(cls):
-        from util.addon import kill_thread
-        kill_thread(cls._server_thread)
-        app.logger.info(f'server stopped: {cls._server_thread}')
+            # use while loop not .join() to wait until server thread terminates,
+            # since Ctrl-C won't be caught in .join()
+            while self._server_thread.is_alive():
+                time.sleep(1)
 
     @classmethod
     def run_sever(cls, host='0.0.0.0', port=8080):
         if cls._server_thread is not None and cls._server_thread.is_alive():
             app.logger.info(f'server is already running: {cls._server_thread}')
             return
-        cls._server_thread = threading.Thread(target=app.run, name='flask_app_server', args=[host, port], daemon=False)
+        cls._server_thread = threading.Thread(target=app.run, name='flask_app_server', args=[host, port], daemon=True)
         cls._server_thread.start()
         app.logger.info(f'server started: {cls._server_thread}')
+
+    @classmethod
+    def terminate_server(cls):
+        from util.addon import kill_thread
+        kill_thread(cls._server_thread)
+        app.logger.info(f'server stopped: {cls._server_thread}')
 
     def sell(self, num=100, duration=1, up_time=1):
         """

@@ -164,7 +164,7 @@ def raise_alert(alert_type=None, loops=5, wait=True):
     if alert_type is True:
         logger.debug(f'alert: beep for {loops} loops.')
         beep(2, 1, loops)
-    elif isinstance(alert_type, str):
+    elif isinstance(alert_type, str) and alert_type:
         logger.debug(f'alert: play music for {loops} loops.')
         play_music(alert_type, loops, wait)
 

@@ -15,6 +15,7 @@ import imghdr
 import logging
 import os
 import sys
+import threading
 from logging.handlers import RotatingFileHandler
 
 from PIL import Image
@@ -114,7 +115,15 @@ def shutdown_task():
     """Shutdown running task."""
     from util.config import config
     from util.addon import kill_thread
-    if config.running_thread and config.running_thread.is_alive():
+    force = request.args.get('force')
+    if config.running_thread is threading.main_thread() and config.running_thread.is_alive():
+        if force == '1':
+            kill_thread(config.running_thread)
+            # actually, won't return since server is killed.
+            return f'Task has been terminated.\nThread: {config.running_thread}\nThe entire program is terminated.'
+        else:
+            return 'Task run in main thread, check force stop to terminate it.'
+    elif config.running_thread and config.running_thread.is_alive():
         kill_thread(config.running_thread)
         return f'Task has been terminated.\nThread: {config.running_thread}'
     else:

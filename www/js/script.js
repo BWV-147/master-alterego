@@ -34,11 +34,11 @@ function trimChar(string, chars = ' \n\t\r', pos = 0) {
 
 
 function shutdown() {
-  if (confirm('Are you sure to shutdown running task in server?')===true){
-    $.get('/shutdown', function (result) {
-      alert('Shutdown result: ' + result.toString())
-    })
-  }
+  let force = $('#forceTerminateCheck').is(':checked')
+  $('#shutdownModal').modal('hide')
+  $.get('/shutdown', {'force': force ? 1 : 0}, function (result) {
+    alert('Shutdown result: ' + result.toString())
+  })
 }
 
 /**

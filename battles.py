@@ -27,7 +27,7 @@ class AFree(BattleBase):
         # pre-processing: e.g. set templates, only once
         if pre_process:
             logger.debug(f'pre-process for {master.quest_name}...')
-            T.read_templates('img/battles/a-charlotte/')
+            T.read_templates('img/battles/free/a-charlotte/')
 
             # LOC.relocate((0, 0, 1920 - 1, 1080 - 1))
 
@@ -36,14 +36,14 @@ class AFree(BattleBase):
             master.set_cards(names[1], (1, 7), (1, 4), (1, 2), (2, 2))
             master.set_cards_from_json(names[2], 'img/cards/android/cards-android.json', '孔明')
 
-            def _handler():
+            def _handler():  # noqas
                 # mainly for jp, re-login handler at 3am(UTC+8)
                 wait_targets(T.get('login_page'), LOC.menu_button)
                 wait_targets(T.get('login1'), (1000, 480, 1350, 600), at=0, clicking=LOC.safe_area)
                 # ....
                 wait_targets(T.quest, LOC.quest)
 
-            config.battle.login_handler = None if True else _handler
+            config.battle.login_handler = None  # _handler
             return
 
         # battle part
