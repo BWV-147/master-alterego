@@ -483,8 +483,6 @@ class Master:
 
     def xjbd(self, target, regions, mode='dmg', turns=100, allow_unknown=False, nps=None):
         # type:(Union[Image.Image,Sequence[Image.Image]],Sequence,str,int,bool,Union[int,Sequence])->List[List]
-        if not isinstance(regions[0], Sequence):
-            regions = [regions]
         cur_turn = 0
         turn_cards = []
         while cur_turn < turns:

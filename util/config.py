@@ -4,6 +4,7 @@ import json
 import os
 import threading
 import time
+from queue import Queue
 from typing import Optional
 
 
@@ -84,10 +85,11 @@ class Config(_BaseConfig):
         self.LOC = None
         self.log_time = 0  # record the time of last logging.info/debug..., set NO_LOG_TIME outside battle progress
         self.task_finished = False  # all battles finished, set to True before child process exist.
-        self.running_thread: Optional[threading.Thread] = None
+        self.task_thread: Optional[threading.Thread] = None
+        self.task_queue = Queue(1)
         self.temp = {}  # save temp vars at runtime
 
-        self._ignored = ['fp', 'T', 'LOC', 'log_time', 'task_finished', 'running_thread', 'temp']
+        self._ignored = ['fp', 'T', 'LOC', 'log_time', 'task_finished', 'task_thread', 'task_queue', 'temp']
         # load config
         if fp:
             self.load()
@@ -97,7 +99,7 @@ class Config(_BaseConfig):
         # runtime properties are set to default (mainly for interactive console, may load more than once).
         self.fp = fp or self.fp or 'data/config.json'
         self.task_finished = False
-        self.T = self.LOC = self.running_thread = None
+        self.T = self.LOC = self.task_thread = None
         self.temp.clear()
         return super().load(self.fp)
 
@@ -141,7 +143,7 @@ class Config(_BaseConfig):
         Ke
         """
         from .addon import kill_thread
-        kill_thread(self.running_thread or threading.current_thread())
+        kill_thread(self.task_thread or threading.current_thread())
 
 
 # sub member of Config

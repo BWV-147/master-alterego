@@ -33,7 +33,7 @@
     <div class="" style="padding-top: 4rem">
         <div class="container">
             <div class="text-center">
-                <div class="btn btn-primary" id="refreshScreenshot">Refresh</div>
+                <div class="btn btn-primary" id="refreshScreenshotBtn">Refresh</div>
             </div>
             <div style="padding-top: 5px">
                 <!--suppress HtmlUnknownTarget -->
@@ -44,7 +44,7 @@
     </div>
 </main>
 <script>
-  $('#refreshScreenshot').click(function () {
+  $('#refreshScreenshotBtn').click(function () {
     $('#screenshot').attr('src', '/getFile?path=screenshot&time=' + new Date().getTime())
   })
 </script>

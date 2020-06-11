@@ -1,5 +1,5 @@
 # %%
-from modules.fp_gacha import FpGacha
+from modules.fp_gacha import FpGacha, start_loop
 from util.autogui import config, screenshot, is_interactive_mode, ArgParser  # noqas
 
 
@@ -12,7 +12,7 @@ def start(cfg=None):
 
 # %%
 if __name__ == '__main__':
-    start()
+    start_loop(lambda: start())
 # %%
 if __name__ == '__main__' and is_interactive_mode():
-    start('data/config-jp.json')
+    start_loop(lambda: start('data/config-jp.json'))

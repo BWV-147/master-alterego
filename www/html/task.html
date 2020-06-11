@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title>Task - Inspector</title>
+
+    <!-- Bootstrap core CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet"/>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+
+    <!-- Favicons -->
+    <link rel="icon"
+          href="https://img.icons8.com/ultraviolet/40/000000/binoculars.png"
+          type="image/png">
+
+    <meta name="theme-color" content="#563d7c">
+
+    <!-- Custom styles for this template -->
+    <!--suppress HtmlUnknownTarget -->
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/script.js"></script>
+</head>
+<body>
+<div class="nav-placeholder"></div>
+<main role="main">
+    <!-- Main jumbotron for a primary marketing message or call to action -->
+    <div class="" style="padding-top: 4rem">
+        <div class="container">
+            <p>
+                <button class="btn btn-primary" id="getTaskStatusBtn" onclick="getTaskStatus()">Refresh</button>
+                <button class="btn btn-primary" id="terminateTaskBtn" data-toggle="modal" data-target="#shutdownModal">
+                    Terminate
+                </button>
+                <button class="btn btn-primary" id="putNewTaskBtn" onclick="putNewTask()">New Task</button>
+            </p>
+            <div class="card card-body"><pre id="taskStatus"></pre></div>
+            <hr>
+        </div>
+    </div>
+</main>
+
+
+<!-- Modal -->
+<div class="modal fade" id="shutdownModal" tabindex="-1" role="dialog" aria-labelledby="shutdownModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="shutdownModalLabel">Shutdown</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Terminate task in child thread, if running in main thread, select the checkbox.
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="" id="forceTerminateCheck">
+                    <label class="form-check-label" for="forceTerminateCheck">
+                        Force terminate
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="shutdownTask()">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer-placeholder"></div>
+</body>
+</html>

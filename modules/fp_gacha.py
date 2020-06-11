@@ -25,7 +25,7 @@ class FpGacha(BaseAgent):
             thread = threading.Thread(target=start_func, name=t_name, args=[config.fp_gacha.num], daemon=True)
             supervise_log_time(thread, 20, interval=3, alert_loops=3)
         else:
-            config.running_thread = threading.current_thread()
+            config.task_thread = threading.current_thread()
             start_func(config.fp_gacha.num)
         self.post_process()
 

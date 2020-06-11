@@ -36,7 +36,7 @@ capture('quest')
 capture('apple_page')
 # %%
 capture('apple_confirm')
-# %% !!!
+# %% !!! support/support2
 capture('support')
 # %%
 capture('support_confirm')

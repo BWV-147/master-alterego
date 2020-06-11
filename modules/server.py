@@ -21,6 +21,8 @@ from logging.handlers import RotatingFileHandler
 from PIL import Image
 from flask import Flask, request, Response, redirect, jsonify, abort, send_from_directory
 
+from util.config import config
+
 ROOT = os.getcwd()
 if ROOT.endswith('modules'):
     # if server.py is run directly, cwd is "root/modules"
@@ -110,30 +112,47 @@ def get_file():
     return Response(compress_image(image).getvalue(), mimetype="image/jpeg")
 
 
-@app.route('/shutdown')
+@app.route('/getTaskStatus')
+def get_task_status():
+    return repr(config.task_thread)
+
+
+@app.route('/shutdownTask')
 def shutdown_task():
     """Shutdown running task."""
-    from util.config import config
     from util.addon import kill_thread
     force = request.args.get('force')
-    if config.running_thread is threading.main_thread() and config.running_thread.is_alive():
+    if config.task_thread is threading.main_thread() and config.task_thread.is_alive():
         if force == '1':
-            kill_thread(config.running_thread)
+            kill_thread(config.task_thread)
             # actually, won't return since server is killed.
-            return f'Task has been terminated.\nThread: {config.running_thread}\nThe entire program is terminated.'
+            return f'Task has been terminated. Thread: {config.task_thread}'
         else:
             return 'Task run in main thread, check force stop to terminate it.'
-    elif config.running_thread and config.running_thread.is_alive():
-        kill_thread(config.running_thread)
-        return f'Task has been terminated.\nThread: {config.running_thread}'
+    elif config.task_thread and config.task_thread.is_alive():
+        kill_thread(config.task_thread)
+        return f'Task has been terminated. Thread: {config.task_thread}'
     else:
-        return f'No running task.\nThread: {config.running_thread}'
+        return f'No running task. Thread: {config.task_thread}'
+
+
+@app.route('/putNewTask')
+def put_new_task():
+    if config.task_thread.is_alive():
+        return f'Task is still alive: {config.task_thread}'
+    elif config.task_queue.full():
+        return f'Task already in queue. Try or check again later.'
+    else:
+        config.task_queue.put_nowait(1)
+        app.logger.info('put a new task to queue')
+        return f'Put a task into queue, check it later'
 
 
 # %%
 if __name__ == '__main__':
     from util.addon import check_sys_setting
-    from util.config import config
+
+    # from util.config import config
 
     config.load()
     check_sys_setting(False)

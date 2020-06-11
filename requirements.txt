@@ -1,16 +1,19 @@
-pulp
-pygame
-scipy
-pillow
-numpy
+colorama
 flask
 goto-statement
+imagecodecs
 mss
+numpy
 opencv-python
+Pillow
 pip-chill
+pulp
 pyautogui
+pygame
 scikit-image
-# click # Installed as dependency for pip-chill, flask
+scipy
+termcolor
+# click # Installed as dependency for flask
 # cycler # Installed as dependency for matplotlib
 # decorator # Installed as dependency for networkx
 # imageio # Installed as dependency for scikit-image
@@ -21,11 +24,9 @@ scikit-image
 # matplotlib # Installed as dependency for scikit-image
 # mouseinfo # Installed as dependency for pyautogui
 # networkx # Installed as dependency for scikit-image
-# numpy # Installed as dependency for matplotlib, imageio, opencv-python, pywavelets, scipy
-# pillow # Installed as dependency for imageio, scikit-image, mouseinfo, pyscreeze
 # pygetwindow # Installed as dependency for pyautogui
 # pymsgbox # Installed as dependency for pyautogui
-# pyparsing # Installed as dependency for matplotlib
+# pyparsing # Installed as dependency for matplotlib, pulp
 # pyperclip # Installed as dependency for mouseinfo
 # pyrect # Installed as dependency for pygetwindow
 # pyscreeze # Installed as dependency for pyautogui
@@ -34,4 +35,5 @@ scikit-image
 # pywavelets # Installed as dependency for scikit-image
 # scipy # Installed as dependency for scikit-image
 # six # Installed as dependency for python-dateutil, cycler
+# tifffile # Installed as dependency for scikit-image
 # werkzeug # Installed as dependency for flask

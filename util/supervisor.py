@@ -6,7 +6,7 @@ from .log import *
 def supervise_log_time(thread, time_out=60, mail=None, interval=10, alert_type=None, alert_loops=15):
     # type: (threading.Thread,float,bool,float,bool,int)->None
     assert thread is not None, thread
-    config.running_thread = thread
+    config.task_thread = thread
     if mail is None:
         mail = config.mail
     if alert_type is None:
@@ -40,10 +40,14 @@ def supervise_log_time(thread, time_out=60, mail=None, interval=10, alert_type=N
             if thread.is_alive():
                 kill_thread(thread)
             break
+        # case 3: thread terminated but not finished task
+        if not config.task_finished and not config.task_thread.is_alive():
+            logger.warning(f'thread terminated unexpectedly...')
+            loops = -1
 
         T: ImageTemplates = config.T
         LOC: Regions = config.LOC
-        # case 3: network error - click "retry" and continue
+        # case 4: task alive and network error - click "retry" and continue
         img_net, loc_net = T.net_error, LOC.net_error
         if img_net is not None and loc_net is not None:
             shot = screenshot()
@@ -53,13 +57,13 @@ def supervise_log_time(thread, time_out=60, mail=None, interval=10, alert_type=N
                 config.update_time(60)
                 continue
 
-        # case 4: re-login after 3am in jp server
+        # case 5: task alive and need re-login after 3am in jp server
         # if match menu button, click save_area until match quest1234, click 1234
         if callable(config.battle.login_handler):
             if match_targets(screenshot(), T.quest, LOC.menu_button):
                 config.battle.login_handler()
 
-        # case 5: unrecognized error - waiting user to handle (in 2*loops seconds)
+        # case 6: task alive but unrecognized error - waiting user to handle (in 2*loops seconds)
         if loops == alert_loops:
             logger.warning(f'Something wrong, please solve it, or it will be force stopped...\n'
                            f' - thread  alive: {thread.is_alive()}.\n'
@@ -67,9 +71,7 @@ def supervise_log_time(thread, time_out=60, mail=None, interval=10, alert_type=N
                            f' - last log time: {time.asctime()}')
         if loops >= 0:
             # print(f'{loops}...\r', end='')
-            print(f'loops={loops}')
-        else:
-            logger.warning(f'Time out, it will be force stopped...')
+            print(f'count down {loops}...')
         loops -= 1
         if alert_type:
             beep(1, 2)
@@ -77,14 +79,27 @@ def supervise_log_time(thread, time_out=60, mail=None, interval=10, alert_type=N
             time.sleep(3)
         if loops < 0:
             # not solved! kill thread and stop.
-            err_msg = f'Thread-{thread.ident}({thread.name}): Time run out!\n' \
+            if thread.is_alive():
+                kill_thread(thread)
+            err_msg = f'{thread}:' \
+                      f' - task finished: {config.task_finished}\n' \
                       f' - current  time: {time.asctime()}\n' \
                       f' - last log time: {time.asctime(time.localtime(config.log_time))}\n' \
                       f' - over time: {time.time() - config.log_time:.2f}(>{time_out}) secs.\n'
             logger.warning(err_msg)
             if mail:
                 send_mail(err_msg, subject=f'[{thread.name}]Went wrong!')
-            kill_thread(thread)
-            logger.info('exit supervisor after killing thread.')
             break
     raise_alert(alert_type, loops=5)
+    logger.info('exit supervisor.')
+
+
+def start_loop(func: Callable):
+    config.task_queue.put(1)
+    while True:
+        if config.task_queue.empty():
+            time.sleep(0.5)
+        else:
+            config.task_queue.get()
+            func()
+            logger.info('waiting new task...')

@@ -19,21 +19,16 @@ class BaseAgent:
         if config.www_host_port is not None:
             self.run_sever(*config.www_host_port)
 
+    # noinspection PyMethodMayBeStatic
     def post_process(self):
         # server thread should be daemon, make it possible to be terminated by Ctrl-C
         # in terminal: keep app running until ctrl-C pressed => call thread.join() in post processing
         # in interactive: main thread is always alive, join() is not needed, we can terminate it manually.
         if config.hide_when_finish:
-            pyautogui.hotkey('alt', 'z')  # hide window for MuMu emulator
             _os = platform.system().lower()
             if _os == 'windows':
+                pyautogui.hotkey('alt', 'z')  # hide window for MuMu emulator
                 pyautogui.hotkey('win', 'd')
-        if not is_interactive_mode() and self._server_thread.is_alive():
-            logger.info('keep running server...')
-            # use while loop not .join() to wait until server thread terminates,
-            # since Ctrl-C won't be caught in .join()
-            while self._server_thread.is_alive():
-                time.sleep(1)
 
     @classmethod
     def run_sever(cls, host='0.0.0.0', port=8080):

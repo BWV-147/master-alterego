@@ -28,7 +28,7 @@ class Lottery(BaseAgent):
             thread = threading.Thread(target=start_func, name=t_name, args=args, daemon=True)
             supervise_log_time(thread, 120, interval=3)
         else:
-            config.running_thread = threading.current_thread()
+            config.task_thread = threading.current_thread()
             start_func(*args)
         self.post_process()
 

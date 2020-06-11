@@ -46,11 +46,10 @@ class BattleBase(BaseAgent):
                                       daemon=True)
             supervise_log_time(thread, 90, interval=3)
         else:
-            config.running_thread = threading.current_thread()
+            config.task_thread = threading.current_thread()
             self._start(battle_func=battle_func, battle_num=config.battle.num, apples=config.battle.apples)
         self.post_process()
 
-    @with_goto
     def _start(self, battle_func, battle_num, apples=None):
         T = self.T
         LOC = self.LOC
@@ -184,8 +183,6 @@ class BattleBase(BaseAgent):
             logger.warning('goto label.h')
             goto.h  # noqas
 
-        # label.h  # noqas  # make sure master.set_waves(a,b) is called
-        # master.set_waves(T.waveXa, T.waveXb)
         label.h  # noqas
 
         wait_targets(T.support, LOC.support_refresh)
@@ -194,8 +191,6 @@ class BattleBase(BaseAgent):
         support = master.choose_support(match_svt=True, match_ce=True, match_ce_max=True, match_skills=True,
                                         switch_classes=(5, 0), friend_only=False,
                                         images=[master.T.support, master.T.support])
-
-        # logger.debug('please choose support manually!')  # print hint if choose manually
 
         # wave 1
         wait_targets(T.wave1a, LOC.loc_wave, 0.7)
@@ -207,7 +202,7 @@ class BattleBase(BaseAgent):
             master.svt_skill(3, 3)
             master.svt_skill(3, 1, 2)
             master.svt_skill(2, 2)
-            master.auto_attack(nps=7)
+        master.auto_attack(nps=7)
 
         # wave 2
         wait_targets(T.wave2a, LOC.loc_wave, 0.7)
@@ -215,9 +210,9 @@ class BattleBase(BaseAgent):
         with master.set_waves(T.wave2a, T.wave2b):
             master.svt_skill(2, 1)
             master.master_skill(2, 2)
-            master.auto_attack(nps=7)
-            # chosen_cards = master.auto_attack(nps=6, no_play_card=True)
-            # master.play_cards([chosen_cards[i] for i in (2, 0, 1)])
+        master.auto_attack(nps=7)
+        # chosen_cards = master.auto_attack(nps=6, no_play_card=True)
+        # master.play_cards([chosen_cards[i] for i in (2, 0, 1)])
 
         # wave 3
         wait_targets(T.wave3a, LOC.loc_wave, 0.7)
@@ -226,7 +221,6 @@ class BattleBase(BaseAgent):
             master.svt_skill(1, 3)
             master.svt_skill(1, 1)
             master.svt_skill(1, 2)
-
         master.auto_attack(nps=6, mode='alter')
         master.xjbd(T.kizuna, LOC.kizuna, mode='alter', allow_unknown=True)
         return

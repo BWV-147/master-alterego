@@ -32,12 +32,31 @@ function trimChar(string, chars = ' \n\t\r', pos = 0) {
   return string;
 }
 
+/**
+ * Task related
+ */
+function addTaskLog(msg) {
+  let $status = $('#taskStatus')
+  $status.text(`${new Date().toLocaleString(undefined, { hour12: false })}: ${msg}\n` + $status.text())
+}
 
-function shutdown() {
+function getTaskStatus() {
+  $.get('/getTaskStatus', function (result) {
+    addTaskLog(result)
+  })
+}
+
+function shutdownTask() {
   let force = $('#forceTerminateCheck').is(':checked')
   $('#shutdownModal').modal('hide')
-  $.get('/shutdown', {'force': force ? 1 : 0}, function (result) {
-    alert('Shutdown result: ' + result.toString())
+  $.get('/shutdownTask', {'force': force ? 1 : 0}, function (result) {
+    addTaskLog(result)
+  })
+}
+
+function putNewTask() {
+  $.get('/putNewTask', function (result) {
+    addTaskLog(result)
   })
 }
 
@@ -163,7 +182,7 @@ function showLogsAtPage(data, index, perPage) {
     $codes = $panel.find('code')
   if ($codes.length !== perPage) {
     $panel
-      .html(shownLogs.map((e) => `<code>${$('<div/>').text(e).html()}</code>`).join('\n'))
+      .html(shownLogs.map((e) => `<code>${$('<div></div>').text(e).html()}</code>`).join('\n'))
     // .css('counter-reset', `step ${startNo}`)
   } else {
     $codes.each(function (index) {

@@ -333,7 +333,8 @@ class ImageTemplates:
             key = filename[0:len(filename) - 4]
             self.templates[key] = Image.open(filepath)
             self.__dict__[key] = self.templates[key]
-        self.directory = directory
+        if not append:
+            self.directory = directory
 
     def __repr__(self):
         return f'{self.__class__.__name__}(dir="{self.directory}", templates={self.templates})'
