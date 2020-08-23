@@ -97,7 +97,10 @@ class Config(_BaseConfig):
     def load(self, fp=None):
         # should only load config at the start of thread,
         # runtime properties are set to default (mainly for interactive console, may load more than once).
-        self.fp = fp or self.fp or 'data/config.json'
+        fp = fp or self.fp or 'data/config.json'
+        if not os.path.exists(fp) and os.path.exists(f'data/config-{fp}.json'):
+            fp = f'data/config-{fp}.json'
+        self.fp = fp
         self.task_finished = False
         self.T = self.LOC = self.task_thread = None
         self.temp.clear()

@@ -31,9 +31,12 @@ from .log import *
 
 
 # %% email
-def send_mail(body, subject=None, receiver=None, attach_shot=True):
+def send_mail(body, subject=None, receiver=None, attach_shot=True, force_send=False):
     from .autogui import screenshot
     # check email params
+    if config.mail is False and force_send is False:
+        logger.info(f'Don\'t send mail.\nSubject: {subject}\nBody: {body}')
+        return
     if receiver is None:
         receiver = config.mail_receiver
     if None in (receiver, config.mail_sender, config.mail_password):
@@ -144,13 +147,14 @@ def beep(duration: float, interval: float = 1, loops: int = 1):
 
 
 def play_music(filename, loops=1, wait=True):
-    pygame.mixer.init()
-    pygame.mixer.music.load(filename)
-    pygame.mixer.music.set_volume(0.5)
-    pygame.mixer.music.play(loops)
-    if wait:
-        while pygame.mixer.music.get_busy():
-            time.sleep(0.1)
+    if os.path.exists(filename):
+        pygame.mixer.init()
+        pygame.mixer.music.load(filename)
+        pygame.mixer.music.set_volume(0.5)
+        pygame.mixer.music.play(loops)
+        if wait:
+            while pygame.mixer.music.get_busy():
+                time.sleep(0.1)
 
 
 def raise_alert(alert_type=None, loops=5, wait=True):

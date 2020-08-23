@@ -2,8 +2,8 @@
 from util.addon import check_sys_setting
 from util.autogui import *
 
-check_sys_setting()
-config.load()
+check_sys_setting(False)
+config.load('data/config-jp.json')
 
 # %%
 # base_path = 'img/battles/a-charlotte/'  # 'img/gacha-jp'
@@ -12,7 +12,8 @@ base_path: Optional[str] = None  # avoid running temp.py directly
 
 # %%
 def capture(fn: str):
-    # time.sleep(1)
+    # pyautogui.hotkey('alt', 'tab')
+    time.sleep(0.1)
     full_fp = os.path.join(base_path, fn + '.png')
     if os.path.exists(full_fp):
         print(f'! Replace: "{full_fp}"')
@@ -62,6 +63,8 @@ capture('order_change')
 capture('wave2c')
 # %% !!!
 capture('wave2d')
+# %% !!!
+capture('cards2')
 # --- end order change ---
 # %% !!!
 capture('wave3a')
@@ -79,6 +82,8 @@ capture('restart_quest')
 capture('apply_friend')
 # %%
 capture('net_error')
+# %% for hunting
+capture('bag_full_alert')
 
 # %% ---------- battle extra parts ----------
 capture('cards4')

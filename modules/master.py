@@ -133,8 +133,7 @@ class Master:
                 for i in range(3):
                     self.card_weights[Card(svt, i + 1)] = ww * 10 + color_weight.find('QAB'[i])
 
-    @staticmethod
-    def str_cards(cards):
+    def str_cards(self, cards):
         # type: (Union[List[Union[int, Card]], Union[int, Card], Dict[int, Card]])->Union[str,List[str]]
         if isinstance(cards, dict):
             # from parsed cards
@@ -143,8 +142,12 @@ class Master:
 
         def _str_card(_c):
             if isinstance(_c, Card):
+                if _c.svt.startswith(Card.UNKNOWN) and 5 < _c.loc <= 8:
+                    return self.members[_c.loc - 6] + '-宝?'
                 return _c.svt + '-' + '宝QAB?'[_c.color]
             else:
+                if 5 < _c <= 8:
+                    return self.members[_c - 6] + '-宝?'
                 return str(_c)
 
         if isinstance(cards, Sequence):
@@ -279,7 +282,8 @@ class Master:
                                 break
                         if not matched:  # this friend not match any support, next friend
                             continue
-                        click((LOC.width / 2, LOC.support_team_column[1] + y_peak))
+                        click((LOC.width / 2, LOC.support_team_column[1] + y_peak
+                               + LOC.support_team_icon[3] - LOC.support_team_icon[1]))
                         logger.debug('found support.', extra=LOG_TIME)
                         while True:
                             page_no = wait_which_target([T.team, T.wave1a],
@@ -458,7 +462,7 @@ class Master:
         logger.info(f'Auto attack: nps={nps}, mode={mode}', extra=LOG_TIME)
         t0 = time.time()
         while not match_targets(screenshot(), self.T.cards1, self.LOC.cards_back):
-            click(self.LOC.attack, lapse=0.3)  # self.LOC.attack should be not covered by self.LOC.cards_back
+            click(self.LOC.attack, lapse=1)  # self.LOC.attack should be not covered by self.LOC.cards_back
         while True:
             cards, np_cards = self.parse_cards(screenshot(), nps=nps if parse_np else None)
             # print('in auto_attack: ', cards, np_cards)
@@ -507,7 +511,7 @@ class Master:
         assert len(locs_or_cards) >= 3, locs_or_cards
         logger.info(f'Attack: cards={locs_or_cards}', extra=LOG_TIME)
         while True:
-            click(self.LOC.attack, lapse=0.2)
+            click(self.LOC.attack, lapse=1)
             if match_targets(screenshot(), self.T.cards1, self.LOC.cards_back):
                 time.sleep(1)
                 self.play_cards(locs_or_cards)
@@ -599,8 +603,9 @@ class Master:
         else:
             s_cards = sorted(cards.values(), key=lambda _c: self.card_weights.get(_c, 0))
             if mode == 'dmg':
-                if len(chosen_nps) > 0:
-                    chosen_cards = [s_cards[i] for i in (-2, -1, -3)]
+                np_num = len(chosen_nps)
+                if np_num > 0:
+                    chosen_cards = s_cards[-(3 - np_num):] + list(reversed(s_cards[0:np_num + 2]))
                 else:
                     for i in (-3, -2, -1, 1, 0):
                         if s_cards[i].color == Card.BUSTER:

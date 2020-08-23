@@ -10,6 +10,7 @@ pre.codes {
     color: #c7d3de;
     position: relative;
     counter-reset: step;
+    min-width: max-content;
 }
 
 pre.codes code {

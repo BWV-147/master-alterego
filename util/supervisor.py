@@ -85,7 +85,7 @@ def supervise_log_time(thread, time_out=60, mail=None, interval=10, alert_type=N
                       f' - task finished: {config.task_finished}\n' \
                       f' - current  time: {time.asctime()}\n' \
                       f' - last log time: {time.asctime(time.localtime(config.log_time))}\n' \
-                      f' - over time: {time.time() - config.log_time:.2f}(>{time_out}) secs.\n'
+                      f' - over time: {time.time() - config.log_time:.2f} secs (timeout={time_out}).\n'
             logger.warning(err_msg)
             if mail:
                 send_mail(err_msg, subject=f'[{thread.name}]Went wrong!')

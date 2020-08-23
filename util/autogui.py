@@ -250,7 +250,7 @@ def search_target(img: Image.Image, target: Image.Image, mode='cv2'):
 
     :param img:
     :param target:
-    :parameter mode: 'cv2'(default) to use open-cv(quick), 'sk' to use skimage package(VERY slow)
+    :param mode: 'cv2'(default) to use open-cv(quick), 'sk' to use skimage package(VERY slow)
             Attention: cv2 use (h,w), but PIL/numpy use (w,h).
     :return (max value, left-top pos)
     """

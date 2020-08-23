@@ -28,7 +28,7 @@ class BaseAgent:
             _os = platform.system().lower()
             if _os == 'windows':
                 pyautogui.hotkey('alt', 'z')  # hide window for MuMu emulator
-                pyautogui.hotkey('win', 'd')
+                # pyautogui.hotkey('win', 'd')
 
     @classmethod
     def run_sever(cls, host='0.0.0.0', port=8080):

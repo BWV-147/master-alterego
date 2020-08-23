@@ -37,7 +37,7 @@ function trimChar(string, chars = ' \n\t\r', pos = 0) {
  */
 function addTaskLog(msg) {
   let $status = $('#taskStatus')
-  $status.text(`${new Date().toLocaleString(undefined, { hour12: false })}: ${msg}\n` + $status.text())
+  $status.text(`[${new Date().toLocaleString(undefined, { hour12: false })}] ${msg}\n` + $status.text())
 }
 
 function getTaskStatus() {

@@ -26,11 +26,12 @@ class ArgParser:
     def _init_parser(self):
         if self._parser is not None:
             return
-        self._parser = argparse.ArgumentParser(conflict_handler='resolve')
-        self._parser.add_argument('-c', '--config', default='data/config.json',
-                                  help='config file path, default "data/config.json".')
-        self._parser.add_argument('-d', '--disable-supervisor', action='store_true',
-                                  help='disable supervisor, default enabled.')
+        _parser = argparse.ArgumentParser(conflict_handler='resolve')
+        _parser.add_argument('-c', '--config', default='data/config.json',
+                             help='config file path or {} part of data/config-{}.json, default "data/config.json".')
+        _parser.add_argument('-d', '--disable-supervisor', action='store_true',
+                             help='disable supervisor, default enabled.')
+        self._parser = _parser
 
 
 def convert_to_list(items):

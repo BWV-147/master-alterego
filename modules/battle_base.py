@@ -44,7 +44,7 @@ class BattleBase(BaseAgent):
                                               "battle_num": config.battle.num,
                                               "apples": config.battle.apples},
                                       daemon=True)
-            supervise_log_time(thread, 90, interval=3)
+            supervise_log_time(thread, 120, interval=3)
         else:
             config.task_thread = threading.current_thread()
             self._start(battle_func=battle_func, battle_num=config.battle.num, apples=config.battle.apples)
@@ -65,31 +65,35 @@ class BattleBase(BaseAgent):
                     shot = screenshot()
                     res = search_target(shot.crop(LOC.quest_outer), T.quest.crop(LOC.quest))
                     if res[0] > THR:
+                        # match quest entrance
                         _x = LOC.quest_outer[0] + res[1][0] + (LOC.quest[2] - LOC.quest[0]) / 2
                         _y = LOC.quest_outer[1] + res[1][1] + (LOC.quest[3] - LOC.quest[1]) / 2
                         click((_x, _y))
                     elif match_targets(shot, T.apple_page, LOC.apple_close):
                         self.master.eat_apple(apples)
-                    elif T.get('bag_full_alert') is not None \
+                    elif T.bag_full_alert is not None \
                             and match_targets(shot, T.bag_full_alert, LOC.bag_full_sell_button):
                         # usually used in hunting events.
                         logger.info('bag full, to sell...')
                         click(LOC.bag_full_sell_button)
                         self.sell(config.battle.sell_num, 1, 3)
                         wait_targets(T.shop, LOC.menu_button, at=LOC.bag_back)
-                        wait_targets(T.quest, LOC.quest, LOC.quest_c)
-                        logger.debug('from shop back to supporting', extra=LOG_TIME)
+                        logger.debug('back from shop', extra=LOG_TIME)
                     elif match_targets(shot, T.restart_quest, LOC.restart_quest_yes):
                         click(LOC.restart_quest_yes)
                         logger.debug('restart the same battle')
                     elif match_targets(shot, T.apply_friend, LOC.apply_friend):
                         click(LOC.apply_friend_deny)
                         logger.debug('not to apply friend')
+                    elif match_targets(shot, T.quest, LOC.menu_button):
+                        # maybe re-login when daily refresh
+                        if callable(config.battle.login_handler):
+                            config.battle.login_handler()
                     elif match_targets(shot, T.support, LOC.support_refresh):
                         break
                     time.sleep(0.5)
             battle_func()
-            wait_targets(T.rewards, LOC.finish_qp, clicking=LOC.finish_qp)
+            wait_targets(T.rewards, LOC.finish_qp, 0.7, clicking=LOC.finish_qp)
             click(LOC.rewards_show_num, lapse=1)
             # check reward_page has CE dropped or not
             dt = timer.lapse()
@@ -107,14 +111,15 @@ class BattleBase(BaseAgent):
                 config.count_battle(True)
                 logger.warning(f'{config.battle.craft_num}th craft dropped!!!')
                 rewards.save(f'{png_fn}-drop{config.battle.craft_num}.png')
-                if config.battle.craft_num in config.battle.enhance_craft_nums:
-                    logger.warning('need to change party or enhance crafts. Exit.')
-                    send_mail(f'NEED Enhancement! {config.battle.craft_num}th craft dropped!!!')
-                    config.mark_task_finish()
-                    return
-                else:
-                    send_mail(f'{config.battle.craft_num}th craft dropped!!!')
-                    click(LOC.finish_next)
+                if config.mail:
+                    if config.battle.craft_num in config.battle.enhance_craft_nums:
+                        logger.warning('need to change party or enhance crafts. Exit.')
+                        send_mail(f'NEED Enhancement! {config.battle.craft_num}th craft dropped!!!')
+                        config.mark_task_finish()
+                        return
+                    else:
+                        send_mail(f'{config.battle.craft_num}th craft dropped!!!')
+                click(LOC.finish_next)
             else:
                 config.count_battle(False)
                 click(LOC.finish_next)
@@ -158,7 +163,7 @@ class BattleBase(BaseAgent):
         # pre-processing: e.g. set templates, only once
         if pre_process:
             logger.info(f'pre-process for {master.quest_name}...', extra=LOG_TIME)
-            T.read_templates('img/battles/a-charlotte/')
+            T.read_templates(['img/battles/.a', 'img/battles/a-charlotte/'])
 
             # LOC.relocate((0, 0, 1920 - 1, 1080 - 1))
 

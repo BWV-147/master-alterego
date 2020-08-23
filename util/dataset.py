@@ -113,10 +113,28 @@ class Regions(_Regions):
     bag_full_enhance_button = (907, 689, 1008, 736)
 
     # menu
-    menu_button = (1659, 974, 1911, 1074)
-    menu_enhance_button = (486, 933, 588, 1011)
-    menu_gacha_button = (758, 933, 860, 1011)
-    menu_shop_button = (1030, 933, 1132, 1011)
+    menu_button = (1704, 1005, 1852, 1048)
+
+    _menu_enhance_button_cn = (486, 933, 588, 1011)
+    _menu_gacha_button_cn = (758, 933, 860, 1011)
+    _menu_shop_button_cn = (1030, 933, 1132, 1011)
+
+    _menu_enhance_button_jp = (651, 933, 763, 1011)
+    _menu_gacha_button_jp = (900, 933, 1002, 1011)
+    _menu_shop_button_jp = (1155, 933, 1260, 1011)
+
+    @property
+    def menu_enhance_button(self):
+        return self._menu_enhance_button_jp if config.is_jp else self._menu_enhance_button_cn
+
+    @property
+    def menu_gacha_button(self):
+        return self._menu_gacha_button_jp if config.is_jp else self._menu_gacha_button_cn
+
+    @property
+    def menu_shop_button(self):
+        return self._menu_shop_button_jp if config.is_jp else self._menu_shop_button_cn
+
     # in bag
     bag_back = (49, 34, 242, 100)
     bag_svt_tab = (107, 152, 193, 191)
@@ -262,7 +280,7 @@ class ImageTemplates:
     """
 
     def __init__(self, directory: str = None):
-        self.directory: str = directory
+        self.dirs: str = directory
         self.templates: Dict[str, Image.Image] = {}
         # ============ battle part ============
         self.net_error: Optional[Image.Image] = None
@@ -323,21 +341,36 @@ class ImageTemplates:
         if directory is not None:
             self.read_templates(directory)
 
-    def read_templates(self, directory: str, append=False):
+    def read_templates(self, directory: Union[str, List[str]], append=False):
+        """
+        Read template .png images from one or more dirs. If list of dirs and duplicated filename, the last one will be remained
+        :param directory:
+        :param append: if false, clear the templates first.
+        :return:
+        """
+        if isinstance(directory, (list, tuple)):
+            if not append:
+                self.templates = {}
+                self.dirs = []
+            for _dir in directory:
+                self.read_templates(_dir, True)
+            return
+
         if not append:
             self.templates = {}
+            self.dirs = []
         for filename in os.listdir(directory):
             if not filename.endswith('.png'):
                 continue
             filepath = os.path.join(directory, filename)
             key = filename[0:len(filename) - 4]
-            self.templates[key] = Image.open(filepath)
-            self.__dict__[key] = self.templates[key]
-        if not append:
-            self.directory = directory
+            if self.__dict__.get(key, None) is not None and not isinstance(self.__dict__[key], Image.Image):
+                raise ValueError(f'Key "{key}" already exist (not image): {self.__dict__[key]}')
+            self.__dict__[key] = self.templates[key] = Image.open(filepath)
+        self.dirs.append(directory)
 
     def __repr__(self):
-        return f'{self.__class__.__name__}(dir="{self.directory}", templates={self.templates})'
+        return f'{self.__class__.__name__}(dirs="{self.dirs}", templates={self.templates})'
 
     def __getattr__(self, item):
         """if @property item is not defined, then search item in self.templates"""

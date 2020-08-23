@@ -138,7 +138,7 @@ def shutdown_task():
 
 @app.route('/putNewTask')
 def put_new_task():
-    if config.task_thread.is_alive():
+    if config.task_thread and config.task_thread.is_alive():
         return f'Task is still alive: {config.task_thread}'
     elif config.task_queue.full():
         return f'Task already in queue. Try or check again later.'
