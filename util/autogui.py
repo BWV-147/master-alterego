@@ -13,8 +13,6 @@ from .dataset import *
 from .gui import *
 from .log import *
 
-MSS = mss()
-
 
 # %% image processing
 def get_mean_color(img: Image.Image, region: Sequence):
@@ -109,12 +107,16 @@ def screenshot(region: Sequence = None, filepath: str = None, monitor: int = Non
     if monitor is None:
         monitor = config.monitor
     _image = None
+    # TODO: to fix first run is not DPI-Aware, or add size to config, now run once at program startup
     size = (1920, 1080)  # default size
     with mss() as sct:
         try:
-            mon = sct.monitors[monitor]
+            mon = dict(sct.monitors[monitor])  # copy
+            mon['width'], mon['height'] = size[0], size[1]
             shot = sct.grab(mon)
             size = shot.size
+            # import pprint
+            # pprint.pprint(sct._monitors)
             _image = Image.frombytes('RGB', size, shot.bgra, 'raw', 'BGRX').crop(region)
         except Exception as e:
             logger.error(f'Fail to grab screenshot using mss(). Error:\n{e}')

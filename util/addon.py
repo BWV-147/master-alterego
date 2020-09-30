@@ -3,7 +3,6 @@ __all__ = [
     'beep',
     'play_music',
     'raise_alert',
-    'check_sys_setting',
     'kill_thread',
     'threading',
     'os'
@@ -174,38 +173,6 @@ def raise_alert(alert_type=None, loops=5, wait=True):
 
 
 # %% system
-def check_sys_setting(admin=True):
-    if sys.platform == 'win32':
-        # check admin permission & set process dpi awareness
-        # please run cmd/powershell or Pycharm as administrator.
-        # SetProcessDpiAwareness: see
-        # https://docs.microsoft.com/zh-cn/windows/win32/api/shellscalingapi/ne-shellscalingapi-process_dpi_awareness
-        # print('set process dpi awareness = PROCESS_PER_MONITOR_DPI_AWARE')
-        ctypes.windll.shcore.SetProcessDpiAwareness(2)
-        if ctypes.windll.shell32.IsUserAnAdmin() == 0:
-            if admin:
-                print('Please run cmd/Pycharm as admin to click inside programs with admin permission(e.g. MuMu).')
-                # To run a new process as admin, no effect in Pycharm's Python Console mode.
-                # print('applying admin permission in a new process, and no effect when in console mode.')
-                # ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, __file__, None, 1)
-                raise PermissionError('Please run as administrator!')
-            else:
-                print('Running without admin permission.\n'
-                      'Operations (e.g. click) within admin programs will take no effects!')
-        else:
-            # print('already admin')
-            pass
-    elif sys.platform == 'darwin':
-        print('Allow the app(PyCharm/Terminal/...) to control your computer '
-              'in "System Preferences/Security & Privacy/Accessibility",\n'
-              'or mouse events will take no effects!', file=sys.stderr)
-        pass
-    else:
-        raise EnvironmentError(f'Unsupported system: {sys.platform}. please run in windows/macOS.')
-    # with mss() as sct:
-    #     print('** Monitors information **')
-    #     pprint.pprint(sct.monitors)
-    #     print('WARNING: make sure "config.monitor/offset" is set properly')
 
 
 def kill_thread(thread: threading.Thread):

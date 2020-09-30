@@ -1,5 +1,6 @@
 """Basic functions or classes, should be independent of others"""
 import argparse
+import ctypes
 import sys
 import time
 from typing import List, Tuple, Union, Dict, Callable, Sequence, Optional  # noqas
@@ -9,6 +10,7 @@ class ArgParser:
     def __init__(self, args: list = None):
         self._parser: Optional[argparse.ArgumentParser] = None
         self._init_parser()
+        self.task = None
         self.supervise = None
         self.config = None
         self.parse(args)
@@ -16,6 +18,8 @@ class ArgParser:
     def parse(self, args):
         # args without filename
         resolved_args = self._parser.parse_known_intermixed_args(args)[0]
+        print(resolved_args)
+        self.task = resolved_args.task
         self.supervise = not resolved_args.disable_supervisor
         self.config = resolved_args.config
 
@@ -27,6 +31,8 @@ class ArgParser:
         if self._parser is not None:
             return
         _parser = argparse.ArgumentParser(conflict_handler='resolve')
+        _parser.add_argument('task', nargs='?', default='battle', choices=['battle', 'lottery', 'fp'],
+                             help='specific a task')
         _parser.add_argument('-c', '--config', default='data/config.json',
                              help='config file path or {} part of data/config-{}.json, default "data/config.json".')
         _parser.add_argument('-d', '--disable-supervisor', action='store_true',
@@ -57,6 +63,41 @@ def is_interactive_mode():
         # interactive interpreter: 1-python default, 2-pycharm interactive console,
         return True
     return False
+
+
+def check_sys_setting(admin=True):
+    if sys.platform == 'win32':
+        # check admin permission & set process dpi awareness
+        # please run cmd/powershell or Pycharm as administrator.
+        # SetProcessDpiAwareness: see
+        # https://docs.microsoft.com/zh-cn/windows/win32/api/shellscalingapi/ne-shellscalingapi-process_dpi_awareness
+        # print('set process dpi awareness = PROCESS_PER_MONITOR_DPI_AWARE')
+        # WARNING: can only set awareness once, return e_access_denied if call again
+        print('Set DpiAwareness:', ctypes.windll.shcore.SetProcessDpiAwareness(2))
+        if ctypes.windll.shell32.IsUserAnAdmin() == 0:
+            if admin:
+                print('Please run cmd/Pycharm as admin to click inside programs with admin permission(e.g. MuMu).')
+                # To run a new process as admin, no effect in Pycharm's Python Console mode.
+                # print('applying admin permission in a new process, and no effect when in console mode.')
+                # ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, __file__, None, 1)
+                raise PermissionError('Please run as administrator!')
+            else:
+                print('Running without admin permission.\n'
+                      'Operations (e.g. click) within admin programs will take no effects!')
+        else:
+            # print('already admin')
+            pass
+    elif sys.platform == 'darwin':
+        print('Allow the app(PyCharm/Terminal/...) to control your computer '
+              'in "System Preferences/Security & Privacy/Accessibility",\n'
+              'or mouse events will take no effects!', file=sys.stderr)
+        pass
+    else:
+        raise EnvironmentError(f'Unsupported system: {sys.platform}. please run in windows/macOS.')
+    # with mss() as sct:
+    #     print('** Monitors information **')
+    #     pprint.pprint(sct.monitors)
+    #     print('WARNING: make sure "config.monitor/offset" is set properly')
 
 
 class Timer:

@@ -59,13 +59,11 @@ class Config(_BaseConfig):
         # Attention: MAIN monitor is not always monitor 1.
         self.monitor = 1  # >=1, check sct.monitors to see monitor info, 0 is all monitors in one screenshot
         self.offset = (0, 0)  # xy offset relative to MAIN monitor's origin for mouse click
-        self.mail = False  # whether to send_mail
         self.alert_type = False  # bool: beep, str: ring tone, alert if supervisor found errors or task finish.
         self.manual_operation_time = 60 * 10  # seconds.
         self.www_host_port = None  # default [host='0.0.0.0', port=8080] to run www server. If None, not to run server
         self.need_admin = True
-        self.hide_when_finish = True  # for MuMu emulator, "alt+z" to hide window.
-
+        self.hide_hotkey = ['alt', 'z']  # for MuMu emulator, "alt+z" to hide window. or "alt+x" for new MuMu
         # ================= battle part =================
         self.battle = BattleConfig()
         self.lottery = LotteryConfig()
@@ -80,6 +78,7 @@ class Config(_BaseConfig):
         self.mail_server_port = None
 
         # ================= ignored =================
+        self.mail = False  # decided by sub-config
         self.fp = fp
         self.T = None
         self.LOC = None
@@ -89,7 +88,7 @@ class Config(_BaseConfig):
         self.task_queue = Queue(1)
         self.temp = {}  # save temp vars at runtime
 
-        self._ignored = ['fp', 'T', 'LOC', 'log_time', 'task_finished', 'task_thread', 'task_queue', 'temp']
+        self._ignored = ['mail', 'fp', 'T', 'LOC', 'log_time', 'task_finished', 'task_thread', 'task_queue', 'temp']
         # load config
         if fp:
             self.load()
@@ -153,10 +152,11 @@ class Config(_BaseConfig):
 class BattleConfig(_BaseConfig):
     def __init__(self):
         super().__init__()
+        self.mail = False
         self.battle_func = None
         self.num = 1  # max battle num once running, auto decrease
         self.finished = 0  # all finished battles sum, auto increase, don't edit
-        self.check_drop = True  # check craft dropped or not, if True, make sure rewards.png contains the dropped craft.
+        self.check_drop = 1  # check dropped craft or item. 0-not check; 1-check 1st drop item; 2-check dropbox(rainbow)
         self.apples = []  # invalid: stop, 0-rainbow, 1-gold, 2-sliver, 3-cropper, 4-zihuiti, 5-manually(wait ~7min)
         self.jump_battle = False  # goto decoration in Battle.battle_func
         self.login_handler = None  # JP: re-login at 3am(UTC+08)
@@ -175,6 +175,7 @@ class BattleConfig(_BaseConfig):
 class LotteryConfig(_BaseConfig):
     def __init__(self):
         super().__init__()
+        self.mail = False
         self.dir = None
         self.start_func = 'draw'  # draw->clean->sell
         self.num = 10  # lottery num running once, auto decrease
@@ -188,6 +189,7 @@ class LotteryConfig(_BaseConfig):
 class FpGachaConfig(_BaseConfig):
     def __init__(self):
         super().__init__()
+        self.mail = False
         self.dir = None
         self.num = 0
         self.finished = 0

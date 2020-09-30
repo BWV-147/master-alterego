@@ -38,9 +38,64 @@
                     Terminate
                 </button>
                 <button class="btn btn-primary" id="putNewTaskBtn" onclick="putNewTask()">New Task</button>
+                <button class="btn btn-primary" id="toggleVisibilityBtn" onclick="toggleVisibility()">Show/Hide</button>
+                <!--                <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#configDiv"-->
+                <!--                        aria-expanded="false" aria-controls="configDiv">Config-->
+                <!--                </button>-->
             </p>
-            <div class="card card-body"><pre id="taskStatus"></pre></div>
-            <hr>
+            <!--config accordion-->
+            <div class="accordion" id="configAccordion">
+                <div class="card">
+                    <div class="card-header" id="configHeading">
+                        <h2 class="mb-0">
+                            <button class="btn btn-block text-left" type="button" data-toggle="collapse"
+                                    data-target="#configCollapse" aria-expanded="true" aria-controls="configCollapse">
+                                Config
+                            </button>
+                        </h2>
+                    </div>
+
+                    <div id="configCollapse" class="collapse hide" aria-labelledby="configHeading"
+                         data-parent="#configAccordion">
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label for="configEditor">
+                                    <button class="btn btn-outline-secondary" id="pullConfigBtn"
+                                            onclick="pullConfig()">Download config
+                                    </button>
+                                    <button class="btn btn-outline-danger" id="pushConfigBtn"
+                                            onclick="pushConfig()">Upload config
+                                    </button>
+                                </label>
+                                <textarea class="form-control" id="configEditor" rows="10" spellcheck="false"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!--logs accordion-->
+            <div class="accordion" id="logsAccordion">
+                <div class="card">
+                    <div class="card-header" id="logsHeading">
+                        <h2 class="mb-0">
+                            <button class="btn btn-block text-left" type="button" data-toggle="collapse"
+                                    data-target="#logsCollapse" aria-expanded="true" aria-controls="logsCollapse">
+                                logs
+                            </button>
+                        </h2>
+                    </div>
+
+                    <div id="logsCollapse" class="collapse show" aria-labelledby="logsHeading"
+                         data-parent="#logsAccordion">
+                        <div class="card-body">
+                            <pre id="taskStatus"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 </main>

@@ -24,6 +24,7 @@ class BattleBase(BaseAgent):
         """
         # pre-processing
         self.pre_process(cfg)
+        config.mail = config.battle.mail
         battle_func = getattr(self, config.battle.battle_func)
         battle_func(True)
         config.T = self.T
@@ -101,20 +102,22 @@ class BattleBase(BaseAgent):
                         f'time = {int(dt // 60)} min {int(dt % 60)} sec. '
                         f'(total {config.battle.finished})', extra=LOG_TIME)
             rewards = screenshot()
-            craft_dropped = match_targets(rewards, T.rewards, LOC.finish_craft)
             drop_dir = f'img/_drops/{self.master.quest_name}'
             if not os.path.exists(drop_dir):
                 os.makedirs(drop_dir)
             # png_fn without suffix
-            png_fn = os.path.join(drop_dir, f'rewards-{self.master.quest_name}-{time.strftime("%m%d-%H%M")}')
-            if craft_dropped and config.battle.check_drop:
+            png_fn = os.path.join(drop_dir, f'rewards-{self.master.quest_name}-{time.strftime("%m%d-%H%M")}'
+                                            f'-{config.battle.finished}')
+
+            if config.battle.check_drop > 0 and match_targets(rewards, T.rewards,
+                                                              LOC.rewards_check_drop[config.battle.check_drop]):
                 config.count_battle(True)
                 logger.warning(f'{config.battle.craft_num}th craft dropped!!!')
                 rewards.save(f'{png_fn}-drop{config.battle.craft_num}.png')
                 if config.mail:
                     if config.battle.craft_num in config.battle.enhance_craft_nums:
                         logger.warning('need to change party or enhance crafts. Exit.')
-                        send_mail(f'NEED Enhancement! {config.battle.craft_num}th craft dropped!!!')
+                        send_mail(f'Enhance! {config.battle.craft_num}th craft dropped!!!77')
                         config.mark_task_finish()
                         return
                     else:

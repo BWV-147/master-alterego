@@ -35,12 +35,11 @@
             <div class="h5">Recent <span id="totalLogCount"></span> logs of<!-- <code id="logName"></code>-->
                 <div class="btn-group" id="dropdownLogs">
                     <button type="button" class="btn  btn-secondary dropdown-toggle" data-toggle="dropdown"
-                            aria-haspopup="true" aria-expanded="false">
-                        ......
+                            aria-haspopup="true" aria-expanded="false">......
                     </button>
-                    <div class="dropdown-menu">
-                    </div>
+                    <div class="dropdown-menu"></div>
                 </div>
+                <button class="btn btn-primary" id="refreshLogBtn" onclick="refreshLog()">Refresh</button>
             </div>
             <nav class="table-responsive">
                 <ul class="pagination pagination-sm" style="margin: 1rem auto"></ul>
@@ -95,7 +94,7 @@
     $('#dropdownLogs .dropdown-menu').html(items.join(''))
     let $links = $('#dropdownLogs .dropdown-item')
     $links.click(function () {
-      let logName=$(this).data('name')
+      let logName = $(this).data('name')
       $('#dropdownLogs button').text(logName)
       downloadAndShowLog(logName)
     })

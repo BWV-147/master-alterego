@@ -1,13 +1,14 @@
 import platform
 import threading
 
-from util.addon import check_sys_setting, raise_alert
+from util.addon import raise_alert
 from util.autogui import *
 from .server import app
 
 
 class BaseAgent:
     _server_thread: threading.Thread = None
+    _tunet_thread: threading.Thread = None
 
     def __init__(self):
         self.T = None
@@ -24,10 +25,10 @@ class BaseAgent:
         # server thread should be daemon, make it possible to be terminated by Ctrl-C
         # in terminal: keep app running until ctrl-C pressed => call thread.join() in post processing
         # in interactive: main thread is always alive, join() is not needed, we can terminate it manually.
-        if config.hide_when_finish:
+        if config.hide_hotkey:
             _os = platform.system().lower()
             if _os == 'windows':
-                pyautogui.hotkey('alt', 'z')  # hide window for MuMu emulator
+                pyautogui.hotkey(*config.hide_hotkey)
                 # pyautogui.hotkey('win', 'd')
 
     @classmethod
@@ -38,6 +39,22 @@ class BaseAgent:
         cls._server_thread = threading.Thread(target=app.run, name='flask_app_server', args=[host, port], daemon=True)
         cls._server_thread.start()
         app.logger.info(f'server started: {cls._server_thread}')
+
+    @classmethod
+    def run_tunet_login(cls, user, pwd):
+        # TODO
+        if cls._tunet_thread is not None and cls._tunet_thread.is_alive():
+            app.logger.info(f'tunet is already running: {cls._tunet_thread}')
+            return
+
+        def _try_login():
+            # import tunet
+            # tunet.auth4.checklogin()
+            pass
+
+        cls._tunet_thread = threading.Thread(target=_try_login, name='tunet', daemon=True)
+        cls._tunet_thread.start()
+        app.logger.info(f'tunet started: {cls._tunet_thread}')
 
     @classmethod
     def terminate_server(cls):
@@ -55,9 +72,9 @@ class BaseAgent:
         wait_targets(T.bag_unselected, LOC.bag_svt_tab)
         print('Make sure the correct setting of **FILTER**')
         if num <= 0:
-            logger.info('need manual operation!')
-            time.sleep(2)
             config.update_time(config.manual_operation_time)  # min for manual operation
+            logger.info(f'Need manual operation! Paused for {config.log_time - time.time():.1f} seconds.')
+            time.sleep(2)
             raise_alert()
             wait_targets(T.shop, LOC.menu_button)
             return

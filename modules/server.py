@@ -12,6 +12,7 @@ __all__ = ['app']
 
 import argparse
 import imghdr
+import json
 import logging
 import os
 import sys
@@ -148,9 +149,27 @@ def put_new_task():
         return f'Put a task into queue, check it later'
 
 
+@app.route('/toggleVisibility')
+def toggle_visibility():
+    import pyautogui as pag
+    pag.hotkey('alt', 'z')
+    return 'Toggle visibility'
+
+
+@app.route('/configuration', methods=['GET', 'POST'])
+def configuration():
+    if request.method == 'GET':
+        return json.dumps(config.to_json(), ensure_ascii=False)
+    else:
+        # don't directly save to config file, since there may be errors.
+        data = request.get_data().decode('utf8')
+        config.from_json(json.loads(data))
+        return json.dumps(config.to_json(), ensure_ascii=False)
+
+
 # %%
 if __name__ == '__main__':
-    from util.addon import check_sys_setting
+    from util.base import check_sys_setting
 
     # from util.config import config
 

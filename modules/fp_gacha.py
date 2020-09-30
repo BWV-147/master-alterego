@@ -12,6 +12,7 @@ class FpGacha(BaseAgent):
     def start(self, supervise=True, cfg=None):
         # pre-processing
         self.pre_process(cfg)
+        config.mail = config.fp_gacha.mail
         self.T.read_templates(config.fp_gacha.dir)
         config.T = self.T
         config.LOC = self.LOC
@@ -21,7 +22,7 @@ class FpGacha(BaseAgent):
         logger.info('starting friend point gacha...', extra=LOG_TIME)
         time.sleep(2)
         if supervise:
-            t_name = os.path.basename(config.fp_gacha.dir)
+            t_name = f'fp-{os.path.basename(config.fp_gacha.dir)}'
             thread = threading.Thread(target=start_func, name=t_name, args=[config.fp_gacha.num], daemon=True)
             supervise_log_time(thread, 20, interval=3, alert_loops=3)
         else:

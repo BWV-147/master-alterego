@@ -37,7 +37,7 @@ function trimChar(string, chars = ' \n\t\r', pos = 0) {
  */
 function addTaskLog(msg) {
   let $status = $('#taskStatus')
-  $status.text(`[${new Date().toLocaleString(undefined, { hour12: false })}] ${msg}\n` + $status.text())
+  $status.text(`[${new Date().toLocaleString(undefined, {hour12: false})}] ${msg}\n` + $status.text())
 }
 
 function getTaskStatus() {
@@ -58,6 +58,33 @@ function putNewTask() {
   $.get('/putNewTask', function (result) {
     addTaskLog(result)
   })
+}
+
+function toggleVisibility() {
+  $.get('/toggleVisibility', function (result) {
+    addTaskLog(result)
+  })
+}
+
+function pullConfig() {
+  $.get('/configuration', function (result) {
+    $('#configEditor').val(JSON.stringify(JSON.parse(result), null, 2))
+    addTaskLog('pulled config')
+  })
+}
+
+function pushConfig() {
+  let data = $('#configEditor').val()
+  try {
+    JSON.parse(data)
+  } catch {
+    addTaskLog('Invalid json format')
+  }
+  $.post('/configuration', data, function (result) {
+    $('#configEditor').val(JSON.stringify(JSON.parse(result), null, 2))
+    addTaskLog('config updated')
+  })
+
 }
 
 /**
@@ -81,6 +108,14 @@ function downloadAndShowLog(logName, num = 0) {
     showLogsAtPage(logs, -1, perPage)
     createPagination(totalPages, -1, (index) => showLogsAtPage(logs, index, perPage), 10)
   })
+}
+
+function refreshLog() {
+  let logName = $('#dropdownLogs button').text()
+  if (trimChar(logName)!=='......'){
+    downloadAndShowLog(logName)
+    console.log('refresh log: '+logName)
+  }
 }
 
 /**
@@ -220,6 +255,7 @@ function jumpToDirectory(path = '') {
 
 function listDir(data) {
   let treeNodes = []
+  $('#fileStat').text(`  Total ${data.folders.length} folders, ${data.files.length} files.`)
   $.each(data.folders, function (index, value) {
     treeNodes.push(`<a data-path="${curPath + '\\' + value}" class="list-group-item list-group-item-action">
         <svg class="bi bi-folder" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">

@@ -242,14 +242,16 @@ class Regions(_Regions):
 
     # kizuna = (115, 251, 580, 305)  # 与从者的羁绊text
     kizuna = (186, 646, 205, 665)  # 羁绊点数第一格
-    finish_qp = (418, 884, 487, 955)
+    finish_qp = (450, 900, 472, 940)
     rewards_show_num = (1593, 115, 1718, 149)
     rewards_items_outer = [[(233 + j * 206, 186 + i * 213, 409 + j * 206, 379 + i * 213) for j in range(0, 7)] for i in
                            range(0, 3)]
     rewards_items = [[(241 + j * 206, 196 + i * 213, 401 + j * 206, 290 + i * 213) for j in range(0, 7)] for i in
                      range(0, 3)]
+    rewards_item1 = (454, 216, 623, 386)  # first dropped item rect
+    rewards_rainbow = (1418, 18, 1442, 50)
+    rewards_check_drop = [None, rewards_item1, rewards_rainbow]
     finish_next = (1444, 980, 1862, 1061)
-    finish_craft = (454, 216, 623, 386)
     restart_quest_yes = (1122, 812, 1386, 829)
     # friend_point = (460, 810, 580, 880)
 
@@ -343,7 +345,7 @@ class ImageTemplates:
 
     def read_templates(self, directory: Union[str, List[str]], append=False):
         """
-        Read template .png images from one or more dirs. If list of dirs and duplicated filename, the last one will be remained
+        Read template .png images from one or more dirs. If duplicated filenames, the last image will be remained
         :param directory:
         :param append: if false, clear the templates first.
         :return:

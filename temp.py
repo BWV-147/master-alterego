@@ -1,9 +1,14 @@
+# %% make sure correct dpi awareness at startup
+import ctypes
+import sys
+
+if sys.platform == 'win32':
+    print('Set DpiAwareness:', ctypes.windll.shcore.SetProcessDpiAwareness(2))
 # %%
-from util.addon import check_sys_setting
 from util.autogui import *
 
 check_sys_setting(False)
-config.load('data/config-jp.json')
+config.load('data/config.json')
 
 # %%
 # base_path = 'img/battles/a-charlotte/'  # 'img/gacha-jp'
@@ -143,3 +148,26 @@ capture('fp_bag1_full')
 capture('fp_bag2_full')
 
 # %%
+from PIL import Image
+
+from mss.windows import MSS
+from pprint import pprint
+
+
+def screenshot2(m=1):
+    with MSS() as sct:
+        shot = sct.grab(monitor=sct.monitors[m])
+        pprint(sct._monitors)
+        size = shot.size
+        _image = Image.frombytes('RGB', size, shot.bgra, 'raw', 'BGRX')
+        print(size, _image.size)
+        return _image
+
+
+#%%
+screenshot2().save(f'test-0000000.png')
+from battles import screenshot
+screenshot()
+#%%
+from battles import *
+screenshot()
