@@ -204,7 +204,7 @@ class Master:
                         elif page_no == 2:
                             return
 
-    def choose_support(self, match_svt=True, match_ce=False, match_ce_max=False, match_skills=None, switch_classes=None,
+    def choose_support(self, match_svt=True, match_skills=True, match_ce=False, match_ce_max=False, switch_classes=None,
                        friend_only=False, images=None):
         # type:(bool,bool,bool,bool,Sequence,bool,List[Image.Image])->int
         """
@@ -212,9 +212,9 @@ class Master:
         drag scrollbar to show all friends. Finally return the index of which support template is chosen.
 
         :param match_svt: match the whole rect of 3 skills
+        :param match_skills: match every skill icon
         :param match_ce: whether match CE, please set to False if jp server since CE could be filtered in jp server
         :param match_ce_max: whether match CE max star
-        :param match_skills: match every skill icon
         :param switch_classes: e.g. (0,5,...) means switch between ALL and CASTER.
                         If empty or None, keep current support class.
                         ALL=0, Saber-Berserker=1-7, extra=8, Mixed=9.
@@ -238,11 +238,11 @@ class Master:
 
         # lambda functions: function(support, screenshot, offset) -> matched or not
         matches = [
-            lambda _p, _s, _o: not match_ce or _is_match_offset(_p, _s, LOC.support_ce[0], _o),
-            lambda _p, _s, _o: not match_ce_max or _is_match_offset(_p, _s, LOC.support_ce_max[0], _o),
             lambda _p, _s, _o: not match_svt or _is_match_offset(_p, _s, LOC.support_skill[0], _o),
             lambda _p, _s, _o: not match_skills or False not in [_is_match_offset(_p, _s, loc, _o) for loc in
                                                                  LOC.support_skills[0]],
+            lambda _p, _s, _o: not match_ce or _is_match_offset(_p, _s, LOC.support_ce[0], _o),
+            lambda _p, _s, _o: not match_ce_max or _is_match_offset(_p, _s, LOC.support_ce_max[0], _o),
             lambda _p, _s, _o: not friend_only or _is_match_offset(_p, _s, LOC.support_friend_icon, _o),
         ]
 
@@ -252,10 +252,10 @@ class Master:
                 if class_icon == -1:
                     time.sleep(0.2)
                 else:
-                    click(LOC.support_class_icons[class_icon], 0.1)
-                    click(LOC.support_scrollbar_head, 0.1)
+                    click(LOC.support_class_icons[class_icon], 0.8)
+                    click(LOC.support_scrollbar_head, 0.8)
                     class_name = ['All', 'Saber', 'Archer', 'Lancer', 'Rider',
-                                  'Caster', 'Assassin', 'Berserker', 'Extra'][class_icon]
+                                  'Caster', 'Assassin', 'Berserker', 'Extra', 'Mix'][class_icon]
                     logger.debug(f'switch support class to No.{class_icon}-{class_name}.')
                 move_to(LOC.support_scrollbar_start)
                 shot = screenshot()
@@ -279,6 +279,8 @@ class Master:
                                     break
                             if matched:  # one support matched
                                 matched_support = support_index
+                                if len(supports) > 1:
+                                    logger.info(f'matched support {support_index}')
                                 break
                         if not matched:  # this friend not match any support, next friend
                             continue
@@ -302,7 +304,7 @@ class Master:
             # refresh support
             refresh_times += 1
             logger.debug(f'refresh support {refresh_times} times...', extra=LOG_TIME)
-            if config.mail and refresh_times % 20 == 0:
+            if refresh_times % 100 == 0:
                 send_mail(body=f'refresh support more than {refresh_times} times.')
             wait_targets(support0, LOC.support_refresh, at=0)
             wait_targets(T.support_confirm, LOC.support_confirm_title, clicking=LOC.support_refresh)
@@ -479,9 +481,9 @@ class Master:
             else:
                 chosen_cards = self.choose_cards(cards, np_cards, nps, mode=mode)
                 break
+        if nps is not None:
+            time.sleep(0.8)
         if no_play_card is False:
-            if nps is not None:
-                time.sleep(0.8)
             self.play_cards(chosen_cards)
         return chosen_cards
 

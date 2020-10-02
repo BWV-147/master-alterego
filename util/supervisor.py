@@ -81,7 +81,7 @@ def supervise_log_time(thread, time_out=60, mail=None, interval=10, alert_type=N
             # not solved! kill thread and stop.
             if thread.is_alive():
                 kill_thread(thread)
-            err_msg = f'{thread}:' \
+            err_msg = f'{thread}:\n' \
                       f' - task finished: {config.task_finished}\n' \
                       f' - current  time: {time.asctime()}\n' \
                       f' - last log time: {time.asctime(time.localtime(config.log_time))}\n' \
@@ -90,7 +90,7 @@ def supervise_log_time(thread, time_out=60, mail=None, interval=10, alert_type=N
             if mail:
                 send_mail(err_msg, subject=f'[{thread.name}]Went wrong!')
             break
-    raise_alert(alert_type, loops=5)
+    raise_alert(alert_type, loops=10)
     logger.info('exit supervisor.')
 
 

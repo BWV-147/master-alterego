@@ -112,7 +112,7 @@ def screenshot(region: Sequence = None, filepath: str = None, monitor: int = Non
     with mss() as sct:
         try:
             mon = dict(sct.monitors[monitor])  # copy
-            mon['width'], mon['height'] = size[0], size[1]
+            # mon['width'], mon['height'] = size[0], size[1]  # this is first introduce since dpi issue
             shot = sct.grab(mon)
             size = shot.size
             # import pprint

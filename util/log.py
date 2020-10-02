@@ -3,10 +3,10 @@ __all__ = ['LOG_TIME', 'LOG_FORMATTER', 'LoggerDispatcher', 'DispatcherFilter', 
 
 import logging
 import os
-from logging.handlers import RotatingFileHandler
 
 import colorama
 import termcolor
+from concurrent_log_handler import ConcurrentRotatingFileHandler
 
 from .base import *
 from .config import config
@@ -99,6 +99,7 @@ class LoggerDispatcher(logging.Logger):
         # properties
         self._logger: Optional[logging.Logger] = None
         self.dispatcher_disabled = False
+        # the full log's filepath if level>debug, used in send_mail
         self._log_filepath = None
         self.dispatcher_filter = DispatcherFilter(self.dispatch_record)
         # init
@@ -143,7 +144,9 @@ class LoggerDispatcher(logging.Logger):
                 if not os.path.exists(save_path):
                     os.makedirs(save_path)
                 fp = os.path.join(save_path, f'{name}.log')
-                fh = RotatingFileHandler(fp, encoding='utf8', maxBytes=1024 * 1024, backupCount=3)
+                fh = ConcurrentRotatingFileHandler(os.path.abspath(fp), encoding='utf8', maxBytes=1024 * 1024,
+                                                   backupCount=3)
+                # fh = RotatingFileHandler(fp, encoding='utf8', maxBytes=1024 * 1024, backupCount=3)
                 fh.setFormatter(LOG_FORMATTER)
                 fh.setLevel(level)
                 _logger.addHandler(fh)
@@ -151,7 +154,8 @@ class LoggerDispatcher(logging.Logger):
 
                 if level > logging.DEBUG:
                     fp = os.path.join(save_path, f'{name}.full.log')
-                    full_fh = RotatingFileHandler(fp, encoding='utf8', maxBytes=1024 * 1024, backupCount=3)
+                    full_fh = ConcurrentRotatingFileHandler(os.path.abspath(fp), encoding='utf8', maxBytes=1024 * 1024,
+                                                            backupCount=3)
                     full_fh.setFormatter(LOG_FORMATTER)
                     full_fh.setLevel(logging.DEBUG)
                     _logger.addHandler(full_fh)

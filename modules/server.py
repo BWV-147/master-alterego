@@ -100,8 +100,13 @@ def get_image_folder_tree():
 def get_file():
     """Return text file or Image(compressed)"""
     filepath = request.args.get('path')
+    monitor = request.args.get('mon')
+    if monitor is None or monitor.lower() == 'null':
+        monitor = config.monitor
+    else:
+        monitor = int(monitor)
     if filepath.lower() == 'screenshot':
-        image = screenshot()
+        image = screenshot(monitor=monitor)
     else:
         filepath = os.path.join('img', filepath)
         if not os.path.isfile(filepath):

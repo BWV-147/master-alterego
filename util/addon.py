@@ -10,6 +10,7 @@ __all__ = [
 
 import ctypes
 import email.utils
+import html
 import os
 import smtplib
 import socket
@@ -57,7 +58,8 @@ def send_mail(body, subject=None, receiver=None, attach_shot=True, force_send=Fa
     subject = f'{time.strftime("[%H:%M]")}{subject}'
 
     # body
-    body = f'<b>{body}</b><br><br>\n' \
+    logger.info('send mail:\n' + body)
+    body = f'<b><pre>{html.escape(body)}</pre></b><br><br>\n' \
            f'<hr><b>Computer name:</b><br>{socket.getfqdn(socket.gethostname())}<br><hr>\n'
 
     # body.screenshot
@@ -80,7 +82,7 @@ def send_mail(body, subject=None, receiver=None, attach_shot=True, force_send=Fa
             lines = fd.readlines()
             n = len(lines)
             # "<" should be replaced with escape characters even in <pre/>
-            recent_records = ['<pre>' + x.rstrip().replace('<', '&lt;') + '</pre>\n' for x in lines[-min(20, n):]]
+            recent_records = ['<pre>' + html.escape(x.rstrip()) + '</pre>\n' for x in lines[-min(20, n):]]
             body += f'<b>Recent 10 logs ({logger.log_filepath}):</b><br>\n' \
                     '<style>.logs pre { margin: 0.3em auto; font-family: "Consolas"; }</style>\n' \
                     f'<span class="logs">\n{"".join(recent_records)}</span><hr>'

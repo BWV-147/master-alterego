@@ -24,7 +24,7 @@ def click(xy: Sequence = None, lapse=0.5):
     """
     if xy is not None:
         move_to(xy)
-        # print('click (%d, %d)' % (x, y))
+        # print(f'click {tuple(xy)}')
     pyautogui.click()
     time.sleep(lapse)
 

@@ -107,44 +107,40 @@ class BattleBase(BaseAgent):
                 os.makedirs(drop_dir)
             # png_fn without suffix
             png_fn = os.path.join(drop_dir, f'rewards-{self.master.quest_name}-{time.strftime("%m%d-%H%M")}'
-                                            f'-{config.battle.finished}')
+                                            f'-{config.battle.finished + 1}')
 
             if config.battle.check_drop > 0 and match_targets(rewards, T.rewards,
                                                               LOC.rewards_check_drop[config.battle.check_drop]):
                 config.count_battle(True)
                 logger.warning(f'{config.battle.craft_num}th craft dropped!!!')
                 rewards.save(f'{png_fn}-drop{config.battle.craft_num}.png')
-                if config.mail:
-                    if config.battle.craft_num in config.battle.enhance_craft_nums:
-                        logger.warning('need to change party or enhance crafts. Exit.')
-                        send_mail(f'Enhance! {config.battle.craft_num}th craft dropped!!!77')
-                        config.mark_task_finish()
-                        return
-                    else:
-                        send_mail(f'{config.battle.craft_num}th craft dropped!!!')
+                if config.battle.craft_num in config.battle.enhance_craft_nums:
+                    logger.warning('need to change party or enhance crafts. Exit.')
+                    send_mail(f'Enhance! {config.battle.craft_num}th craft dropped!!!77')
+                    config.mark_task_finish()
+                    return
+                else:
+                    send_mail(f'{config.battle.craft_num}th craft dropped!!!')
                 click(LOC.finish_next)
             else:
                 config.count_battle(False)
                 click(LOC.finish_next)
                 rewards.save(f"{png_fn}.png")
             # ready to restart a battle
-            if finished_num % 30 == 0 and config.mail:
+            if finished_num % 30 == 0:
                 send_mail(f'Progress: {finished_num}/{max_num} battles finished.', attach_shot=False)
             while True:
                 shot = screenshot()
                 if search_target(shot.crop(LOC.quest_outer), T.quest.crop(LOC.quest))[0] > THR:
                     break
                 elif match_targets(shot, T.restart_quest, LOC.restart_quest_yes):
-                    click(LOC.restart_quest_yes)
-                    logger.debug('restart the same battle', extra=LOG_TIME)
                     break
                 elif match_targets(shot, T.apply_friend, LOC.apply_friend):
                     click(LOC.apply_friend_deny)
                     logger.debug('not to apply friend')
                 time.sleep(0.5)
         logger.info(f'>>>>> All {finished_num} battles "{self.master.quest_name}" finished. <<<<<')
-        if config.mail:
-            send_mail(f'All {finished_num} battles "{self.master.quest_name}" finished')
+        send_mail(f'All {finished_num} battles "{self.master.quest_name}" finished')
         config.mark_task_finish()
         return
 
@@ -173,7 +169,7 @@ class BattleBase(BaseAgent):
             # --------------  name       NP    Quick    Arts   Buster -----------
             master.set_cards(names[0], (3, 6), (1, 5), (1, 3), (3, 3))
             master.set_cards(names[1], (1, 7), (2, 2), (1, 1), (2, 4))
-            master.set_cards_from_json(names[2], 'img/cards/android/cards-android.json', '孔明')
+            master.set_cards_from_json('孔明', 'img/battles/cards/android/cards-android.json')
 
             def _handler():
                 # mainly for jp, re-login handler at 3am(UTC+8)
@@ -196,7 +192,7 @@ class BattleBase(BaseAgent):
         wait_targets(T.support, LOC.support_refresh)
         # use different process with different support servant
         # noinspection PyUnusedLocal
-        support = master.choose_support(match_svt=True, match_ce=True, match_ce_max=True, match_skills=True,
+        support = master.choose_support(match_svt=True, match_skills=True, match_ce=True, match_ce_max=True,
                                         switch_classes=(5, 0), friend_only=False,
                                         images=[master.T.support, master.T.support])
 

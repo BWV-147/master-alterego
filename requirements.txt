@@ -1,4 +1,5 @@
 colorama
+concurrent-log-handler
 flask
 goto-statement
 imagecodecs

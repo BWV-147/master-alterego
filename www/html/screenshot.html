@@ -32,8 +32,26 @@
     <!-- Main jumbotron for a primary marketing message or call to action -->
     <div class="" style="padding-top: 4rem">
         <div class="container">
-            <div class="text-center">
+            <div class="text-center ">
                 <div class="btn btn-primary" id="refreshScreenshotBtn">Refresh</div>
+                <div id="monitorGroup">
+                    Monitor
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="inlineRadioOptions" id="monitor0Radio"
+                               value="0">
+                        <label class="form-check-label" for="monitor0Radio">0</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="inlineRadioOptions" id="monitor1Radio"
+                               value="1">
+                        <label class="form-check-label" for="monitor1Radio">1</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="inlineRadioOptions" id="monitor2Radio"
+                               value="2">
+                        <label class="form-check-label" for="monitor2Radio">2</label>
+                    </div>
+                </div>
             </div>
             <div style="padding-top: 5px">
                 <!--suppress HtmlUnknownTarget -->
@@ -44,8 +62,12 @@
     </div>
 </main>
 <script>
+  let monitor = null
+  $('#monitorGroup').find('input').click(function () {
+    monitor = $(this).val()
+  })
   $('#refreshScreenshotBtn').click(function () {
-    $('#screenshot').attr('src', '/getFile?path=screenshot&time=' + new Date().getTime())
+    $('#screenshot').attr('src', `/getFile?path=screenshot&mon=${monitor}&time=${new Date().getTime()}`)
   })
 </script>
 <div class="footer-placeholder"></div>
