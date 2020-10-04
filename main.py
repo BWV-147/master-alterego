@@ -1,9 +1,7 @@
 # %% make sure correct dpi awareness at startup
-import ctypes
-import sys
+from init import initial
 
-if sys.platform == 'win32':
-    print('Set DpiAwareness:', ctypes.windll.shcore.SetProcessDpiAwareness(2))
+initial()
 # %%
 from battles import Battle, start_loop
 from modules.fp_gacha import FpGacha

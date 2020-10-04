@@ -69,11 +69,8 @@ def check_sys_setting(admin=True):
     if sys.platform == 'win32':
         # check admin permission & set process dpi awareness
         # please run cmd/powershell or Pycharm as administrator.
-        # SetProcessDpiAwareness: see
-        # https://docs.microsoft.com/zh-cn/windows/win32/api/shellscalingapi/ne-shellscalingapi-process_dpi_awareness
-        # print('set process dpi awareness = PROCESS_PER_MONITOR_DPI_AWARE')
-        # WARNING: can only set awareness once, return e_access_denied if call again
-        print('Set DpiAwareness:', ctypes.windll.shcore.SetProcessDpiAwareness(2))
+        from init import initial
+        initial()
         if ctypes.windll.shell32.IsUserAnAdmin() == 0:
             if admin:
                 print('Please run cmd/Pycharm as admin to click inside programs with admin permission(e.g. MuMu).')
