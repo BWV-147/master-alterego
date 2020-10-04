@@ -1067,3 +1067,81 @@ class Battle(JFree, AFree, SFree):
 
         master.xjbd(T.kizuna, LOC.kizuna, mode='dmg', allow_unknown=True)
         return
+
+    @with_goto
+    def a2_ticket(self, pre_process=False):
+        """
+        阿拉什-狂娜-孔明-孔明support-大王-X 换人
+        """
+        master = self.master
+        T = master.T
+        LOC = master.LOC
+
+        master.quest_name = 'A2-silver'
+        names = master.members = ['阿拉什', '狂娜', '孔明', '孔明', '大王']
+        master.set_card_weight(dict(zip(names, [2.01, 2.02, 1, 1, 2])))
+
+        # pre-processing: e.g. set templates, only once
+        if pre_process:
+            logger.debug(f'pre-process for {master.quest_name} ...')
+            T.read_templates(['img/battles/.a', 'img/battles/a2-ticket/'])
+
+            # LOC.relocate((0, 0, 1920 - 1, 1080 - 1))
+            # --------------  name       NP    Quick    Arts   Buster -----------
+            master.set_cards(names[0], (3, 6), (2, 3), (3, 1), (1, 4))
+            master.set_cards(names[1], (4, 7), (2, 5), (1, 3), (3, 3))
+            master.set_cards(names[4], (0, 0), (1, 2), (1, 1), (2, 4))
+            master.set_cards_from_json('孔明', 'img/battles/cards/android/cards-android.json')
+
+            config.battle.login_handler = None  # _handler
+            return
+
+        # battle part
+        if config.battle.jump_battle:
+            config.battle.jump_battle = False
+            logger.warning('goto label.h')
+            goto.h  # noqas
+
+        wait_targets(T.support, LOC.support_refresh)
+        master.choose_support(match_svt=True, match_skills=True, match_ce=True, match_ce_max=True,
+                              friend_only=False, switch_classes=(9,))
+
+        label.h  # noqas
+        # wave 1
+        wait_targets(T.wave1a, LOC.loc_wave, 0.7)
+        logger.debug(f'Quest {master.quest_name} started...')
+        logger.debug('wave 1...')
+        with master.set_waves(T.wave1a, T.wave1b):
+            master.svt_skill(3, 2)
+            master.svt_skill(3, 3, enemy=3)
+            master.svt_skill(3, 1, 1)
+            master.master_skill(3, order_change=(3, 5), order_change_img=T.order_change)
+        master.xjbd(T.wave2a, LOC.loc_wave, 'alter')
+
+        # wave 2
+        wait_targets(T.wave2a, LOC.loc_wave, 0.7)
+        logger.debug('wave 2...')
+        with master.set_waves(T.wave2a, T.wave2b):
+            master.svt_skill(3, 1, 1)
+            master.svt_skill(1, 3)
+        master.set_card_weight(dict(zip(['阿拉什', '狂娜', '孔明', '大王'], [0, 2.02, 1, 2])))
+        master.auto_attack(nps=6, mode='dmg')
+        master.members = ['孔明', '狂娜', '大王']
+
+        # wave 3
+        wait_targets(T.wave3a, LOC.loc_wave, 0.7)
+        logger.debug('wave 3...')
+        with master.set_waves(T.wave3a, T.wave3b):
+            master.svt_skill(1, 1, 2)
+            master.svt_skill(1, 2)
+            master.svt_skill(1, 3)
+            master.svt_skill(2, 1)
+            master.svt_skill(2, 2)
+            # master.svt_skill(2, 3)
+            master.svt_skill(3, 2, 2)
+            master.master_skill(2)
+            master.master_skill(1, enemy=3)
+        master.auto_attack(nps=7, mode='alter')
+
+        master.xjbd(T.kizuna, LOC.kizuna, mode='dmg', allow_unknown=True)
+        return

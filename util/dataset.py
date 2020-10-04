@@ -214,7 +214,7 @@ class Regions(_Regions):
     battle_master_avatar = (1706, 77, 1854, 189)
     wave_num = (1293, 18, 1320, 54)
     enemies_all = (0, 0, 1080, 128)
-    enemies = ((0, 0, 120, 130), (360, 0, 480, 130), (720, 0, 840, 130))  # skill_to_enemies
+    enemies = ((360, 0, 480, 130), (720, 0, 840, 130), (0, 0, 120, 130))  # skill_to_enemies
     dying_clicking_point = (960, 360)
     skills = [
         [(61, 823, 121, 908), (202, 823, 262, 908), (343, 823, 403, 908)],

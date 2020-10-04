@@ -83,6 +83,8 @@ class Master:
                 # only one loc, not a list of loc
                 locs = [locs]
             for img_name, loc in locs:
+                if loc > 8 or loc < 1:
+                    continue
                 if isinstance(img_name, int):
                     img_name = f'cards{img_name}'
                 _templates.append(images.get(img_name).crop(self.LOC.cards[loc - 1]))
@@ -385,8 +387,8 @@ class Master:
 
         :param before: wave a
         :param skill: 1~3
-        :param friend: 1~3
-        :param enemy: 1~3
+        :param friend: 1~3, from left to right
+        :param enemy: 1~3, from right to left
         :param order_change: None or (svt1:1~3,svt2:4~6)
         :param order_change_img: if None, use `self.T.order_change`
         :return: master self
