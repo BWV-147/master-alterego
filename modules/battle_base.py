@@ -78,8 +78,8 @@ class BattleBase(BaseAgent):
                         logger.info('bag full, to sell...')
                         click(LOC.bag_full_sell_button)
                         self.sell(config.battle.sell_num, 1, 3)
-                        wait_targets(T.shop, LOC.menu_button, at=LOC.bag_back)
-                        logger.debug('back from shop', extra=LOG_TIME)
+                        wait_search_template(T.quest.crop(LOC.quest), LOC.quest_outer)
+                        logger.debug('back from shop to quest', extra=LOG_TIME)
                     elif match_targets(shot, T.restart_quest, LOC.restart_quest_yes):
                         click(LOC.restart_quest_yes)
                         logger.debug('restart the same battle')
@@ -193,7 +193,7 @@ class BattleBase(BaseAgent):
         # use different process with different support servant
         # noinspection PyUnusedLocal
         support = master.choose_support(match_svt=True, match_skills=True, match_ce=True, match_ce_max=True,
-                                        switch_classes=(5, 0), friend_only=False,
+                                        friend_only=False, switch_classes=(5, 0),
                                         images=[master.T.support, master.T.support])
 
         # wave 1

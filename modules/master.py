@@ -169,7 +169,8 @@ class Master:
                 config.kill()
         for apple in apples:
             if apple == 0:  # 不舍得吃彩苹果
-                apple = 3
+                # apple = 3
+                pass
             if apple not in (0, 1, 2, 3, 4, 5):
                 logger.info(f'apple={apple} ({apples}), don\'t eat apple or no left apples, task finish.')
                 click(LOC.apple_close)
@@ -204,9 +205,9 @@ class Master:
                         elif page_no == 2:
                             return
 
-    def choose_support(self, match_svt=True, match_skills=True, match_ce=False, match_ce_max=False, switch_classes=None,
-                       friend_only=False, images=None):
-        # type:(bool,bool,bool,bool,Sequence,bool,List[Image.Image])->int
+    def choose_support(self, match_svt=True, match_skills=True, match_ce=False, match_ce_max=False, friend_only=False,
+                       switch_classes=None, images=None):
+        # type:(bool,bool,bool,bool,bool,Sequence[int],Sequence[Image.Image])->int
         """
         Choose the **first** friend in support templates `images`(default T.support) from the whole support list,
         drag scrollbar to show all friends. Finally return the index of which support template is chosen.
@@ -215,10 +216,10 @@ class Master:
         :param match_skills: match every skill icon
         :param match_ce: whether match CE, please set to False if jp server since CE could be filtered in jp server
         :param match_ce_max: whether match CE max star
+        :param friend_only: only choose friends' support
         :param switch_classes: e.g. (0,5,...) means switch between ALL and CASTER.
                         If empty or None, keep current support class.
                         ALL=0, Saber-Berserker=1-7, extra=8, Mixed=9.
-        :param friend_only: only choose friends' support
         :param images: support page images, default [T.support]
         :return: index of which support template in `images` is chosen
         """
@@ -300,7 +301,7 @@ class Master:
                     # no friends matched, drag downward
                     if dy_mouse != 0:
                         pyautogui.dragRel(0, dy_mouse, 0.2)
-                        time.sleep(0.2)
+                        time.sleep(0.4)
             # refresh support
             refresh_times += 1
             logger.debug(f'refresh support {refresh_times} times...', extra=LOG_TIME)
@@ -337,6 +338,7 @@ class Master:
         # type: (Image.Image,Image.Image,int,int,int,int,bool)->Master
         """
         Release servant skill to <self/all friends/all enemies>.
+        TODO: bug fix, first skill to enemy in this wave may not set enemy correctly.
 
         :param before: image before the skill released.
         :param after: image after the skill released. if null, not to check.
@@ -362,7 +364,7 @@ class Master:
         region = LOC.skills[who - 1][skill - 1]
         wait_targets(before, region, at=0, lapse=1)
         if friend is None:
-            while match_targets(screenshot(), before, region, 0.7):
+            while match_targets(screenshot(), before, region, 0.5):
                 # some times need to
                 click(region, 1)
         else:
@@ -427,6 +429,7 @@ class Master:
             wait_targets(T.skill_targets, LOC.skill_targets_close, 0.7, lapse=0.3)
             click(LOC.skill_to_target[friend - 1])
         elif order_change is not None:
+            # TODO: change to order_change_unselect grey button
             wait_targets(order_change_img, LOC.order_change[0])
             click(LOC.order_change[order_change[0] - 1])
             click(LOC.order_change[order_change[1] - 1])
@@ -454,6 +457,8 @@ class Master:
     def auto_attack(self, nps: Union[List[int], int] = None, mode='dmg', parse_np=False, allow_unknown=False,
                     no_play_card=False):
         """
+        TODO: add buster first params.
+
         :param parse_np:
         :param nps:
         :param mode: dmg/xjbd/alter

@@ -16,10 +16,10 @@ base_path: Optional[str] = None  # avoid running temp.py directly
 
 
 # %%
-def capture(fn: str):
+def capture(fn: str, _base=None):
     # pyautogui.hotkey('alt', 'tab')
     time.sleep(0.1)
-    full_fp = os.path.join(base_path, fn + '.png')
+    full_fp = os.path.join(_base or base_path, fn + '.png')
     if os.path.exists(full_fp):
         print(f'! Replace: "{full_fp}"')
     else:
@@ -130,6 +130,8 @@ capture('bag_sell_confirm')
 # %%
 capture('bag_sell_finish')
 # %%
+capture('bag_qp_limit')
+# %%
 capture('shop')
 # %%
 capture('shop_event_banner_list')
@@ -147,27 +149,5 @@ capture('fp_bag1_full')
 # %%
 capture('fp_bag2_full')
 
-# %%
-from PIL import Image
-
-from mss.windows import MSS
-from pprint import pprint
-
-
-def screenshot2(m=1):
-    with MSS() as sct:
-        shot = sct.grab(monitor=sct.monitors[m])
-        pprint(sct._monitors)
-        size = shot.size
-        _image = Image.frombytes('RGB', size, shot.bgra, 'raw', 'BGRX')
-        print(size, _image.size)
-        return _image
-
-
-#%%
-screenshot2().save(f'test-0000000.png')
-from battles import screenshot
-screenshot()
-#%%
-from battles import *
-screenshot()
+# %% test code
+pass

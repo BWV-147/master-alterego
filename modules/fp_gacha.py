@@ -37,7 +37,7 @@ class FpGacha(BaseAgent):
         T = self.T
         LOC = self.LOC
 
-        wait_targets(T.gacha_fp_result, [LOC.gacha_fp_logo])
+        wait_targets(T.gacha_fp_page, [LOC.gacha_fp_logo])
         logger.info('draw: starting...', extra=LOG_TIME)
         loops = 0
         while loops < num:
@@ -63,16 +63,19 @@ class FpGacha(BaseAgent):
                     logger.info('CE bag full, make sure only show *LOW RARITY<=2* CE.')
                     click(LOC.fp_bag_full_enhance_button)
                     self.enhance_ce(config.fp_gacha.enhance_num)
-                wait_targets(T.shop, LOC.menu_button, at=0)
-                wait_targets(T.menu, LOC.menu_gacha_button, at=0)
-                while True:
-                    wait_targets(T.gacha_quartz_page, LOC.gacha_help, lapse=0.2)
-                    shot = screenshot()
-                    if match_targets(shot, T.gacha_quartz_page, LOC.gacha_quartz_logo):
-                        click(LOC.gacha_arrow_left)
-                    elif match_targets(shot, T.gacha_fp_page, LOC.gacha_fp_logo):
-                        logger.debug('back to fp gacha page')
-                        break
+                if [config.fp_gacha.sell_num, config.fp_gacha.enhance_num][bag_no] > 0:
+                    wait_targets(T.shop, LOC.menu_button, at=0)
+                    wait_targets(T.menu, LOC.menu_gacha_button, at=0)
+                    while True:
+                        wait_targets(T.gacha_quartz_page, LOC.gacha_help, lapse=0.2)
+                        shot = screenshot()
+                        if match_targets(shot, T.gacha_quartz_page, LOC.gacha_quartz_logo):
+                            click(LOC.gacha_arrow_left)
+                        elif match_targets(shot, T.gacha_fp_page, LOC.gacha_fp_logo):
+                            logger.debug('back to fp gacha page')
+                            break
+                else:
+                    wait_targets(T.gacha_fp_page, [LOC.gacha_fp_logo])
         config.mark_task_finish()
 
     def enhance_ce(self, num=100):

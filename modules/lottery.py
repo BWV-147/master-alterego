@@ -34,10 +34,10 @@ class Lottery(BaseAgent):
         self.post_process()
 
     def draw(self, num=100):
-        logger.info('draw: starting...', extra=LOG_TIME)
         T = self.T
         LOC = self.LOC
         wait_targets(T.lottery_initial, LOC.lottery_tab)
+        logger.info('lottery: drawing...', extra=LOG_TIME)
         loops = 0
         reset_i = 0
         while True:
@@ -74,14 +74,15 @@ class Lottery(BaseAgent):
 
     def clean(self, num: int = 100):
         """
-        Pay attention if cleaning before mailbox is full.
+        Clean mailbox, at most `num` items.
 
         :param num: max item num to get out from mailbox, if <0: manual mode. num < (box_max_num - 10 - retained_num)
         """
+        print('Make sure the mailbox **FILTER** only shows "Experience Cards"/"Zhong Huo"!')
         T = self.T
         LOC = self.LOC
+        wait_targets(T.mailbox_unselected1, LOC.mailbox_get_all_action)
         logger.info('mailbox: cleaning...', extra=LOG_TIME)
-        print('Make sure the mailbox **FILTER** only shows "Experience Cards"/"Zhong Huo"!')
         wait_targets(T.mailbox_unselected1, LOC.mailbox_get_all_action)
         if num < 0:
             logger.warning('please clean mailbox manually and return to lottery page!')
@@ -101,7 +102,7 @@ class Lottery(BaseAgent):
             page_no = wait_which_target([T.mailbox_unselected1, T.bag_full_alert],
                                         [LOC.mailbox_get_all_action, LOC.bag_full_sell_button])
             if page_no == 0:
-                if no > num:
+                if no >= num:
                     wait_targets(T.mailbox_unselected1, LOC.mailbox_back, at=0)
                     logger.debug('from mailbox back to lottery', extra=LOG_TIME)
                     return
@@ -149,9 +150,10 @@ class Lottery(BaseAgent):
                 logger.info('bag full.')
                 click(LOC.bag_full_sell_button)
                 self.sell(config.lottery.sell_times, 1, 4)
-                wait_targets(T.shop, LOC.shop_event_item_exchange, at=0)
-                wait_targets(T.shop_event_banner_list,
-                             LOC.shop_event_banner_list[config.lottery.event_banner_no], at=0)
+                if config.lottery.sell_times > 0:
+                    wait_targets(T.shop, LOC.shop_event_item_exchange, at=0)
+                    wait_targets(T.shop_event_banner_list,
+                                 LOC.shop_event_banner_list[config.lottery.event_banner_no], at=0)
                 wait_targets(T.lottery_initial, LOC.lottery_10_initial, clicking=LOC.lottery_tab)
                 logger.info('from shop back to lottery', extra=LOG_TIME)
                 return

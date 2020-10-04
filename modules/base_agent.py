@@ -11,8 +11,8 @@ class BaseAgent:
     _tunet_thread: threading.Thread = None
 
     def __init__(self):
-        self.T = None
-        self.LOC = None
+        self.T: Optional[ImageTemplates] = None
+        self.LOC: Optional[Regions] = None
 
     def pre_process(self, cfg):
         config.load(cfg)

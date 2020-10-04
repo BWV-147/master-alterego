@@ -112,7 +112,7 @@ def screenshot(region: Sequence = None, filepath: str = None, monitor: int = Non
     with mss() as sct:
         try:
             mon = dict(sct.monitors[monitor])  # copy
-            # mon['width'], mon['height'] = size[0], size[1]  # this is first introduce since dpi issue
+            # mon['width'], mon['height'] = size[0], size[1]  # first introduce by dpi issue, force set screen size
             shot = sct.grab(mon)
             size = shot.size
             # import pprint
@@ -236,9 +236,18 @@ def wait_which_target(targets, regions, threshold=THR, at=None, lapse=0.0, click
 
 
 # 直到匹配模板
-def wait_search_template(target: Image.Image, threshold=THR, lapse=0.0, interval=0.2):
+def wait_search_template(target: Image.Image, search_box=None, threshold=THR, lapse=0.0, interval=0.2):
+    """
+
+    :param target: only target template, not full screenshot
+    :param search_box: search box should be larger than target size
+    :param threshold:
+    :param lapse:
+    :param interval:
+    :return:
+    """
     while True:
-        if search_target(screenshot(), target)[0] >= threshold:
+        if search_target(screenshot(search_box), target)[0] >= threshold:
             time.sleep(lapse)
             return
         time.sleep(interval)

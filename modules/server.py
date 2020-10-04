@@ -101,7 +101,7 @@ def get_file():
     """Return text file or Image(compressed)"""
     filepath = request.args.get('path')
     monitor = request.args.get('mon')
-    if monitor is None or monitor.lower() == 'null':
+    if monitor is None or monitor == '' or monitor.lower() == 'null':
         monitor = config.monitor
     else:
         monitor = int(monitor)
@@ -169,6 +169,7 @@ def configuration():
         # don't directly save to config file, since there may be errors.
         data = request.get_data().decode('utf8')
         config.from_json(json.loads(data))
+        config.save()
         return json.dumps(config.to_json(), ensure_ascii=False)
 
 

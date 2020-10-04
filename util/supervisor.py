@@ -69,6 +69,8 @@ def supervise_log_time(thread, time_out=60, mail=None, interval=10, alert_type=N
                            f' - thread  alive: {thread.is_alive()}.\n'
                            f' - task finished: {config.task_finished}.\n'
                            f' - last log time: {time.asctime()}')
+            # if click event is not submitted actually, try click again.
+            click()
         if loops >= 0:
             # print(f'{loops}...\r', end='')
             print(f'count down {loops}...')

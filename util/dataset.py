@@ -144,6 +144,7 @@ class Regions(_Regions):
     bag_sell_action = (1600, 975, 1870, 1047)
     bag_sell_confirm = (1181, 912, 1340, 968)
     bag_sell_finish = (875, 908, 1045, 966)
+    bag_qp_limit_confirm = (1334, 811, 1449, 868)
 
     # ce enhance
     ce_enhance_button = (1587, 988, 1645, 1051)
@@ -187,9 +188,9 @@ class Regions(_Regions):
     support_class_icons = [(117, 175, 165, 209), (218, 175, 266, 209), (319, 175, 367, 209), (420, 175, 468, 209),
                            (521, 175, 569, 209), (622, 175, 670, 209), (723, 175, 771, 209), (824, 175, 872, 209),
                            (925, 175, 973, 209), (1026, 175, 1074, 209)]  # All, 7 common class, extra, mix
-    support_scrollbar_start = (1857, 270)
+    support_scrollbar_start = (1857, 280)
     support_scrollbar_end = (1857, 1047)
-    support_scrollbar_head = (1843, 274, 1873, 296)
+    support_scrollbar_head = (1843, 280, 1873, 296)
     support_ce = ((72, 489, 316, 537), (72, 791, 316, 838))  # 礼装位置
     support_ce_max = ((273, 524, 303, 552), (273, 825, 303, 854))  # 礼装满破的星星
     support_skill = ((1252, 463, 1577, 548), (1252, 764, 1577, 847))  # 技能整体外轮廓
@@ -322,6 +323,7 @@ class ImageTemplates:
         self.bag_selected: Optional[Image.Image] = None
         self.bag_sell_confirm: Optional[Image.Image] = None
         self.bag_sell_finish: Optional[Image.Image] = None
+        self.bag_qp_limit: Optional[Image.Image] = None
         self.shop: Optional[Image.Image] = None
         self.shop_event_banner_list: Optional[Image.Image] = None
         # ============ fp gacha part ============

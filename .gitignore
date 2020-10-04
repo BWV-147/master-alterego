@@ -1,9 +1,11 @@
 # User-defined
 !**/.gitkeep
 data/
+img/
 *.png
 *.jpg
 *.log.*
+*.lock
 /**/*.json
 /test*.*
 
