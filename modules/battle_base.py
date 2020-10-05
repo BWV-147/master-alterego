@@ -116,7 +116,7 @@ class BattleBase(BaseAgent):
                 rewards.save(f'{png_fn}-drop{config.battle.craft_num}.png')
                 if config.battle.craft_num in config.battle.enhance_craft_nums:
                     logger.warning('need to change party or enhance crafts. Exit.')
-                    send_mail(f'Enhance! {config.battle.craft_num}th craft dropped!!!77')
+                    send_mail(f'Enhance! {config.battle.craft_num}th craft dropped!!!')
                     config.mark_task_finish()
                     return
                 else:

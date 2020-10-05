@@ -157,7 +157,7 @@ def put_new_task():
 @app.route('/toggleVisibility')
 def toggle_visibility():
     import pyautogui as pag
-    pag.hotkey('alt', 'z')
+    pag.hotkey(*config.hide_hotkey)
     return 'Toggle visibility'
 
 

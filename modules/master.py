@@ -135,6 +135,17 @@ class Master:
                 for i in range(3):
                     self.card_weights[Card(svt, i + 1)] = ww * 10 + color_weight.find('QAB'[i])
 
+    def svt_die(self, svt: int):
+        assert svt in (1, 2, 3)
+        svt -= 1
+        svt_name = self.members[svt]
+        if len(self.members) <= 3:
+            self.members[svt] = 'NoBody'
+        else:
+            self.members.pop(svt)
+            self.members.insert(svt, self.members.pop(2))
+        logger.debug(f'{svt_name} is dead, current party: {self.members}')
+
     def str_cards(self, cards):
         # type: (Union[List[Union[int, Card]], Union[int, Card], Dict[int, Card]])->Union[str,List[str]]
         if isinstance(cards, dict):
