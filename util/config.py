@@ -158,6 +158,7 @@ class BattleConfig(_BaseConfig):
         self.finished = 0  # all finished battles sum, auto increase, don't edit
         self.check_drop = 1  # check dropped craft or item. 0-not check; 1-check 1st drop item; 2-check dropbox(rainbow)
         self.apples = []  # invalid: stop, 0-rainbow, 1-gold, 2-sliver, 3-cropper, 4-zihuiti, 5-manually(wait ~7min)
+        self.end_until_eating_apple = False  # if True, continue battles even finished>=num, be sure the least AP left
         self.jump_battle = False  # goto decoration in Battle.battle_func
         self.login_handler = None  # JP: re-login at 3am(UTC+08)
         self.sell_num = 0  # usually used in hunting event

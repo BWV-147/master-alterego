@@ -56,10 +56,9 @@ class BattleBase(BaseAgent):
         LOC = self.LOC
         timer = Timer()
         finished_num = 0
-        max_num = battle_num
-        while finished_num < max_num:
+        while config.battle.end_until_eating_apple or finished_num < battle_num:
             finished_num += 1
-            logger.info(f'========= Battle "{self.master.quest_name}" No.{finished_num}/{max_num} =========',
+            logger.info(f'========= Battle "{self.master.quest_name}" No.{finished_num}/{battle_num} =========',
                         extra=LOG_TIME)
             if not config.battle.jump_battle:
                 while True:
@@ -71,7 +70,10 @@ class BattleBase(BaseAgent):
                         _y = LOC.quest_outer[1] + res[1][1] + (LOC.quest[3] - LOC.quest[1]) / 2
                         click((_x, _y))
                     elif match_targets(shot, T.apple_page, LOC.apple_close):
-                        self.master.eat_apple(apples)
+                        if finished_num > battle_num and config.battle.end_until_eating_apple:
+                            self.master.eat_apple(-1)
+                        else:
+                            self.master.eat_apple(apples)
                     elif T.bag_full_alert is not None \
                             and match_targets(shot, T.bag_full_alert, LOC.bag_full_sell_button):
                         # usually used in hunting events.
@@ -98,7 +100,7 @@ class BattleBase(BaseAgent):
             click(LOC.rewards_show_num, lapse=1)
             # check reward_page has CE dropped or not
             dt = timer.lapse()
-            logger.info(f'Battle {finished_num}/{max_num} finished, '
+            logger.info(f'Battle {finished_num}/{battle_num} finished, '
                         f'time = {int(dt // 60)} min {int(dt % 60)} sec. '
                         f'(total {config.battle.finished})', extra=LOG_TIME)
             rewards = screenshot()
@@ -128,7 +130,7 @@ class BattleBase(BaseAgent):
                 rewards.save(f"{png_fn}.png")
             # ready to restart a battle
             if finished_num % 30 == 0:
-                send_mail(f'Progress: {finished_num}/{max_num} battles finished.', attach_shot=False)
+                send_mail(f'Progress: {finished_num}/{battle_num} battles finished.', attach_shot=False)
             while True:
                 shot = screenshot()
                 if search_target(shot.crop(LOC.quest_outer), T.quest.crop(LOC.quest))[0] > THR:
