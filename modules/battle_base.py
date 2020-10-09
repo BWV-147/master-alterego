@@ -169,7 +169,9 @@ class BattleBase(BaseAgent):
             # --------------  name       NP    Quick    Arts   Buster -----------
             master.set_cards(names[0], (3, 6), (1, 5), (1, 3), (3, 3))
             master.set_cards(names[1], (1, 7), (2, 2), (1, 1), (2, 4))
-            master.set_cards_from_json('孔明', 'img/battles/cards/android/cards-android.json')
+            # here 'android' default to 'img/battles/cards/android/cards-android.json',
+            # use full path if not match the default pattern
+            master.set_cards_from_json('孔明', 'android')
 
             def _handler():
                 # mainly for jp, re-login handler at 3am(UTC+8)
@@ -194,7 +196,7 @@ class BattleBase(BaseAgent):
         # noinspection PyUnusedLocal
         support = master.choose_support(match_svt=True, match_skills=True, match_ce=True, match_ce_max=True,
                                         friend_only=False, switch_classes=(5, 0),
-                                        images=[master.T.support, master.T.support])
+                                        images=[T.support, T.support_cba])
 
         # wave 1
         wait_targets(T.wave1a, LOC.loc_wave, 0.7)
@@ -225,6 +227,6 @@ class BattleBase(BaseAgent):
             master.svt_skill(1, 3)
             master.svt_skill(1, 1)
             master.svt_skill(1, 2)
-        master.auto_attack(nps=6, mode='alter')
+        master.auto_attack(nps=6, mode='alter', buster_first=True)
         master.xjbd(T.kizuna, LOC.kizuna, mode='alter', allow_unknown=True)
         return

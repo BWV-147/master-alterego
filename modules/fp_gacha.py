@@ -37,7 +37,7 @@ class FpGacha(BaseAgent):
         T = self.T
         LOC = self.LOC
 
-        wait_targets(T.gacha_fp_page, [LOC.gacha_fp_logo])
+        wait_targets(T.gacha_fp_result, [LOC.gacha_fp_logo, LOC.gacha_fp_result_summon])
         logger.info('draw: starting...', extra=LOG_TIME)
         loops = 0
         while loops < num:
@@ -59,6 +59,9 @@ class FpGacha(BaseAgent):
                     logger.info('servant bag full, make sure only show *LOW RARITY<=3* servants.')
                     click(LOC.fp_bag_full_sell_button)
                     self.sell(config.fp_gacha.sell_num, 1, 4)
+                    wait_targets(T.gacha_fp_result, LOC.gacha_fp_result_summon)
+                    logger.debug('fp gacha will start in 5 secs, don\'t move mouse now')
+                    time.sleep(5)
                 else:
                     logger.info('CE bag full, make sure only show *LOW RARITY<=2* CE.')
                     click(LOC.fp_bag_full_enhance_button)
@@ -75,7 +78,7 @@ class FpGacha(BaseAgent):
                             logger.debug('back to fp gacha page')
                             break
                 else:
-                    wait_targets(T.gacha_fp_page, [LOC.gacha_fp_logo])
+                    wait_targets(T.gacha_fp_result, [LOC.gacha_fp_logo, LOC.gacha_fp_result_summon])
         config.mark_task_finish()
 
     def enhance_ce(self, num=100):

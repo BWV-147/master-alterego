@@ -137,15 +137,47 @@ capture('shop_event_banner_list')
 capture('net_error')
 
 # %% ======== fp gacha ========
-capture('fp_gacha_page')
+capture('gacha_quartz_page')
 # %%
-capture('fp_gacha_confirm')
+capture('gacha_fp_page')
 # %%
-capture('fp_gacha_result')
+capture('gacha_fp_confirm')
 # %%
-capture('fp_bag1_full')
+capture('gacha_fp_result')
 # %%
-capture('fp_bag2_full')
+capture('gacha_fp_bag2_full')
+# %%
+capture('ce_enhance_empty')
+# %%
+capture('ce_select_target')
+# %%
+capture('ce_items_unselected')
+# %%
+capture('ce_items_selected')
+# %%
+capture('ce_enhance_page')
+# %%
+capture('ce_enhance_confirm')
+# %%
+capture('gacha_fp_bag1_full')
+# %%
+capture('bag_unselected')
+# %%
+capture('bag_selected')
+# %%
+capture('bag_sell_confirm')
+# %%
+capture('bag_sell_finish')
+# %%
+capture('menu')
+# %%
+capture('net_error')
+# %%
+capture('shop')
+
 
 # %% test code
 pass
+for f in os.listdir('img/fp_gacha/jp'):
+    if f.endswith('.png'):
+        print(f"# %%\ncapture('{f[:-4]}')")
