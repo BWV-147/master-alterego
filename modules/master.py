@@ -103,6 +103,9 @@ class Master:
         """
         import json
         key = key or svt
+        fp2 = f'img/battles/cards/{fp}/cards-{fp}.json'
+        if not os.path.exists(fp) and os.path.exists(fp2):
+            fp = fp2
         _folder = os.path.dirname(os.path.abspath(fp))
         data: Dict[str, str] = json.load(open(fp, encoding='utf8'))[key]
         params = []
@@ -468,7 +471,7 @@ class Master:
         return cards, np_cards
 
     def auto_attack(self, nps: Union[List[int], int] = None, mode='dmg', parse_np=False, allow_unknown=False,
-                    no_play_card=False):
+                    no_play_card=False, buster_first=False):
         """
         TODO: add buster first params.
 
@@ -477,7 +480,8 @@ class Master:
         :param mode: dmg/xjbd/alter
         :param allow_unknown: if parse cards failed(more than 5s), just chose cards[1,2,3]
         :param no_play_card: if True, return chosen_cards but no to play cards automatically.
-        :return: Optional, chosen_cards
+        :param buster_first:
+        :return: chosen_cards
         """
         logger.info(f'Auto attack: nps={nps}, mode={mode}', extra=LOG_TIME)
         t0 = time.time()
@@ -488,16 +492,16 @@ class Master:
             # print('in auto_attack: ', cards, np_cards)
             chosen_cards = []
             if cards == {} or Card.UNKNOWN in [c.svt for c in cards.values()]:
+                # if lapse>5s[can be modified], some card is not recognized, maybe someone has been died
                 if time.time() - t0 > 5 and allow_unknown or self.card_templates == {}:
-                    # if lapse>3s, maybe someone has been died
-                    chosen_cards = self.choose_cards(cards, np_cards, nps, mode=mode)
+                    chosen_cards = self.choose_cards(cards, np_cards, nps, mode=mode, buster_first=buster_first)
                     logger.info(f'unrecognized: {[f"{self.str_cards(c)}" for c in cards.values()]},'
                                 f' nps={self.str_cards(np_cards)}', extra=LOG_TIME)
                     break
                 else:
                     continue
             else:
-                chosen_cards = self.choose_cards(cards, np_cards, nps, mode=mode)
+                chosen_cards = self.choose_cards(cards, np_cards, nps, mode=mode, buster_first=buster_first)
                 break
         if nps is not None:
             time.sleep(0.8)
@@ -603,13 +607,14 @@ class Master:
                          f' nps={self.str_cards(np_cards)}', extra=LOG_TIME)
         return cards, np_cards
 
-    def choose_cards(self, cards, np_cards, nps=None, mode='dmg'):
-        # type:(Dict[int,Card],Dict[int,Card],Union[List[int],int],str)->List[Card]
+    def choose_cards(self, cards, np_cards, nps=None, mode='dmg', buster_first=False):
+        # type:(Dict[int,Card],Dict[int,Card],Union[List[int],int],str,bool)->List[Card]
         """
         :param cards:loc 1~5 {loc+1:svt*10+color}
         :param np_cards:
         :param nps: chosen nps to attack (6~8).
         :param mode: dmg,np
+        :param buster_first:
         :return: locations of chosen cards
         """
         if len(cards) < 5:
@@ -644,6 +649,11 @@ class Master:
             else:
                 raise KeyError(f'Invalid mode "{mode}"')
         chosen_cards = chosen_nps + chosen_cards[0:3]
+        if buster_first:
+            for i, c in enumerate(chosen_cards):
+                if i < 3 and isinstance(c, Card) and c.color == Card.BUSTER:
+                    chosen_cards.insert(0, chosen_cards.pop(i))
+                    break
         logger.debug(f'Chosen: {self.str_cards(chosen_cards)}', extra=LOG_TIME)
         return chosen_cards
 

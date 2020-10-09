@@ -58,8 +58,8 @@ def send_mail(body, subject=None, receiver=None, attach_shot=True, force_send=Fa
     subject = f'{time.strftime("[%H:%M]")}{subject}'
 
     # body
-    logger.info('send mail:\n' + body)
-    body = f'<b><pre>{html.escape(body)}</pre></b><br><br>\n' \
+    logger.info('send mail:\n' + html.unescape(body))
+    body = f'<b><pre>{html.escape(body)}</pre></b><br>\n' \
            f'<hr><b>Computer name:</b><br>{socket.getfqdn(socket.gethostname())}<br><hr>\n'
 
     # body.screenshot
@@ -82,10 +82,10 @@ def send_mail(body, subject=None, receiver=None, attach_shot=True, force_send=Fa
             lines = fd.readlines()
             n = len(lines)
             # "<" should be replaced with escape characters even in <pre/>
-            recent_records = ['<pre>' + html.escape(x.rstrip()) + '</pre>\n' for x in lines[-min(20, n):]]
+            recent_records = ['<code>' + html.escape(x.rstrip()) + '</code>\n' for x in lines[-min(20, n):]]
             body += f'<b>Recent 10 logs ({logger.log_filepath}):</b><br>\n' \
                     '<style>.logs pre { margin: 0.3em auto; font-family: "Consolas"; }</style>\n' \
-                    f'<span class="logs">\n{"".join(recent_records)}</span><hr>'
+                    f'<span class="logs">\n<pre>{"".join(recent_records)}</pre></span><hr>'
 
     print(f'Ready to send email:\n'
           f'=============== Email ===============\n'
