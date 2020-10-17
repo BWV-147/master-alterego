@@ -1,3 +1,7 @@
+from init import initial
+
+initial()
+
 from . import addon
 from . import autogui
 from . import base

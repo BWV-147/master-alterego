@@ -168,6 +168,7 @@ def match_which_target(img, targets, regions=None, threshold=THR, at=None, lapse
     """
     Compare targets to find which matches. See `wait_which_target`.
     `at` is a region or **bool** value `True`, if True, click matched region.
+    if target in `targets` is None, it will be skipped matching
 
     :return: matched index, return -1 if not matched.
     """
@@ -176,7 +177,7 @@ def match_which_target(img, targets, regions=None, threshold=THR, at=None, lapse
     res = -1
     for target, region in zip(targets, regions):
         res += 1
-        if cal_sim(img, target, region) >= threshold:
+        if target is not None and cal_sim(img, target, region) >= threshold:
             if at is None:
                 pass
             elif isinstance(at, Sequence):
@@ -213,7 +214,7 @@ def wait_which_target(targets, regions, threshold=THR, at=None, lapse=0.0, click
     """
     Waiting for screenshot to match one of targets.
 
-    :param targets: one Image or list of Image.
+    :param targets: one Image or list of Image. Element of None will be skipped matching.
     :param regions: one region or list of region.
             `targets` or `regions` must contains at least 2 elements.
             length of targets and regions could be (1,n), (n,1), (n,n), where n>=2.

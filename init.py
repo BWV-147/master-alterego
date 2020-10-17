@@ -2,9 +2,24 @@ import ctypes
 import platform
 import sys
 
+_initiated = False
+
 
 def initial():
+    """
+    Initiation must be called at the startup of program. Otherwise, some settings may take no sense.
+    :return:
+    """
+    global _initiated
+    if _initiated:
+        return
+    # 1st-DPI
     set_dpi_awareness()
+    # 2nd-pyautogui, must import after setting DPI
+    import pyautogui
+    pyautogui.FAILSAFE = False
+
+    _initiated = True
 
 
 def set_dpi_awareness():

@@ -1,3 +1,7 @@
+from init import initial
+
+initial()
+
 from . import battle_base
 from . import drops_stat
 from . import fp_gacha

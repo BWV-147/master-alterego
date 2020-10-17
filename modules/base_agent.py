@@ -92,6 +92,11 @@ class BaseAgent:
                 logger.info(f'sell: {no} times...', extra=LOG_TIME)
                 click(LOC.bag_sell_action)
                 wait_targets(T.bag_sell_confirm, LOC.bag_sell_confirm, at=0)
+
+                qp_limit_no = wait_which_target([T.bag_qp_limit, T.bag_sell_finish],
+                                                [LOC.bag_qp_limit_confirm, LOC.bag_sell_confirm])
+                if qp_limit_no == 0:
+                    click(LOC.bag_qp_limit_confirm)
                 wait_targets(T.bag_sell_finish, LOC.bag_sell_finish, at=0)
             else:
                 if no == 0:

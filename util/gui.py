@@ -21,21 +21,13 @@ def apply_offset(xy: Sequence, offset: Sequence = None):
 def click(xy: Sequence = None, lapse=0.5):
     """
     click at point (x,y) or region center (x1,y1,x2,y2) within a random offset in radius 0~r
+
+    disable pyautogui.FAILSAFE to ignore FailSafeException/Check
     """
-
-    def _click():
-        if xy is not None:
-            move_to(xy)
-            # print(f'click {tuple(xy)}')
-        pyautogui.click()
-
-    # sometimes, mouse move to boundary of screen and some error occurs, just try once more
-    # noinspection PyBroadException
-    try:
-        _click()
-    except Exception:
-        time.sleep(0.5)
-        _click()
+    if xy is not None:
+        move_to(xy)
+        # print(f'click {tuple(xy)}')
+    pyautogui.click()
     time.sleep(lapse)
 
 
