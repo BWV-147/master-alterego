@@ -37,7 +37,9 @@ function trimChar(string, chars = ' \n\t\r', pos = 0) {
  */
 function addTaskLog(msg) {
   let $status = $('#taskStatus')
-  $status.text(`[${new Date().toLocaleString(undefined, {hour12: false})}] ${msg}\n` + $status.text())
+  if ($status.length > 0) {
+    $status.text(`[${new Date().toLocaleString(undefined, {hour12: false})}] ${msg}\n` + $status.text())
+  }
 }
 
 function getTaskStatus() {
@@ -62,6 +64,12 @@ function putNewTask() {
 
 function toggleVisibility() {
   $.get('/toggleVisibility', function (result) {
+    addTaskLog(result)
+  })
+}
+
+function switchTab() {
+  $.get('/switchTab', function (result) {
     addTaskLog(result)
   })
 }
@@ -112,9 +120,9 @@ function downloadAndShowLog(logName, num = 0) {
 
 function refreshLog() {
   let logName = $('#dropdownLogs button').text()
-  if (trimChar(logName)!=='......'){
+  if (trimChar(logName) !== '......') {
     downloadAndShowLog(logName)
-    console.log('refresh log: '+logName)
+    console.log('refresh log: ' + logName)
   }
 }
 

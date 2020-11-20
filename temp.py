@@ -178,6 +178,3 @@ capture('shop')
 
 # %% test code
 pass
-for f in os.listdir('img/fp_gacha/jp'):
-    if f.endswith('.png'):
-        print(f"# %%\ncapture('{f[:-4]}')")

@@ -33,15 +33,13 @@
     <div class="" style="padding-top: 4rem">
         <div class="container">
             <p>
-                <button class="btn btn-primary" id="getTaskStatusBtn" onclick="getTaskStatus()">Refresh</button>
+                <button class="btn btn-primary" id="getTaskStatusBtn" onclick="getTaskStatus()">Refresh Task Status</button>
                 <button class="btn btn-primary" id="terminateTaskBtn" data-toggle="modal" data-target="#shutdownModal">
                     Terminate
                 </button>
                 <button class="btn btn-primary" id="putNewTaskBtn" onclick="putNewTask()">New Task</button>
                 <button class="btn btn-primary" id="toggleVisibilityBtn" onclick="toggleVisibility()">Show/Hide</button>
-                <!--                <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#configDiv"-->
-                <!--                        aria-expanded="false" aria-controls="configDiv">Config-->
-                <!--                </button>-->
+                <button class="btn btn-primary" id="switchTabBtn" onclick="switchTab()">Switch Tab</button>
             </p>
             <!--config accordion-->
             <div class="accordion" id="configAccordion">

@@ -158,7 +158,14 @@ def put_new_task():
 def toggle_visibility():
     import pyautogui as pag
     pag.hotkey(*config.hide_hotkey)
-    return 'Toggle visibility'
+    return f'Toggle visibility: {config.hide_hotkey}'
+
+
+@app.route('/switchTab')
+def switch_tab():
+    import pyautogui as pag
+    pag.hotkey(*config.switch_tab_hotkey)
+    return f'Switch Tab: {config.switch_tab_hotkey}'
 
 
 @app.route('/configuration', methods=['GET', 'POST'])

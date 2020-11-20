@@ -29,6 +29,7 @@
           <option value="battles.label" />
           <option value="modules.battle_base.goto" />
           <option value="modules.battle_base.label" />
+          <option value="battles.with_goto" />
         </list>
       </option>
     </inspection_tool>

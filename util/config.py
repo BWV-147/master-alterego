@@ -63,7 +63,8 @@ class Config(_BaseConfig):
         self.manual_operation_time = 60 * 10  # seconds.
         self.www_host_port = None  # default [host='0.0.0.0', port=8080] to run www server. If None, not to run server
         self.need_admin = True
-        self.hide_hotkey = ['alt', 'z']  # for MuMu emulator, "alt+z" to hide window. or "alt+x" for new MuMu
+        self.hide_hotkey = ['alt', 'z']  # for MuMu Windows, "alt+z" to hide window. or "alt+x" for new MuMu
+        self.switch_tab_hotkey = ['ctrl', 'tab']  # for MuMu Windows
         # ================= battle part =================
         self.battle = BattleConfig()
         self.lottery = LotteryConfig()
