@@ -251,7 +251,7 @@ class Regions(_Regions):
                      range(0, 3)]
     rewards_item1 = (454, 216, 623, 386)  # first dropped item rect
     rewards_rainbow = (1418, 18, 1442, 50)
-    rewards_check_drop = [None, rewards_item1, rewards_rainbow]
+    rewards_check_drop = [(0, 0, 0, 0), rewards_item1, rewards_rainbow]
     finish_next = (1444, 980, 1862, 1061)
     restart_quest_yes = (1122, 812, 1386, 829)
     # friend_point = (460, 810, 580, 880)

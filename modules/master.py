@@ -98,12 +98,13 @@ class Master:
         :param fp: json file path. Json file and images should be in the same folder.
                 format: {"svt": {"NP/Quick/Arts/Buster":"k1,1,k2,2,k3,3"}}.
                 in which "k1,1,..." is serials of (img, loc).
+                default `img/share/{device}/cards-{device}.json`
         :param key: svt key in json, default is `svt`
         :return:
         """
         import json
         key = key or svt
-        fp2 = f'img/battles/cards/{fp}/cards-{fp}.json'
+        fp2 = f'img/share/{fp}/cards-{fp}.json'
         if not os.path.exists(fp) and os.path.exists(fp2):
             fp = fp2
         _folder = os.path.dirname(os.path.abspath(fp))
@@ -247,7 +248,7 @@ class Master:
             switch_classes = (-1,)
         wait_targets(support0, LOC.support_refresh)
         while numpy.mean(get_mean_color(screenshot(), LOC.loading_line)) > 200:
-            time.sleep(0.2)
+            sleep(0.2)
         refresh_times = 0
 
         def _is_match_offset(_support, _shot, old_loc, _offset):
@@ -267,7 +268,7 @@ class Master:
             wait_targets(support0, LOC.support_class_affinity)
             for class_icon in switch_classes:
                 if class_icon == -1:
-                    time.sleep(0.2)
+                    sleep(0.2)
                 else:
                     click(LOC.support_class_icons[class_icon], 0.8)
                     click(LOC.support_scrollbar_head, 0.8)
@@ -307,7 +308,7 @@ class Master:
                         while True:
                             page_no = wait_which_target([T.team, T.wave1a],
                                                         [LOC.team_cloth_button, LOC.master_skill])
-                            time.sleep(0.3)
+                            sleep(0.3)
                             if page_no == 0:
                                 logger.debug('entering battle', extra=LOG_TIME)
                                 click(LOC.team_start_action)
@@ -316,8 +317,12 @@ class Master:
                                 return matched_support
                     # no friends matched, drag downward
                     if dy_mouse != 0:
-                        pyautogui.dragRel(0, dy_mouse, 0.2)
-                        time.sleep(0.4)
+                        drag([LOC.support_scrollbar_start[0], LOC.support_scrollbar_start[1] + dy_mouse * drag_point],
+                             [LOC.support_scrollbar_start[0],
+                              LOC.support_scrollbar_start[1] + dy_mouse * (drag_point + 1)],
+                             0.2)
+                        # pyautogui.dragRel(0, dy_mouse, 0.2)
+                        sleep(0.4)
             # refresh support
             refresh_times += 1
             logger.debug(f'refresh support {refresh_times} times...', extra=LOG_TIME)
@@ -434,14 +439,14 @@ class Master:
             if flag % 3 == 0:
                 click(LOC.master_skill)
             flag += 1
-            time.sleep(0.6)
+            sleep(0.6)
             if match_targets(screenshot(), before, region):
                 click(region, 0)
                 break
 
         if friend is not None:
             # it should also match the saved screenshot, but...
-            time.sleep(0.3)
+            sleep(0.3)
             wait_targets(T.skill_targets, LOC.skill_targets_close, 0.7, lapse=0.3)
             click(LOC.skill_to_target[friend - 1])
         elif order_change is not None:
@@ -462,7 +467,7 @@ class Master:
                 click(self.LOC.attack)
             elif match_targets(shot, self.T.cards1, self.LOC.cards_back):
                 break
-        time.sleep(1)
+        sleep(1)
         while True:
             cards, np_cards = self.parse_cards(screenshot())
             if cards == {} or Card.UNKNOWN in [c.svt for c in cards.values()]:
@@ -504,7 +509,7 @@ class Master:
                 chosen_cards = self.choose_cards(cards, np_cards, nps, mode=mode, buster_first=buster_first)
                 break
         if nps is not None:
-            time.sleep(0.8)
+            sleep(0.8, 0.5)
         if no_play_card is False:
             self.play_cards(chosen_cards)
         return chosen_cards
@@ -523,7 +528,7 @@ class Master:
             elif match_targets(shot, self.T.wave1a, self.LOC.master_skill):
                 cur_turn += 1
                 logger.info(f'xjbd: turn {cur_turn}/{turns}.', extra=LOG_TIME)
-                time.sleep(1)
+                sleep(1, 0.5)
                 chosen_cards = self.auto_attack(mode=mode, nps=nps, allow_unknown=allow_unknown)
                 # self.attack([1, 2, 3])
                 turn_cards.append(chosen_cards)
@@ -537,7 +542,7 @@ class Master:
         while True:
             click(self.LOC.attack, lapse=1)
             if match_targets(screenshot(), self.T.cards1, self.LOC.cards_back):
-                time.sleep(1)
+                sleep(1, 0.5)
                 self.play_cards(locs_or_cards)
                 break
 
@@ -567,14 +572,14 @@ class Master:
                 elif mode == 2 and card.color != Card.NP:
                     continue
                 for template in templates:
-                    if base_line > 0:
-                        # enhancement: from 0.95s->0.7s....
-                        box = (0, max([0, base_line - 10]),
-                               outer.size[0], min([base_line + template.size[1] + 10, outer.size[1]]))
-                        cropped_outer = outer.crop(box)
-                    else:
-                        cropped_outer = outer
-                    th, pos = search_target(cropped_outer, template)
+                    # if base_line > 0:
+                    #     # enhancement: from 0.95s->0.7s....
+                    #     box = (0, max([0, base_line - 10]),
+                    #            outer.size[0], min([base_line + template.size[1] + 10, outer.size[1]]))
+                    #     cropped_outer = outer.crop(box)
+                    # else:
+                    #     cropped_outer = outer
+                    th, pos = search_target(outer, template)
                     values.append(th)
                     if th > threshold and th > max_th:
                         if base_line < 0:

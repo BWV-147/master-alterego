@@ -109,23 +109,30 @@ def screenshot(region: Sequence = None, filepath: str = None, monitor: int = Non
     _image = None
     # TODO: to fix first run is not DPI-Aware, or add size to config, now run once at program startup
     size = (1920, 1080)  # default size
-    with mss() as sct:
+    if config.is_wda:
         try:
-            mon = dict(sct.monitors[monitor])  # copy
-            # mon['width'], mon['height'] = size[0], size[1]  # first introduce by dpi issue, force set screen size
-            shot = sct.grab(mon)
-            size = shot.size
-            # import pprint
-            # pprint.pprint(sct._monitors)
-            _image = Image.frombytes('RGB', size, shot.bgra, 'raw', 'BGRX').crop(region)
+            _image = config.wda_client.screenshot().convert('RGB')
+            size = _image.size
         except Exception as e:
-            logger.error(f'Fail to grab screenshot using mss(). Error:\n{e}')
-            if tuple(config.offset) == (0, 0):
-                # ImageGrab can only grab the main screen
-                try:
-                    _image = ImageGrab.grab()
-                except Exception as e:
-                    logger.error(f'Fail to grab screenshot using ImageGrad. Error:\n{e}')
+            logger.error(f'Fail to grab screenshot WDA. Error:\n{e}')
+    else:
+        with mss() as sct:
+            try:
+                mon = dict(sct.monitors[monitor])  # copy
+                # mon['width'], mon['height'] = size[0], size[1]  # first introduce by dpi issue, force set screen size
+                shot = sct.grab(mon)
+                size = shot.size
+                # import pprint
+                # pprint.pprint(sct._monitors)
+                _image = Image.frombytes('RGB', size, shot.bgra, 'raw', 'BGRX').crop(region)
+            except Exception as e:
+                logger.error(f'Fail to grab screenshot using mss(). Error:\n{e}')
+                if tuple(config.offset) == (0, 0):
+                    # ImageGrab can only grab the main screen
+                    try:
+                        _image = ImageGrab.grab()
+                    except Exception as e:
+                        logger.error(f'Fail to grab screenshot using ImageGrad. Error:\n{e}')
     if _image is None:
         # grab failed, return an empty image with single color
         _image = Image.new('RGB', size, (0, 255, 255)).crop(region)
@@ -205,7 +212,7 @@ def wait_targets(targets, regions, threshold=THR, at=None, lapse=0.0, clicking=N
             return
         if clicking is not None:
             click(clicking, 0)
-        time.sleep(interval)
+        sleep(interval)
 
 
 # 直到匹配某一个target
@@ -233,7 +240,7 @@ def wait_which_target(targets, regions, threshold=THR, at=None, lapse=0.0, click
             return res
         if clicking is not None:
             click(clicking, 0)
-        time.sleep(interval)
+        sleep(interval)
 
 
 # 直到匹配模板
@@ -251,7 +258,7 @@ def wait_search_template(target: Image.Image, search_box=None, threshold=THR, la
         if search_target(screenshot(search_box), target)[0] >= threshold:
             time.sleep(lapse)
             return
-        time.sleep(interval)
+        sleep(interval)
 
 
 # 搜索目标模板存在匹配的最大值
@@ -266,6 +273,11 @@ def search_target(img: Image.Image, target: Image.Image, mode='cv2'):
             Attention: cv2 use (h,w), but PIL/numpy use (w,h).
     :return (max value, left-top pos)
     """
+    # when scaling/relocate Regions, rect may have +-2 error range
+    if img.width < target.width:
+        target = target.crop((0, 0, img.width, target.height))
+    if img.height < target.height:
+        target = target.crop((0, 0, target.width, img.height))
     m1: numpy.ndarray = numpy.array(img.convert('RGB'))
     m2: numpy.ndarray = numpy.array(target.convert('RGB'))
     if mode == 'sk':
@@ -274,7 +286,8 @@ def search_target(img: Image.Image, target: Image.Image, mode='cv2'):
         pos = numpy.where(matches == max_match)
         return numpy.max(matches), (pos[1][0], pos[0][0])
     else:
-        cv_img, cv_target = (cv2.cvtColor(m1, cv2.COLOR_RGB2BGR), cv2.cvtColor(m2, cv2.COLOR_RGB2BGR))
+        cv_img = cv2.cvtColor(m1, cv2.COLOR_RGB2BGR)
+        cv_target = cv2.cvtColor(m2, cv2.COLOR_RGB2BGR)
         # h, w = cv_target.shape[0:2]
         matches = cv2.matchTemplate(cv_img, cv_target, cv2.TM_CCOEFF_NORMED)
         max_match = numpy.max(matches)

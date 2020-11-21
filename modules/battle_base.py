@@ -94,9 +94,9 @@ class BattleBase(BaseAgent):
                             config.battle.login_handler()
                     elif match_targets(shot, T.support, LOC.support_refresh):
                         break
-                    time.sleep(0.5)
+                    sleep(0.5)
             battle_func()
-            wait_targets(T.rewards, LOC.finish_qp, 0.7, clicking=LOC.finish_qp)
+            wait_targets(T.rewards, LOC.finish_qp, 0.5, clicking=LOC.finish_qp)
             click(LOC.rewards_show_num, lapse=1)
             # check reward_page has CE dropped or not
             dt = timer.lapse()
@@ -140,7 +140,7 @@ class BattleBase(BaseAgent):
                 elif match_targets(shot, T.apply_friend, LOC.apply_friend):
                     click(LOC.apply_friend_deny)
                     logger.debug('not to apply friend')
-                time.sleep(0.5)
+                sleep(0.5)
         logger.info(f'>>>>> All {finished_num} battles "{self.master.quest_name}" finished. <<<<<')
         send_mail(f'All {finished_num} battles "{self.master.quest_name}" finished')
         config.mark_task_finish()

@@ -116,7 +116,7 @@ class Lottery(BaseAgent):
                     return
                 while drag_no < drag_num and no < num:
                     drag_no += 1
-                    time.sleep(0.2)
+                    sleep(0.2)
                     for mailbox_unselect in [T.mailbox_unselected1, T.mailbox_unselected2]:
                         shot = screenshot()
                         peaks = search_peaks(shot.crop(LOC.mailbox_check_column),
@@ -135,7 +135,7 @@ class Lottery(BaseAgent):
                                     break
                         if no >= num:
                             break
-                        time.sleep(0.3)
+                        sleep(0.3)
                     if no < num:
                         drag(start=LOC.mailbox_drag_start, end=LOC.mailbox_drag_end,
                              duration=0.5, down_time=0.1, up_time=0.3, lapse=0.1)

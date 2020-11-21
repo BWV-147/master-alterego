@@ -1,6 +1,8 @@
 import platform
 import threading
 
+import wda  # noqa
+
 from util.addon import raise_alert
 from util.autogui import *
 from .server import app
@@ -8,6 +10,7 @@ from .server import app
 
 class BaseAgent:
     _server_thread: threading.Thread = None
+    # TODO: Tsinghua Network authentication to avoid offline
     _tunet_thread: threading.Thread = None
 
     def __init__(self):
@@ -16,7 +19,11 @@ class BaseAgent:
 
     def pre_process(self, cfg):
         config.load(cfg)
-        check_sys_setting(config.need_admin)
+        config.init_wda()
+        check_sys_setting(config.need_admin, config.is_wda)
+        if config.is_wda:
+            config.wda_client = wda.Client(config.wda_url)
+            logger.info(f'WDA connected, current app: {config.wda_client.app_current()["bundleId"]}')
         if config.www_host_port is not None:
             self.run_sever(*config.www_host_port)
 
@@ -83,8 +90,10 @@ class BaseAgent:
         while True:
             wait_targets(T.bag_unselected, [LOC.bag_svt_tab, LOC.bag_sell_action])
             if no < num:
-                drag(LOC.bag_select_start, LOC.bag_select_middle, 0.6, 0.5, None, 0)
-                drag(LOC.bag_select_middle, LOC.bag_select_end, duration, None, up_time)
+                drag(LOC.bag_select_start, LOC.bag_select_end, duration, 0.6, up_time)
+                # TODO: verify it
+                # drag(LOC.bag_select_start, LOC.bag_select_middle, 0.6, 0.5, None, 0)
+                # drag(LOC.bag_select_middle, LOC.bag_select_end, duration, None, up_time)
             page_no = wait_which_target([T.bag_selected, T.bag_unselected],
                                         [LOC.bag_sell_action, LOC.bag_sell_action])
             if page_no == 0:

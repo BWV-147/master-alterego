@@ -1,6 +1,7 @@
 colorama
 concurrent-log-handler
 flask
+facebook-wda
 goto-statement
 imagecodecs
 mss

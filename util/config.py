@@ -7,6 +7,8 @@ import time
 from queue import Queue
 from typing import Optional
 
+import wda  # noqa
+
 
 class _BaseConfig:
     def __init__(self):
@@ -56,6 +58,8 @@ class Config(_BaseConfig):
         # ================= sys config =================
         self.id = None
         self.is_jp = False  # difference between jp and cn server
+        self.is_wda = False  # app run in real iOS device and served in macOS
+        self.wda_url = None  # default http://localhost:8100
         # Attention: MAIN monitor is not always monitor 1.
         self.monitor = 1  # >=1, check sct.monitors to see monitor info, 0 is all monitors in one screenshot
         self.offset = (0, 0)  # xy offset relative to MAIN monitor's origin for mouse click
@@ -84,12 +88,14 @@ class Config(_BaseConfig):
         self.T = None
         self.LOC = None
         self.log_time = 0  # record the time of last logging.info/debug..., set NO_LOG_TIME outside battle progress
+        self.wda_client: Optional[wda.Client] = None
         self.task_finished = False  # all battles finished, set to True before child process exist.
         self.task_thread: Optional[threading.Thread] = None
         self.task_queue = Queue(1)
         self.temp = {}  # save temp vars at runtime
 
-        self._ignored = ['mail', 'fp', 'T', 'LOC', 'log_time', 'task_finished', 'task_thread', 'task_queue', 'temp']
+        self._ignored = ['mail', 'fp', 'T', 'LOC', 'log_time', 'wda_client', 'task_finished', 'task_thread',
+                         'task_queue', 'temp']
         # load config
         if fp:
             self.load()
@@ -109,6 +115,23 @@ class Config(_BaseConfig):
     def save(self, fp=None):
         fp = fp or self.fp
         return super().save(fp)
+
+    def init_wda(self):
+        if self.is_wda:
+            self.wda_client = wda.Client(self.wda_url)
+            try:
+                # quality:
+                # 0-max(time is wasted to transfer large image),
+                # 1-middle,
+                # 2-lowest, may not clear enough
+                # once changed the quality value, image templates should be updated
+                self.wda_client.appium_settings({'screenshotQuality': 1})
+                print(f"window size = {self.wda_client.window_size()}")
+                print(f"screenshot size = {self.wda_client.screenshot().size}")
+                print(f"scale = {self.wda_client.scale}")
+            except Exception as e:
+                print(f'Error:\n {e}')
+                raise EnvironmentError(f'WebDriverAgent is not configured properly!')
 
     def count_lottery(self):
         self.lottery.finished += 1

@@ -5,6 +5,9 @@ import sys
 import time
 from typing import List, Tuple, Union, Dict, Callable, Sequence, Optional  # noqas
 
+_BUNDLE_ID_CN = 'com.bilibili.fatego'
+_BUNDLE_ID_JP = 'com.aniplex.fategrandorder'
+
 
 class ArgParser:
     def __init__(self, args: list = None):
@@ -65,8 +68,9 @@ def is_interactive_mode():
     return False
 
 
-def check_sys_setting(admin=True):
+def check_sys_setting(admin=True, wda=False):
     if sys.platform == 'win32':
+        # Android/iOS emulator in Windows
         # check admin permission & set process dpi awareness
         # please run cmd/powershell or Pycharm as administrator.
         from init import initial
@@ -84,17 +88,17 @@ def check_sys_setting(admin=True):
         else:
             # print('already admin')
             pass
+    elif wda is True:
+        # WDA+iOS real device, check in config.init_wda()
+        pass
     elif sys.platform == 'darwin':
+        # Android emulator in macOS
         print('Allow the app(PyCharm/Terminal/...) to control your computer '
               'in "System Preferences/Security & Privacy/Accessibility",\n'
               'or mouse events will take no effects!', file=sys.stderr)
         pass
     else:
         raise EnvironmentError(f'Unsupported system: {sys.platform}. please run in windows/macOS.')
-    # with mss() as sct:
-    #     print('** Monitors information **')
-    #     pprint.pprint(sct.monitors)
-    #     print('WARNING: make sure "config.monitor/offset" is set properly')
 
 
 class Timer:

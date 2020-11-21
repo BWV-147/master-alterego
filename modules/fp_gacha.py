@@ -110,8 +110,10 @@ class FpGacha(BaseAgent):
                         break
             wait_targets(T.ce_enhance_page, LOC.ce_target_box, at=LOC.ce_select_items_box)
             wait_targets(T.ce_items_unselected, LOC.ce_select_button)
-            drag(LOC.ce_select_start, LOC.ce_select_middle, 0.5, 0.5, None, 0)
-            drag(LOC.ce_select_middle, LOC.ce_select_end, 0.1, None, 0.2)
+            drag(LOC.ce_select_start, LOC.ce_select_end, 0.5, 0.5, 0.2, 0)
+            # TODO: verify it
+            # drag(LOC.ce_select_start, LOC.ce_select_middle, 0.5, 0.5, None, 0)
+            # drag(LOC.ce_select_middle, LOC.ce_select_end, 0.1, None, 0.2)
             item_selected = wait_which_target([T.ce_items_unselected, T.ce_items_selected], LOC.ce_select_button)
             if item_selected == 0:
                 logger.info('no ce left', extra=LOG_TIME)

@@ -7,6 +7,7 @@ from util.autogui import *
 
 check_sys_setting(False)
 config.load('data/config.json')
+config.init_wda()
 
 # %%
 # base_path = 'img/battles/a-charlotte/'  # 'img/gacha-jp'
@@ -16,13 +17,17 @@ base_path: Optional[str] = None  # avoid running temp.py directly
 # %%
 def capture(fn: str, _base=None):
     # pyautogui.hotkey('alt', 'tab')
+    assert (_base or base_path) is not None
     time.sleep(0.1)
+    t0 = time.time()
     full_fp = os.path.join(_base or base_path, fn + '.png')
+    img = screenshot()
     if os.path.exists(full_fp):
-        print(f'! Replace: "{full_fp}"')
+        print(f'! Replace: "{full_fp}"', end='')
     else:
-        print(f'   Saved : "{full_fp}" saved')
-    screenshot().save(full_fp)
+        print(f'   Save  : "{full_fp}" saved', end='')
+    print(f'\t\t{time.time() - t0:.4f} sec')
+    img.save(full_fp)
     # pyautogui.hotkey('alt', 'tab')
 
 
@@ -34,7 +39,6 @@ def save_rewards(quest_name):
 
 
 # %% ------------- battle part --------------
-# %% !!!
 capture('quest')
 # %%
 capture('apple_page')
@@ -174,7 +178,6 @@ capture('menu')
 capture('net_error')
 # %%
 capture('shop')
-
 
 # %% test code
 pass

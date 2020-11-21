@@ -671,27 +671,27 @@ class SFree(BattleBase):
 # noinspection DuplicatedCode
 class Battle(JFree, AFree, SFree):
     @with_goto
-    def a3_ticket(self, pre_process=False):
+    def s_knight(self, pre_process=False):
         """
-        贞德-花嫁-豆爸-花嫁support-X-X 换人
+        狂兰80NP-CBA-孔明-CBA support-X-X 换人
         """
         master = self.master
         T = master.T
         LOC = master.LOC
 
-        master.quest_name = 'A3-Ticket'
-        names = master.members = ['贞德', '花嫁', '豆爸', '花嫁']
-        master.set_card_weight(dict(zip(names, [3, 2, 1, 2])))
+        master.quest_name = 'S-Knight'
+        names = master.members = ['狂兰', 'CBA', '孔明', 'CBA']
+        master.set_card_weight(dict(zip(names, [3, 2, 2, 2])))
 
         # pre-processing: e.g. set templates, only once
         if pre_process:
             logger.debug(f'pre-process for {master.quest_name} ...')
-            T.read_templates(['img/battles/.a', 'img/battles/a3-ticket/'])
+            T.read_templates(['img/share/6s', 'img/battles/s-knight'])
 
-            # LOC.relocate((0, 0, 1920 - 1, 1080 - 1))
+            LOC.relocate((0, 0, 1334, 750))
             # --------------  name       NP    Quick    Arts   Buster -----------
-            master.set_cards(names[0], (1, 6), (3, 2), (1, 1), (1, 2))
-            master.set_cards_from_json('花嫁', 'android')
+            master.set_cards(names[0], (1, 6), (1, 3), (2, 5), (2, 2))
+            master.set_cards_from_json('CBA', '6s')
 
             config.battle.login_handler = None  # _handler
             return
@@ -701,116 +701,43 @@ class Battle(JFree, AFree, SFree):
             config.battle.jump_battle = False
             logger.warning('goto label.h')
             goto.h  # noqas
+        label.h  # noqas
 
         wait_targets(T.support, LOC.support_refresh)
-        master.choose_support(match_svt=True, match_skills=True, match_ce=True, match_ce_max=True,
-                              friend_only=False, switch_classes=(1,))
+        master.choose_support(match_svt=True, match_skills=True, match_ce=False, match_ce_max=False,
+                              friend_only=False, switch_classes=(5, 0))
 
-        label.h  # noqas
         # wave 1
         wait_targets(T.wave1a, LOC.loc_wave, 0.7)
         logger.debug(f'Quest {master.quest_name} started...')
         logger.debug('wave 1...')
-        with master.set_waves(T.wave1a, T.wave1b):
-            master.svt_skill(3, 2)
-            master.svt_skill(3, 3, 1)
-            master.master_skill(3, order_change=(3, 4), order_change_img=T.order_change)
-        with master.set_waves(T.wave1c, T.wave1d):
-            master.svt_skill(2, 1, 1)
-            master.svt_skill(2, 2, 1)
-            master.svt_skill(3, 1, 1)
-            master.svt_skill(3, 2, 1)
-            master.svt_skill(1, 1)
-            master.svt_skill(1, 2)
-        master.auto_attack(nps=6, mode='alter')
-
-        # wave 2
-        wait_targets(T.wave2a, LOC.loc_wave, 0.7)
-        logger.debug('wave 2...')
-        with master.set_waves(T.wave2a, T.wave2b):
-            master.svt_skill(1, 3)
-        master.auto_attack(nps=6, mode='alter')
-
-        # wave 3
-        wait_targets(T.wave3a, LOC.loc_wave, 0.7)
-        logger.debug('wave 3...')
-        with master.set_waves(T.wave3a, T.wave3b):
-            master.master_skill(1)
-            master.master_skill(2)
-        master.auto_attack(nps=6, mode='dmg', buster_first=True)
-
-        master.xjbd(T.kizuna, LOC.kizuna, mode='dmg', allow_unknown=True)
-        return
-
-    @with_goto
-    def s3_ticket(self, pre_process=False):
-        """
-        贞德-花嫁-花嫁support-C闪-X-X 换人
-        """
-        master = self.master
-        T = master.T
-        LOC = master.LOC
-
-        master.quest_name = 'S3-Ticket'
-        names = master.members = ['贞德', '花嫁', '花嫁S', 'C闪']
-        master.set_card_weight(dict(zip(names, [3, 2.01, 2.01, 2])))
-
-        # pre-processing: e.g. set templates, only once
-        if pre_process:
-            logger.debug(f'pre-process for {master.quest_name} ...')
-            T.read_templates(['img/battles/.s', 'img/battles/s3-ticket/'])
-
-            # LOC.relocate((0, 0, 1920 - 1, 1080 - 1))
-            # --------------  name       NP    Quick    Arts   Buster -----------
-            master.set_cards(names[0], (1, 6), (3, 2), (1, 1), (1, 2))
-            master.set_cards(names[1], (1, 6), (3, 2), (1, 1), (1, 2))
-            master.set_cards(names[2], (1, 6), (3, 2), (1, 1), (1, 2))
-
-            config.battle.login_handler = None  # _handler
-            return
-
-        # battle part
-        if config.battle.jump_battle:
-            config.battle.jump_battle = False
-            logger.warning('goto label.h')
-            goto.h  # noqas
-
-        wait_targets(T.support, LOC.support_refresh)
-        master.choose_support(match_svt=True, match_skills=True, match_ce=True, match_ce_max=True,
-                              friend_only=False, switch_classes=(1,))
-
-        label.h  # noqas
-        # wave 1
-        wait_targets(T.wave1a, LOC.loc_wave, 0.7)
-        logger.debug(f'Quest {master.quest_name} started...')
-        logger.debug('wave 1...')
-        with master.set_waves(T.wave1a, T.wave1b):
-            master.svt_skill(3, 1, 1)
-            master.svt_skill(3, 2, 1)
-            master.master_skill(3, order_change=(3, 4))
-        with master.set_waves(T.wave1c, T.wave1d):
-            master.svt_skill(2, 1, 1)
-            master.svt_skill(2, 2, 1)
+        with master.set_waves(T.wave1a, ):
             master.svt_skill(3, 2)
             master.svt_skill(3, 3)
-            master.svt_skill(1, 1)
-            master.svt_skill(1, 2)
+            master.svt_skill(2, 1, 1)
         master.auto_attack(nps=6, mode='alter')
 
         # wave 2
         wait_targets(T.wave2a, LOC.loc_wave, 0.7)
         logger.debug('wave 2...')
-        with master.set_waves(T.wave2a, T.wave2b):
+        with master.set_waves(T.wave2a, ):
+            master.svt_skill(3, 1, 1)
+            master.master_skill(3, order_change=(3, 4))
+        with master.set_waves(T.wave2c, ):
+            master.svt_skill(2, 3, 1)
+            master.svt_skill(3, 1, 1)
             master.svt_skill(1, 3)
         master.auto_attack(nps=6, mode='alter')
 
         # wave 3
         wait_targets(T.wave3a, LOC.loc_wave, 0.7)
         logger.debug('wave 3...')
-        with master.set_waves(T.wave3a, T.wave3b):
+        with master.set_waves(T.wave3a, ):
+            master.svt_skill(3, 3, 1)
+            master.svt_skill(2, 2)
+            master.svt_skill(3, 2)
             master.master_skill(1)
-            master.master_skill(2)
-        master.auto_attack(nps=6, mode='dmg', buster_first=True)
-
+            click(LOC.enemies[1])
+        master.auto_attack(nps=6, mode='dmg')
         master.xjbd(T.kizuna, LOC.kizuna, mode='dmg', allow_unknown=True)
         return
