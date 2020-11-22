@@ -98,13 +98,13 @@ class Master:
         :param fp: json file path. Json file and images should be in the same folder.
                 format: {"svt": {"NP/Quick/Arts/Buster":"k1,1,k2,2,k3,3"}}.
                 in which "k1,1,..." is serials of (img, loc).
-                default `img/share/{device}/cards-{device}.json`
+                default `img/share/{device}/cards.json`
         :param key: svt key in json, default is `svt`
         :return:
         """
         import json
         key = key or svt
-        fp2 = f'img/share/{fp}/cards-{fp}.json'
+        fp2 = f'img/share/{fp}/cards.json'
         if not os.path.exists(fp) and os.path.exists(fp2):
             fp = fp2
         _folder = os.path.dirname(os.path.abspath(fp))

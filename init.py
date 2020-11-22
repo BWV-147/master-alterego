@@ -2,6 +2,7 @@ import ctypes
 import platform
 import sys
 
+# initiate only once
 _initiated = False
 
 

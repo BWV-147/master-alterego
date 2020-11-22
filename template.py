@@ -10,13 +10,13 @@ config.load('data/config.json')
 config.init_wda()
 
 # %%
-# base_path = 'img/battles/a-charlotte/'  # 'img/gacha-jp'
-base_path: Optional[str] = None  # avoid running temp.py directly
+base_path: Optional[str] = None
 
 
 # %%
 def capture(fn: str, _base=None):
     # pyautogui.hotkey('alt', 'tab')
+    # avoid running template.py directly
     assert (_base or base_path) is not None
     time.sleep(0.1)
     t0 = time.time()
