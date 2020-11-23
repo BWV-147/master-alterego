@@ -5,33 +5,58 @@ import os
 import threading
 import time
 from queue import Queue
-from typing import Optional
+from typing import Optional, List, Tuple, Dict, Set, Mapping
 
 import wda  # noqa
 
 
-class _BaseConfig:
+class JsonSerializable:
     def __init__(self):
         self._ignored = []
 
-    def from_json(self, data):
+    @staticmethod
+    def dump_obj(obj):
+        if isinstance(obj, (List, Tuple, Set)):
+            return [JsonSerializable.dump_obj(v) for v in obj]
+        elif isinstance(obj, Mapping):
+            return {k: JsonSerializable.dump_obj(v) for k, v in obj.items()}
+        elif isinstance(obj, JsonSerializable):
+            return obj.to_json()
+        else:
+            return obj
+
+    @staticmethod
+    def load_obj(data, cls):
+        return cls().from_json(data)
+
+    @staticmethod
+    def load_obj_list(data: List, cls):
+        return [JsonSerializable.load_obj(v, cls) for v in data]
+
+    @staticmethod
+    def load_obj_dict(data: dict, cls):
+        return {k: JsonSerializable.load_obj(v, cls) for k, v in data.items()}
+
+    def from_json(self, data: dict, drop_unknown=True):
         for k, v in data.items():
-            if k in self.__dict__:
-                if isinstance(self.__dict__[k], _BaseConfig):
+            if k in self.__dict__ or drop_unknown is False:
+                if isinstance(self.__dict__[k], JsonSerializable):
+                    # reset to a fresh instance then update
+                    self.__dict__[k] = self.__dict__[k].__class__()
                     self.__dict__[k].from_json(v)
                 else:
                     self.__dict__[k] = v
+        return self
 
-    def to_json(self):
+    def to_json(self, ignore=True):
         out = {}
         for k, v in self.__dict__.items():
-            if not k.startswith('_') and k not in self._ignored:
-                if isinstance(v, _BaseConfig):
-                    out[k] = v.to_json()
-                else:
-                    out[k] = v
+            if not ignore or (not k.startswith('_') and k not in self._ignored):
+                out[k] = self.dump_obj(v)
         return out
 
+
+class BaseConfig(JsonSerializable):
     def load(self, fp):
         assert fp is not None, f'please provide filepath of config file.'
         if os.path.exists(fp):
@@ -49,11 +74,11 @@ class _BaseConfig:
     def save(self, fp):
         assert fp is not None, f'please provide filepath of config file.'
         json.dump(self.to_json(), open(fp, 'w', encoding='utf8'), ensure_ascii=False, indent=2,
-                  skipkeys=True, default=lambda o: o.__dict__)
+                  skipkeys=True)
         return fp
 
 
-class Config(_BaseConfig):
+class Config(BaseConfig):
     def __init__(self, fp=None):
         super().__init__()
         # ================= sys config =================
@@ -71,7 +96,8 @@ class Config(_BaseConfig):
         self.hide_hotkey = ['alt', 'z']  # for MuMu Windows, "alt+z" to hide window. or "alt+x" for new MuMu
         self.switch_tab_hotkey = ['ctrl', 'tab']  # for MuMu Windows
         # ================= battle part =================
-        self.battle = BattleConfig()
+        self.battle_name = 'default'
+        self.battles: Dict[str, BattleConfig] = {'default': BattleConfig()}
         self.lottery = LotteryConfig()
         self.fp_gacha = FpGachaConfig()
         # ================= Email part ==================
@@ -101,6 +127,10 @@ class Config(_BaseConfig):
         if fp:
             self.load()
 
+    def from_json(self, data: dict, drop_unknown=True):
+        self.battles = self.load_obj_dict(data.pop('battles', {}), BattleConfig)
+        return super().from_json(data)
+
     def load(self, fp=None):
         # should only load config at the start of thread,
         # runtime properties are set to default (mainly for interactive console, may load more than once).
@@ -117,6 +147,10 @@ class Config(_BaseConfig):
         fp = fp or self.fp
         return super().save(fp)
 
+    @property
+    def battle(self):
+        return self.battles[self.battle_name]
+
     def init_wda(self):
         if self.is_wda:
             self.wda_client = wda.Client(self.wda_settings.get('url', None))
@@ -131,10 +165,7 @@ class Config(_BaseConfig):
                 print(f"scale = {self.wda_client.scale}")
                 print(f'WDA connected, current app: {config.wda_client.app_current()["bundleId"]}')
                 default_settings = self.wda_client.appium_settings()
-                settings = {}
-                for k, v in self.wda_settings.items():
-                    if k in default_settings:
-                        settings[k] = v
+                settings = {k: v for k, v in self.wda_settings.items() if k in default_settings}
                 if settings:
                     print(f'set WDA: {settings}')
                     print(self.wda_client.appium_settings(settings))
@@ -182,7 +213,7 @@ class Config(_BaseConfig):
 
 
 # sub member of Config
-class BattleConfig(_BaseConfig):
+class BattleConfig(BaseConfig):
     def __init__(self):
         super().__init__()
         self.mail = False
@@ -206,7 +237,7 @@ class BattleConfig(_BaseConfig):
         self._ignored = ['login_handler', ]
 
 
-class LotteryConfig(_BaseConfig):
+class LotteryConfig(BaseConfig):
     def __init__(self):
         super().__init__()
         self.mail = False
@@ -220,7 +251,7 @@ class LotteryConfig(_BaseConfig):
         self.event_banner_no = 0  # values: 0,1,2. Move from shop -> banner list -> event shop
 
 
-class FpGachaConfig(_BaseConfig):
+class FpGachaConfig(BaseConfig):
     def __init__(self):
         super().__init__()
         self.mail = False

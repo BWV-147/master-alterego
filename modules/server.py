@@ -160,15 +160,21 @@ def put_new_task():
 @app.route('/toggleVisibility')
 def toggle_visibility():
     import pyautogui as pag
-    pag.hotkey(*config.hide_hotkey)
-    return f'Toggle visibility: {config.hide_hotkey}'
+    if config.is_wda:
+        return 'invalid request for WDA', 403
+    else:
+        pag.hotkey(*config.hide_hotkey)
+        return f'Toggle visibility: {config.hide_hotkey}'
 
 
 @app.route('/switchTab')
 def switch_tab():
     import pyautogui as pag
-    pag.hotkey(*config.switch_tab_hotkey)
-    return f'Switch Tab: {config.switch_tab_hotkey}'
+    if config.is_wda:
+        return 'Invalid request for WDA', 403
+    else:
+        pag.hotkey(*config.switch_tab_hotkey)
+        return f'Switch Tab: {config.switch_tab_hotkey}'
 
 
 @app.route('/configuration', methods=['GET', 'POST'])

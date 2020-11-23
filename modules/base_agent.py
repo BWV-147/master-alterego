@@ -10,8 +10,6 @@ from .server import app
 
 class BaseAgent:
     _server_thread: threading.Thread = None
-    # TODO: Tsinghua Network authentication to avoid offline
-    _tunet_thread: threading.Thread = None
 
     def __init__(self):
         self.T: Optional[ImageTemplates] = None
@@ -43,22 +41,6 @@ class BaseAgent:
         cls._server_thread = threading.Thread(target=app.run, name='flask_app_server', args=[host, port], daemon=True)
         cls._server_thread.start()
         app.logger.info(f'server started: {cls._server_thread}')
-
-    @classmethod
-    def run_tunet_login(cls, user, pwd):
-        # TODO
-        if cls._tunet_thread is not None and cls._tunet_thread.is_alive():
-            app.logger.info(f'tunet is already running: {cls._tunet_thread}')
-            return
-
-        def _try_login():
-            # import tunet
-            # tunet.auth4.checklogin()
-            pass
-
-        cls._tunet_thread = threading.Thread(target=_try_login, name='tunet', daemon=True)
-        cls._tunet_thread.start()
-        app.logger.info(f'tunet started: {cls._tunet_thread}')
 
     @classmethod
     def terminate_server(cls):

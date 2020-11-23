@@ -279,8 +279,8 @@ class Regions(_Regions):
 class ImageTemplates:
     """
     Store loaded template images. Image file(*.png) should be screenshots token by PIL or mss module.
-    Otherwise, image comparision may not work.
-    @xDyxnxaxmxixcAttrs
+    Otherwise, image comparison may not work.
+    @DynamicAttrs
     """
 
     def __init__(self, directory: str = None):
