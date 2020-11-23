@@ -21,9 +21,6 @@ class BaseAgent:
         config.load(cfg)
         config.init_wda()
         check_sys_setting(config.need_admin, config.is_wda)
-        if config.is_wda:
-            config.wda_client = wda.Client(config.wda_url)
-            logger.info(f'WDA connected, current app: {config.wda_client.app_current()["bundleId"]}')
         if config.www_host_port is not None:
             self.run_sever(*config.www_host_port)
 

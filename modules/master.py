@@ -451,7 +451,7 @@ class Master:
             click(LOC.skill_to_target[friend - 1])
         elif order_change is not None:
             # TODO: change to order_change_unselect grey button
-            wait_targets(order_change_img, LOC.order_change[0])
+            wait_targets(order_change_img, LOC.order_change_close)
             click(LOC.order_change[order_change[0] - 1])
             click(LOC.order_change[order_change[1] - 1])
             click(LOC.order_change_confirm)

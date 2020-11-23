@@ -22,6 +22,16 @@ class ArgParser:
         # args without filename
         resolved_args = self._parser.parse_known_intermixed_args(args)[0]
         print(resolved_args)
+        if resolved_args.gen_config:
+            import os
+            from util.config import config
+            fp = 'data/config.json'
+            if os.path.exists(fp):
+                print(f'config file is already at {fp}')
+            else:
+                config.save(fp)
+                print(f'default config file saved at {fp}')
+            exit(0)
         self.task = resolved_args.task
         self.supervise = not resolved_args.disable_supervisor
         self.config = resolved_args.config
@@ -40,6 +50,7 @@ class ArgParser:
                              help='config file path or {} part of data/config-{}.json, default "data/config.json".')
         _parser.add_argument('-d', '--disable-supervisor', action='store_true',
                              help='disable supervisor, default enabled.')
+        _parser.add_argument('--gen-config', action='store_true', help='generate default config file.')
         self._parser = _parser
 
 

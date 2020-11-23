@@ -50,6 +50,7 @@ class _BaseConfig:
         assert fp is not None, f'please provide filepath of config file.'
         json.dump(self.to_json(), open(fp, 'w', encoding='utf8'), ensure_ascii=False, indent=2,
                   skipkeys=True, default=lambda o: o.__dict__)
+        return fp
 
 
 class Config(_BaseConfig):
@@ -59,7 +60,7 @@ class Config(_BaseConfig):
         self.id = None
         self.is_jp = False  # difference between jp and cn server
         self.is_wda = False  # app run in real iOS device and served in macOS
-        self.wda_url = None  # default http://localhost:8100
+        self.wda_settings = {'url': None}  # default url http://localhost:8100 and other options for appium_settings
         # Attention: MAIN monitor is not always monitor 1.
         self.monitor = 1  # >=1, check sct.monitors to see monitor info, 0 is all monitors in one screenshot
         self.offset = (0, 0)  # xy offset relative to MAIN monitor's origin for mouse click
@@ -118,17 +119,25 @@ class Config(_BaseConfig):
 
     def init_wda(self):
         if self.is_wda:
-            self.wda_client = wda.Client(self.wda_url)
+            self.wda_client = wda.Client(self.wda_settings.get('url', None))
             try:
                 # quality:
                 # 0-max(time is wasted to transfer large image),
                 # 1-middle,
                 # 2-lowest, may not clear enough
                 # once changed the quality value, image templates should be updated
-                self.wda_client.appium_settings({'screenshotQuality': 1})
                 print(f"window size = {self.wda_client.window_size()}")
                 print(f"screenshot size = {self.wda_client.screenshot().size}")
                 print(f"scale = {self.wda_client.scale}")
+                print(f'WDA connected, current app: {config.wda_client.app_current()["bundleId"]}')
+                default_settings = self.wda_client.appium_settings()
+                settings = {}
+                for k, v in self.wda_settings.items():
+                    if k in default_settings:
+                        settings[k] = v
+                if settings:
+                    print(f'set WDA: {settings}')
+                    print(self.wda_client.appium_settings(settings))
             except Exception as e:
                 print(f'Error:\n {e}')
                 raise EnvironmentError(f'WebDriverAgent is not configured properly!')

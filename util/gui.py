@@ -35,10 +35,11 @@ def click(xy: Sequence = None, lapse=0.5):
     # in desktop, xy=None means the current pos of mouse,
     # but mobile device cannot remember the last position, so store it in `temp` dict
     if xy is None:
-        xy = config.temp['click_xy']
+        xy = config.temp.get('click_xy', (0, 0))
     else:
         config.temp['click_xy'] = xy
     if config.is_wda:
+        assert xy is not None
         x, y = apply_wda_scale(apply_offset(get_center_coord(xy), config.offset), config.wda_client.scale)
         # print(f'click at {(x, y)}')
         config.wda_client.click(x, y)

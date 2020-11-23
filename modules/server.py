@@ -22,8 +22,6 @@ from logging.handlers import RotatingFileHandler
 from PIL import Image
 from flask import Flask, request, Response, redirect, jsonify, abort, send_from_directory
 
-from util.config import config
-
 ROOT = os.getcwd()
 if ROOT.endswith('modules'):
     # if server.py is run directly, cwd is "root/modules"
@@ -33,6 +31,8 @@ if ROOT.endswith('modules'):
 if os.path.normpath(ROOT) not in [os.path.normpath(p) for p in sys.path]:
     sys.path.insert(0, ROOT)
 
+# after add project root to paths, import will work normally
+from util.config import config
 from util.autogui import screenshot, compress_image
 
 app = Flask('flask.app', root_path=os.path.join(ROOT, 'www'), static_folder='/', static_url_path='/')
@@ -40,9 +40,12 @@ app = Flask('flask.app', root_path=os.path.join(ROOT, 'www'), static_folder='/',
 # app.logger has default StreamHandler
 werkzeug_logger = logging.getLogger('werkzeug')
 werkzeug_logger.addHandler(logging.StreamHandler())
+_log_folder = os.path.join(ROOT, 'logs')
+if not os.path.exists(_log_folder):
+    os.mkdir(_log_folder)
 for _logger in (werkzeug_logger, app.logger):  # type:logging.Logger
     _logger.setLevel(logging.DEBUG)
-    fh = RotatingFileHandler(os.path.join(ROOT, 'logs', f'{_logger.name}.log'),
+    fh = RotatingFileHandler(os.path.join(_log_folder, f'{_logger.name}.log'),
                              encoding='utf8', maxBytes=1024 * 1024, backupCount=2)
     fh.setFormatter(logging.Formatter(
         style='{',
