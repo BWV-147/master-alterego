@@ -64,6 +64,11 @@ def favicon():
     return redirect('https://img.icons8.com/ultraviolet/40/000000/binoculars.png')
 
 
+@app.route('/getId')
+def get_id():
+    return config.id
+
+
 @app.route('/getLogList')
 def get_log_list():
     log_dir = 'logs'
