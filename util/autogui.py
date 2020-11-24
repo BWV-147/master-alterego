@@ -54,7 +54,7 @@ def cal_sim(img1: Image.Image, img2: Image.Image, region=None, method='ssim') ->
         sim = sum(1 - (0 if _l == _r else float(abs(_l - _r)) / max(_l, _r)) for _l, _r in zip(lh, rh)) / len(lh)
     else:
         raise ValueError(f'invalid method "{method}", only "ssim" and "hist" supported')
-    # print(f'sim={sim:.4f}   \r', end='')
+    # print(f'sim={sim:.4f}')
     return sim
 
 
@@ -107,7 +107,6 @@ def screenshot(region: Sequence = None, filepath: str = None, monitor: int = Non
     if monitor is None:
         monitor = config.monitor
     _image = None
-    # TODO: to fix first run is not DPI-Aware, or add size to config, now run once at program startup
     size = (1920, 1080)  # default size
     if config.is_wda:
         try:
@@ -141,11 +140,13 @@ def screenshot(region: Sequence = None, filepath: str = None, monitor: int = Non
     return _image
 
 
-def match_one_target(img: Image.Image, target: Image.Image, region: Sequence, threshold: float = THR) -> bool:
+def match_one_target(img: Image.Image, target: Image.Image, region: Sequence, threshold: float = None) -> bool:
+    if threshold is None:
+        threshold = THR
     return cal_sim(img, target, region) >= threshold
 
 
-def match_targets(img, targets, regions=None, threshold=THR, at=None, lapse=0.0):
+def match_targets(img, targets, regions=None, threshold=None, at=None, lapse=0.0):
     # type:(Image.Image,Union[Image.Image,Sequence[Image.Image]],Sequence,float,Union[int,Sequence],float)->bool
     """
     Match all targets. See `wait_targets`.
@@ -153,6 +154,8 @@ def match_targets(img, targets, regions=None, threshold=THR, at=None, lapse=0.0)
 
     :return: bool, matched or not.
     """
+    if threshold is None:
+        threshold = THR
     targets, regions = _fix_length(targets, regions)
     for target, region in zip(targets, regions):
         if cal_sim(img, target, region) < threshold:
@@ -170,7 +173,7 @@ def match_targets(img, targets, regions=None, threshold=THR, at=None, lapse=0.0)
 
 
 # 匹配第几个target
-def match_which_target(img, targets, regions=None, threshold=THR, at=None, lapse=0.0):
+def match_which_target(img, targets, regions=None, threshold=None, at=None, lapse=0.0):
     # type:(Image.Image,Union[Image.Image,Sequence[Image.Image]],Sequence,float,Union[bool,Sequence],float)->int
     """
     Compare targets to find which matches. See `wait_which_target`.
@@ -179,6 +182,8 @@ def match_which_target(img, targets, regions=None, threshold=THR, at=None, lapse
 
     :return: matched index, return -1 if not matched.
     """
+    if threshold is None:
+        threshold = THR
     targets, regions = _fix_length(targets, regions)
     assert len(targets) > 1, f'length of targets or regions must be at least 2: {(len(targets), len(regions))}'
     res = -1
@@ -197,7 +202,7 @@ def match_which_target(img, targets, regions=None, threshold=THR, at=None, lapse
     return -1
 
 
-def wait_targets(targets, regions, threshold=THR, at=None, lapse=0.0, clicking=None, interval=0.2):
+def wait_targets(targets, regions, threshold=None, at=None, lapse=0.0, clicking=None, interval=0.2):
     # type:(Union[Image.Image,Sequence[Image.Image]],Union[int,Sequence],float,Union[int,Sequence],float,Sequence,float)->None
     """
     Waiting screenshot to match all targets.
@@ -216,7 +221,7 @@ def wait_targets(targets, regions, threshold=THR, at=None, lapse=0.0, clicking=N
 
 
 # 直到匹配某一个target
-def wait_which_target(targets, regions, threshold=THR, at=None, lapse=0.0, clicking=None, interval=0.2):
+def wait_which_target(targets, regions, threshold=None, at=None, lapse=0.0, clicking=None, interval=0.2):
     # type:(Union[Image.Image,Sequence[Image.Image]],Sequence,float,Union[bool,Sequence],float,Sequence,float)->int
     """
     Waiting for screenshot to match one of targets.
@@ -244,7 +249,7 @@ def wait_which_target(targets, regions, threshold=THR, at=None, lapse=0.0, click
 
 
 # 直到匹配模板
-def wait_search_template(target: Image.Image, search_box=None, threshold=THR, lapse=0.0, interval=0.2):
+def wait_search_template(target: Image.Image, search_box=None, threshold: float = None, lapse=0.0, interval=0.2):
     """
 
     :param target: only target template, not full screenshot
@@ -254,6 +259,8 @@ def wait_search_template(target: Image.Image, search_box=None, threshold=THR, la
     :param interval:
     :return:
     """
+    if threshold is None:
+        threshold = THR
     while True:
         if search_target(screenshot(search_box), target)[0] >= threshold:
             time.sleep(lapse)
@@ -297,7 +304,8 @@ def search_target(img: Image.Image, target: Image.Image, mode='cv2'):
 
 
 # noinspection PyTypeChecker
-def search_peaks(image: Image.Image, target: Image.Image, column=True, threshold=THR, **kwargs) -> numpy.ndarray:
+def search_peaks(image: Image.Image, target: Image.Image, column=True, threshold: float = None,
+                 **kwargs) -> numpy.ndarray:
     """
     Find target position in img which contains several targets. For simplicity, `target` and `image` should have
     the same width or height. Thus it's 1-D search.
@@ -309,6 +317,8 @@ def search_peaks(image: Image.Image, target: Image.Image, column=True, threshold
     :param kwargs: extra args for `scipy.signal.find_peaks`
     :return: offsets of peaks in column/row direction.
     """
+    if threshold is None:
+        threshold = THR
     if column is True:
         assert image.size[0] == target.size[0], f'must be same width: img {image.size}, target {target.size}.'
     else:

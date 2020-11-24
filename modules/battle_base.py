@@ -118,11 +118,11 @@ class BattleBase(BaseAgent):
                 rewards.save(f'{png_fn}-drop{config.battle.craft_num}.png')
                 if config.battle.craft_num in config.battle.enhance_craft_nums:
                     logger.warning('need to change party or enhance crafts. Exit.')
-                    send_mail(f'Enhance! {config.battle.craft_num}th craft dropped!!!')
+                    send_mail(f'Enhance! {config.battle.craft_num}th craft dropped!!!', mail_level=MAIL_WARNING)
                     config.mark_task_finish()
                     return
                 else:
-                    send_mail(f'{config.battle.craft_num}th craft dropped!!!')
+                    send_mail(f'{config.battle.craft_num}th craft dropped!!!', mail_level=MAIL_WARNING)
                 click(LOC.finish_next)
             else:
                 config.count_battle(False)
@@ -130,7 +130,8 @@ class BattleBase(BaseAgent):
                 rewards.save(f"{png_fn}.png")
             # ready to restart a battle
             if finished_num % 30 == 0:
-                send_mail(f'Progress: {finished_num}/{battle_num} battles finished.', attach_shot=False)
+                send_mail(f'Progress: {finished_num}/{battle_num} battles finished.',
+                          attach_shot=False, mail_level=MAIL_INFO)
             while True:
                 shot = screenshot()
                 if search_target(shot.crop(LOC.quest_outer), T.quest.crop(LOC.quest))[0] > THR:
@@ -142,7 +143,7 @@ class BattleBase(BaseAgent):
                     logger.debug('not to apply friend')
                 sleep(0.5)
         logger.info(f'>>>>> All {finished_num} battles "{self.master.quest_name}" finished. <<<<<')
-        send_mail(f'All {finished_num} battles "{self.master.quest_name}" finished')
+        send_mail(f'All {finished_num} battles "{self.master.quest_name}" finished', mail_level=MAIL_INFO)
         config.mark_task_finish()
         return
 
@@ -166,7 +167,7 @@ class BattleBase(BaseAgent):
             logger.info(f'pre-process for {master.quest_name}...', extra=LOG_TIME)
             T.read_templates(['img/battles/.a', 'img/battles/a-charlotte/'])
 
-            # LOC.relocate((0, 0, 1920 - 1, 1080 - 1))
+            # LOC.relocate((0, 0, 1920, 1080))
 
             # --------------  name       NP    Quick    Arts   Buster -----------
             master.set_cards(names[0], (3, 6), (1, 5), (1, 3), (3, 3))

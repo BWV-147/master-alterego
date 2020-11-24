@@ -1,4 +1,4 @@
-__all__ = ['Config', 'config']
+__all__ = ['Config', 'config', 'MAIL_MUTE', 'MAIL_DEBUG', 'MAIL_INFO', 'MAIL_WARNING']
 
 import json
 import os
@@ -8,6 +8,11 @@ from queue import Queue
 from typing import Optional, List, Tuple, Dict, Set, Mapping
 
 import wda  # noqa
+
+MAIL_MUTE = 0
+MAIL_DEBUG = 1
+MAIL_INFO = 2
+MAIL_WARNING = 3
 
 
 class JsonSerializable:
@@ -110,7 +115,7 @@ class Config(BaseConfig):
         self.mail_server_port = None
 
         # ================= ignored =================
-        self.mail = False  # decided by sub-config
+        self.mail = MAIL_MUTE  # decided by sub-config
         self.fp = fp
         self.T = None
         self.LOC = None
@@ -216,7 +221,7 @@ class Config(BaseConfig):
 class BattleConfig(BaseConfig):
     def __init__(self):
         super().__init__()
-        self.mail = False
+        self.mail = MAIL_MUTE
         self.battle_func = None
         self.num = 1  # max battle num once running, auto decrease
         self.finished = 0  # all finished battles sum, auto increase, don't edit
@@ -240,7 +245,7 @@ class BattleConfig(BaseConfig):
 class LotteryConfig(BaseConfig):
     def __init__(self):
         super().__init__()
-        self.mail = False
+        self.mail = MAIL_MUTE
         self.dir = None
         self.start_func = 'draw'  # draw->clean->sell
         self.num = 10  # lottery num running once, auto decrease
@@ -254,7 +259,7 @@ class LotteryConfig(BaseConfig):
 class FpGachaConfig(BaseConfig):
     def __init__(self):
         super().__init__()
-        self.mail = False
+        self.mail = MAIL_MUTE
         self.dir = None
         self.num = 0
         self.finished = 0

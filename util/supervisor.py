@@ -4,7 +4,7 @@ from .log import *
 
 
 def supervise_log_time(thread, time_out=60, mail=None, interval=10, alert_type=None, alert_loops=15):
-    # type: (threading.Thread,float,bool,float,bool,int)->None
+    # type: (threading.Thread,float,int,float,bool,int)->None
     assert thread is not None, thread
     config.task_thread = thread
     if mail is None:
@@ -34,8 +34,7 @@ def supervise_log_time(thread, time_out=60, mail=None, interval=10, alert_type=N
         if config.task_finished:
             # thread finished: all battles finished(thread exit normally)
             logger.info(f'Thread-{thread.ident}({thread.name}) finished. Stop supervising.')
-            if mail:
-                send_mail(f'[{thread.name}]Task finished.')
+            send_mail(f'[{thread.name}]Task finished.', mail_level=MAIL_INFO)
             # make sure thread is stopped
             if thread.is_alive():
                 kill_thread(thread)
@@ -88,7 +87,7 @@ def supervise_log_time(thread, time_out=60, mail=None, interval=10, alert_type=N
                       f' - current  time: {time.asctime()}\n' \
                       f' - last log time: {time.asctime(time.localtime(config.log_time))}\n' \
                       f' - over time: {time.time() - config.log_time:.2f} secs (timeout={time_out}).\n'
-            send_mail(err_msg, subject=f'[{thread.name}]Went wrong!')
+            send_mail(err_msg, subject=f'[{thread.name}]Went wrong!', mail_level=MAIL_WARNING)
             break
     raise_alert(alert_type, loops=10)
     logger.info('exit supervisor.')

@@ -29,7 +29,7 @@ class AFree(BattleBase):
             logger.debug(f'pre-process for {master.quest_name} ...')
             T.read_templates(['img/share/android', 'img/battles/free/a-charlotte/'])
 
-            # LOC.relocate((0, 0, 1920 - 1, 1080 - 1))
+            # LOC.relocate((0, 0, 1920, 1080))
             # --------------  name       NP    Quick    Arts   Buster -----------
             master.set_cards(names[0], (1, 6), (1, 4), (1, 3), (1, 1))
             master.set_cards(names[1], (4, 7), (2, 3), (1, 5), (2, 2))
@@ -101,7 +101,7 @@ class AFree(BattleBase):
             logger.debug(f'pre-process for {master.quest_name} ...')
             T.read_templates(['img/share/android', 'img/battles/free/a-devar/'])
 
-            # LOC.relocate((0, 0, 1920 - 1, 1080 - 1))
+            # LOC.relocate((0, 0, 1920, 1080))
             # --------------  name       NP    Quick    Arts   Buster -----------
             master.set_cards(names[0], (1, 6), (3, 1), (1, 2), (3, 4))
             master.set_cards(names[1], (3, 7), (1, 3), (2, 5), (3, 2))
@@ -171,7 +171,7 @@ class AFree(BattleBase):
             logger.debug(f'pre-process for {master.quest_name} ...')
             T.read_templates(['img/battles/.a', 'img/battles/free/a-devar/'])
 
-            # LOC.relocate((0, 0, 1920 - 1, 1080 - 1))
+            # LOC.relocate((0, 0, 1920, 1080))
             # --------------  name       NP    Quick    Arts   Buster -----------
             master.set_cards(names[0], (1, 6), (3, 1), (1, 2), (3, 4))
             master.set_cards(names[1], (3, 7), (1, 3), (2, 5), (3, 2))
@@ -243,7 +243,7 @@ class JFree(BattleBase):
             logger.debug(f'pre-process for {master.quest_name}...')
             T.read_templates(['img/share/jp', 'img/battles/free/j-charlotte/'])
 
-            # LOC.relocate((0, 0, 1920 - 1, 1080 - 1))
+            # LOC.relocate((0, 0, 1920, 1080))
 
             # --------------  name       NP    Quick    Arts   Buster -----------
             master.set_cards(names[0], (1, 6), (1, 3), (2, 1), (2, 4))
@@ -313,7 +313,7 @@ class JFree(BattleBase):
             logger.debug(f'pre-process for {master.quest_name}...')
             T.read_templates(['img/share/jp', 'img/battles/free/j-charlotte2/'])
 
-            # LOC.relocate((0, 0, 1920 - 1, 1080 - 1))
+            # LOC.relocate((0, 0, 1920, 1080))
 
             # --------------  name       NP    Quick    Arts   Buster -----------
             master.set_cards(names[0], (1, 6), (2, 3), (1, 2), (2, 5))
@@ -383,7 +383,7 @@ class JFree(BattleBase):
             logger.debug(f'pre-process for {master.quest_name}...')
             T.read_templates(['img/share/jp', 'img/battles/free/j-charlotte3/'])
 
-            # LOC.relocate((0, 0, 1920 - 1, 1080 - 1))
+            # LOC.relocate((0, 0, 1920, 1080))
 
             # --------------  name       NP    Quick    Arts   Buster -----------
             master.set_cards(names[0], (1, 6), (2, 1), (1, 2), (3, 3))
@@ -453,7 +453,7 @@ class JFree(BattleBase):
             logger.debug(f'pre-process for {master.quest_name}...')
             T.read_templates(['img/share/jp', 'img/battles/free/j-riverside/'])
 
-            # LOC.relocate((0, 0, 1920 - 1, 1080 - 1))
+            # LOC.relocate((0, 0, 1920, 1080))
 
             # --------------  name       NP    Quick    Arts   Buster -----------
             # master.set_cards(names[0], (), (), (), ())
@@ -701,7 +701,7 @@ class SFree(BattleBase):
         label.h  # noqas
 
         wait_targets(T.support, LOC.support_refresh)
-        master.choose_support(match_svt=True, match_skills=True, match_ce=True, match_ce_max=True,
+        master.choose_support(match_svt=True, match_skills=False, match_ce=True, match_ce_max=True,
                               friend_only=False, switch_classes=(5, 0))
 
         # wave 1

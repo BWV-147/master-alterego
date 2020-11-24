@@ -26,15 +26,15 @@ import numpy
 if 'PYGAME_HIDE_SUPPORT_PROMPT' not in os.environ:
     os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
 import pygame
-from .config import config
+from .config import *
 from .log import *
 
 
 # %% email
-def send_mail(body, subject=None, receiver=None, attach_shot=True, force_send=False):
+def send_mail(body, subject=None, receiver=None, attach_shot=True, mail_level=MAIL_DEBUG):
     from .autogui import screenshot
     # check email params
-    if config.mail is False and force_send is False:
+    if not (MAIL_MUTE < config.mail <= mail_level):
         logger.info(f'Don\'t send mail.\nSubject: {subject}\nBody: {body}')
         return
     if receiver is None:

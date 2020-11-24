@@ -251,8 +251,9 @@ class Master:
             sleep(0.2)
         refresh_times = 0
 
-        def _is_match_offset(_support, _shot, old_loc, _offset):
-            return match_targets(_shot.crop(numpy.add(old_loc, [0, _offset, 0, _offset])), _support.crop(old_loc))
+        def _is_match_offset(_support, _shot, old_loc, _offset, threshold=None):
+            return match_targets(_shot.crop(numpy.add(old_loc, [0, _offset, 0, _offset])), _support.crop(old_loc),
+                                 threshold=threshold)
 
         # lambda functions: function(support, screenshot, offset) -> matched or not
         matches = [
@@ -260,7 +261,8 @@ class Master:
             lambda _p, _s, _o: not match_skills or False not in [_is_match_offset(_p, _s, loc, _o) for loc in
                                                                  LOC.support_skills[0]],
             lambda _p, _s, _o: not match_ce or _is_match_offset(_p, _s, LOC.support_ce[0], _o),
-            lambda _p, _s, _o: not match_ce_max or _is_match_offset(_p, _s, LOC.support_ce_max[0], _o),
+            # ce_max rect is to small, may has lower similarity
+            lambda _p, _s, _o: not match_ce_max or _is_match_offset(_p, _s, LOC.support_ce_max[0], _o, 0.8),
             lambda _p, _s, _o: not friend_only or _is_match_offset(_p, _s, LOC.support_friend_icon, _o),
         ]
 
@@ -270,22 +272,20 @@ class Master:
                 if class_icon == -1:
                     sleep(0.2)
                 else:
-                    click(LOC.support_class_icons[class_icon], 0.8)
-                    click(LOC.support_scrollbar_head, 0.8)
+                    click(LOC.support_class_icons[class_icon])
                     class_name = ['All', 'Saber', 'Archer', 'Lancer', 'Rider',
                                   'Caster', 'Assassin', 'Berserker', 'Extra', 'Mix'][class_icon]
                     logger.debug(f'switch support class to No.{class_icon}-{class_name}.')
-                move_to(LOC.support_scrollbar_start)
+                click(LOC.support_scrollbar_start)
                 shot = screenshot()
-                if min(numpy.mean(shot.crop(LOC.support_scrollbar_head).getdata(), 0)) > 225:
-                    drag_points = 6
-                    dy_mouse = (LOC.support_scrollbar_end[1] - LOC.support_scrollbar_start[1]) // (drag_points - 1)
-                else:
-                    drag_points = 1
-                    dy_mouse = 0
-                for drag_point in range(drag_points):
+                drag_x, drag_y1 = LOC.support_scrollbar_start
+                drag_y2 = LOC.support_scrollbar_end[1]
+                drag_point_num = 6 if min(numpy.mean(shot.crop(LOC.support_scrollbar_head).getdata(), 0)) > 225 else 1
+                drag_points = [(drag_x, drag_y1 + (drag_y2 - drag_y1) / 8 * i) for i in range(drag_point_num)]
+                for i_point in range(drag_point_num):
                     shot = screenshot()
                     y_peaks = search_peaks(shot.crop(LOC.support_team_column), support0.crop(LOC.support_team_icon))
+                    print(f'y_peaks={y_peaks}')
                     for y_peak in y_peaks:
                         y_offset = y_peak - (LOC.support_team_icon[1] - LOC.support_team_column[1])
                         matched = False
@@ -316,18 +316,14 @@ class Master:
                             elif page_no == 1:
                                 return matched_support
                     # no friends matched, drag downward
-                    if dy_mouse != 0:
-                        drag([LOC.support_scrollbar_start[0], LOC.support_scrollbar_start[1] + dy_mouse * drag_point],
-                             [LOC.support_scrollbar_start[0],
-                              LOC.support_scrollbar_start[1] + dy_mouse * (drag_point + 1)],
-                             0.2)
-                        # pyautogui.dragRel(0, dy_mouse, 0.2)
+                    if i_point + 1 < drag_point_num:
+                        drag(drag_points[i_point], drag_points[i_point + 1], 0.2)
                         sleep(0.4)
             # refresh support
             refresh_times += 1
             logger.debug(f'refresh support {refresh_times} times...', extra=LOG_TIME)
             if refresh_times % 100 == 0:
-                send_mail(body=f'refresh support more than {refresh_times} times.')
+                send_mail(body=f'refresh support more than {refresh_times} times.', mail_level=MAIL_INFO)
             wait_targets(support0, LOC.support_refresh, at=0)
             wait_targets(T.support_confirm, LOC.support_confirm_title, clicking=LOC.support_refresh)
             click(LOC.support_refresh_confirm)
