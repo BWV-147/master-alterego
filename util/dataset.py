@@ -114,26 +114,10 @@ class Regions(_Regions):
 
     # menu
     menu_button = (1704, 1005, 1852, 1048)
-
-    _menu_enhance_button_cn = (486, 933, 588, 1011)
-    _menu_gacha_button_cn = (758, 933, 860, 1011)
-    _menu_shop_button_cn = (1030, 933, 1132, 1011)
-
-    _menu_enhance_button_jp = (651, 933, 763, 1011)
-    _menu_gacha_button_jp = (900, 933, 1002, 1011)
-    _menu_shop_button_jp = (1155, 933, 1260, 1011)
-
-    @property
-    def menu_enhance_button(self):
-        return self._menu_enhance_button_jp if config.is_jp else self._menu_enhance_button_cn
-
-    @property
-    def menu_gacha_button(self):
-        return self._menu_gacha_button_jp if config.is_jp else self._menu_gacha_button_cn
-
-    @property
-    def menu_shop_button(self):
-        return self._menu_shop_button_jp if config.is_jp else self._menu_shop_button_cn
+    menu_button_expand = (1704, 772, 1852, 815)
+    menu_enhance_button = (486, 933, 588, 1011)
+    menu_gacha_button = (758, 933, 860, 1011)
+    menu_shop_button = (1030, 933, 1132, 1011)
 
     # in bag
     bag_back = (49, 34, 242, 100)
@@ -147,7 +131,7 @@ class Regions(_Regions):
     bag_qp_limit_confirm = (1334, 811, 1449, 868)
 
     # ce enhance
-    ce_enhance_button = (1587, 988, 1645, 1051)
+    ce_enhance_button = (1587, 988, 1715, 1051)
     ce_enhance_help = (640, 1014, 705, 1050)
     ce_target_box = (211, 520, 373, 687)
     ce_select_mode = (5, 319, 88, 411)
@@ -156,9 +140,9 @@ class Regions(_Regions):
 
     ce_select_items_box = (600, 300, 700, 400)
     ce_select_button = (1680, 980, 1777, 1040)
-    ce_select_start = (210, 590)
-    ce_select_middle = (1407, 590)
-    ce_select_end = (1407, 1025)
+    ce_select_start = (210, 800)
+    ce_select_middle = (1407, 800)
+    ce_select_end = (1407, 1040)
     ce_enhance_lv2 = (1253, 671, 1322, 717)
     ce_enhance_confirm = (1203, 855, 1316, 913)
     # from bag to drawer
@@ -190,7 +174,7 @@ class Regions(_Regions):
                            (925, 175, 973, 209), (1026, 175, 1074, 209)]  # All, 7 common class, extra, mix
     support_scrollbar_start = (1857, 280)
     support_scrollbar_end = (1857, 1047)
-    support_scrollbar_head = (1843, 280, 1873, 296)
+    support_scrollbar_head = (1848, 280, 1870, 296)
     support_ce = ((72, 489, 316, 537), (72, 791, 316, 838))  # 礼装位置
     support_ce_max = ((273, 524, 303, 552), (273, 825, 303, 854))  # 礼装满破的星星
     support_skill = ((1252, 463, 1577, 548), (1252, 764, 1577, 847))  # 技能整体外轮廓
@@ -205,22 +189,17 @@ class Regions(_Regions):
     support_refresh_confirm = (1110, 890)
     support_refresh = (1238, 160, 1318, 230)
     support_class_affinity = (1119, 160, 1201, 230)
-    support_scroll = ((1860, 520), (1860, 640), (760, 880))
 
-    team_start_action = (1655, 973, 1902, 1052)
+    team_start_action = (1690, 983, 1880, 1042)
     team_cloth = (20, 980, 263, 1054)  # with close icon inside
     team_cloth_button = (148, 986, 263, 1054)  # without cloth
 
     battle_master_avatar = (1706, 77, 1854, 189)
-    wave_num = (1293, 18, 1320, 54)
+    wave_num = (1298, 18, 1320, 54)
     enemies_all = (0, 0, 1080, 128)
-    enemies = ((360, 0, 480, 130), (720, 0, 840, 130), (0, 0, 120, 130))  # skill_to_enemies
-    dying_clicking_point = (960, 360)
-    skills = [
-        [(61, 823, 121, 908), (202, 823, 262, 908), (343, 823, 403, 908)],
-        [(539, 823, 599, 908), (680, 823, 740, 908), (821, 823, 881, 908)],
-        [(1017, 823, 1077, 908), (1158, 823, 1218, 908), (1299, 823, 1359, 908)]
-    ]
+    enemies = ((720, 10, 840, 130), (370, 10, 480, 130), (20, 10, 120, 130))  # skill_to_enemies
+    dying_clicking_point = (1200, 40)
+    skills = [[(63 + i * 476 + j * 140, 825, 120 + i * 476 + j * 140, 893) for j in range(3)] for i in range(3)]
     skill_targets_close = (1614, 195, 1678, 256)
     skill_to_target = ((490, 700), (970, 700), (1429, 700))
     master_skill = (1736, 440, 1841, 507)
@@ -244,8 +223,8 @@ class Regions(_Regions):
 
     # kizuna = (115, 251, 580, 305)  # 与从者的羁绊text
     kizuna = (186, 646, 205, 665)  # 羁绊点数第一格
-    finish_qp = (450, 900, 472, 940)
-    rewards_show_num = (1593, 115, 1718, 149)
+    rewards_qp = (450, 900, 472, 930)
+    rewards_show_num = (1593, 115, 1711, 149)
     rewards_items_outer = [[(233 + j * 206, 186 + i * 213, 409 + j * 206, 379 + i * 213) for j in range(0, 7)] for i in
                            range(0, 3)]
     rewards_items = [[(241 + j * 206, 196 + i * 213, 401 + j * 206, 290 + i * 213) for j in range(0, 7)] for i in
@@ -253,8 +232,8 @@ class Regions(_Regions):
     rewards_item1 = (454, 216, 623, 386)  # first dropped item rect
     rewards_rainbow = (1418, 18, 1442, 50)
     rewards_check_drop = [(0, 0, 0, 0), rewards_item1, rewards_rainbow]
-    finish_next = (1444, 980, 1862, 1061)
-    restart_quest_yes = (1122, 812, 1386, 829)
+    rewards_next = (1576, 980, 1750, 1061)
+    restart_quest_yes = (1122, 812, 1386, 879)
     # friend_point = (460, 810, 580, 880)
 
     # ============= fp gacha ================
@@ -274,6 +253,41 @@ class Regions(_Regions):
 
     gacha_arrow_left = (77, 539)
     gacha_arrow_right = (1850, 539)
+
+
+class RegionsJP(Regions):
+    bag_full_sell_button = (461, 659, 575, 720)
+    bag_full_enhance_button = (897, 664, 1018, 721)
+
+    menu_button = (1704, 955, 1852, 998)
+    menu_button_expand = (1704, 682, 1852, 725)
+    menu_enhance_button = (660, 850, 760, 930)
+    menu_gacha_button = (923, 854, 995, 918)
+    menu_shop_button = (1171, 856, 1237, 922)
+
+    rewards_qp = (448, 845, 477, 877)
+    rewards_show_num = (1593, 62, 1711, 92)
+    rewards_items_outer = [[(233 + j * 206, 132 + i * 213, 409 + j * 206, 325 + i * 213) for j in range(0, 7)] for i in
+                           range(0, 3)]
+    rewards_items = [[(241 + j * 206, 142 + i * 213, 401 + j * 206, 236 + i * 213) for j in range(0, 7)] for i in
+                     range(0, 3)]
+    rewards_item1 = (447, 142, 607, 236)  # first dropped item rect
+    rewards_rainbow = (1452, 16, 1459, 32)
+    rewards_check_drop = [(0, 0, 0, 0), rewards_item1, rewards_rainbow]
+    rewards_next = (1576, 920, 1750, 1001)
+
+    support_scrollbar_start = (1882, 294)
+    support_scrollbar_end = (1882, 1047)
+    support_scrollbar_head = (1873, 280, 1895, 296)
+
+    team_start_action = (1660, 975, 1850, 1034)
+
+    wave_num = (1323, 18, 1345, 54)
+    enemies_all = (0, 0, 1110, 128)
+    enemies = ((754, 10, 874, 130), (387, 10, 497, 130), (20, 10, 120, 130))  # skill_to_enemies
+    skills = [[(74 + i * 476 + j * 140, 832, 129 + i * 476 + j * 140, 897) for j in range(3)] for i in range(3)]
+
+    ce_enhance_button = (1599, 975, 1727, 1038)
 
 
 class ImageTemplates:
@@ -332,8 +346,8 @@ class ImageTemplates:
         self.gacha_fp_page: Optional[Image.Image] = None
         self.gacha_fp_confirm: Optional[Image.Image] = None
         self.gacha_fp_result: Optional[Image.Image] = None
-        self.gacha_fp_bag1_full: Optional[Image.Image] = None
-        self.gacha_fp_bag2_full: Optional[Image.Image] = None
+        self.gacha_fp_svt_full: Optional[Image.Image] = None
+        self.gacha_fp_ce_full: Optional[Image.Image] = None
         self.menu: Optional[Image.Image] = None
         self.ce_enhance_empty = None
         self.ce_select_target = None

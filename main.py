@@ -25,7 +25,7 @@ def start(cfg=None):
 
 # %%
 if __name__ == '__main__':
-    start_loop(lambda: start())
+    start_loop(lambda cfg=None: start(cfg))
 # %%
 if __name__ == '__main__' and is_interactive_mode():
     start_loop(lambda: start('data/config-jp.json'))

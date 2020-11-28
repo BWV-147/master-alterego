@@ -86,25 +86,26 @@ class BaseConfig(JsonSerializable):
 class Config(BaseConfig):
     def __init__(self, fp=None):
         super().__init__()
-        # ================= sys config =================
+        # ================= base config =================
         self.id = None
         self.is_jp = False  # difference between jp and cn server
         self.is_wda = False  # app run in real iOS device and served in macOS
-        self.wda_settings = {'url': None}  # default url http://localhost:8100 and other options for appium_settings
         # Attention: MAIN monitor is not always monitor 1.
         self.monitor = 1  # >=1, check sct.monitors to see monitor info, 0 is all monitors in one screenshot
         self.offset = (0, 0)  # xy offset relative to MAIN monitor's origin for mouse click
+        # ================= battle part =================
+        self.battle_name = 'default'
+        self.battles: Dict[str, BattleConfig] = {'default': BattleConfig()}
+        self.lottery = LotteryConfig()
+        self.fp_gacha = FpGachaConfig()
+        # ================= Other part ==================
+        self.wda_settings = {'url': None}  # default url http://localhost:8100 and other options for appium_settings
         self.alert_type = False  # bool: beep, str: ring tone, alert if supervisor found errors or task finish.
         self.manual_operation_time = 60 * 10  # seconds.
         self.www_host_port = None  # default [host='0.0.0.0', port=8080] to run www server. If None, not to run server
         self.need_admin = True
         self.hide_hotkey = ['alt', 'z']  # for MuMu Windows, "alt+z" to hide window. or "alt+x" for new MuMu
         self.switch_tab_hotkey = ['ctrl', 'tab']  # for MuMu Windows
-        # ================= battle part =================
-        self.battle_name = 'default'
-        self.battles: Dict[str, BattleConfig] = {'default': BattleConfig()}
-        self.lottery = LotteryConfig()
-        self.fp_gacha = FpGachaConfig()
         # ================= Email part ==================
         # make sure the security of password.
         self.mail_receiver = None

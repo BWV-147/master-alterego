@@ -60,7 +60,8 @@ class Master:
         # realtime member list, auto-update with order-change, but Arash/Chen Gong need to update manually.
         self.members = list('ABCDEF')
         self.T = ImageTemplates()
-        self.LOC = Regions()
+        # initiate inside BattleBase after pre_process
+        self.LOC: Optional[Regions] = None
         self.card_templates: Dict[Card, List[Image.Image]] = {}
         self.card_weights: Dict[Card, float] = {}
         self._wave_a = None

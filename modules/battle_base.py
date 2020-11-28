@@ -24,6 +24,7 @@ class BattleBase(BaseAgent):
         """
         # pre-processing
         self.pre_process(cfg)
+        self.master.LOC = self.LOC
         config.mail = config.battle.mail
         battle_func = getattr(self, config.battle.battle_func)
         battle_func(True)
@@ -96,7 +97,7 @@ class BattleBase(BaseAgent):
                         break
                     sleep(0.5)
             battle_func()
-            wait_targets(T.rewards, LOC.finish_qp, 0.5, clicking=LOC.finish_qp)
+            wait_targets(T.rewards, LOC.rewards_qp, 0.5, clicking=LOC.rewards_qp)
             click(LOC.rewards_show_num, lapse=1)
             # check reward_page has CE dropped or not
             dt = timer.lapse()
@@ -123,10 +124,10 @@ class BattleBase(BaseAgent):
                     return
                 else:
                     send_mail(f'{config.battle.craft_num}th craft dropped!!!', mail_level=MAIL_WARNING)
-                click(LOC.finish_next)
+                click(LOC.rewards_next)
             else:
                 config.count_battle(False)
-                click(LOC.finish_next)
+                click(LOC.rewards_next)
                 rewards.save(f"{png_fn}.png")
             # ready to restart a battle
             if finished_num % 30 == 0:

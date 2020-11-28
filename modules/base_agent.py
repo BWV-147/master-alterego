@@ -17,6 +17,7 @@ class BaseAgent:
 
     def pre_process(self, cfg):
         config.load(cfg)
+        self.LOC = RegionsJP() if config.is_jp else Regions()
         config.init_wda()
         check_sys_setting(config.need_admin, config.is_wda)
         if config.www_host_port is not None:

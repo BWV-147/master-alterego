@@ -45,7 +45,7 @@ class FpGacha(BaseAgent):
             if loops % 10 == 0:
                 logger.debug(f'fp gacha {loops}/{num}...')
             # wait_targets(T.fp_gacha_page, LOC.fp_gacha_logo, at=LOC.fp_gacha_point)
-            page_no = wait_which_target([T.gacha_fp_result, T.gacha_fp_bag2_full],
+            page_no = wait_which_target([T.gacha_fp_result, T.gacha_fp_ce_full],
                                         [LOC.gacha_fp_result_summon, LOC.bag_full_sell_button],
                                         clicking=LOC.gacha_fp_point, interval=0.05)
             if page_no == 0:
@@ -54,7 +54,7 @@ class FpGacha(BaseAgent):
                 config.update_time()
                 config.count_fp_gacha()
             else:
-                bag_no = wait_which_target([T.gacha_fp_bag1_full, T.gacha_fp_bag2_full], LOC.fp_bag_full_title)
+                bag_no = wait_which_target([T.gacha_fp_svt_full, T.gacha_fp_ce_full], LOC.fp_bag_full_title)
                 if bag_no == 0:
                     logger.info('servant bag full, make sure only show *LOW RARITY<=3* servants.')
                     click(LOC.fp_bag_full_sell_button)
