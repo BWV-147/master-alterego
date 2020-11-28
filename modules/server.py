@@ -7,6 +7,14 @@ To expose to public network, the following operations are needed.
    or NAT traversal tools(e.g. ngrok) to expose local web server.
 
 On windows, host="::" ony bind ipv6, and host="0.0.0.0" only bind ipv4.
+
+REST API: returned response format
+{
+    'body': '',
+    'success': true/false,
+    'msg': 'message'
+}
+
 """
 __all__ = ['app']
 
@@ -20,7 +28,7 @@ import threading
 from logging.handlers import RotatingFileHandler
 
 from PIL import Image
-from flask import Flask, request, Response, redirect, jsonify, abort, send_from_directory
+from flask import Flask, request, Response, redirect, abort, send_from_directory
 
 ROOT = os.getcwd()
 if ROOT.endswith('modules'):
@@ -54,6 +62,15 @@ for _logger in (werkzeug_logger, app.logger):  # type:logging.Logger
     _logger.addHandler(fh)
 
 
+# only wrap json response
+def wrap_response(content=None, success=True, msg=None):
+    return {
+        'success': success,
+        'body': content,
+        'msg': msg
+    }
+
+
 @app.route('/')
 def index():
     return redirect('/html/index.html')
@@ -72,8 +89,11 @@ def get_id():
 @app.route('/getLogList')
 def get_log_list():
     log_dir = 'logs'
-    filenames = [f for f in os.listdir(log_dir) if f.endswith('.log')]
-    return jsonify(filenames)
+    if not os.path.exists(log_dir):
+        filenames = []
+    else:
+        filenames = [f for f in os.listdir(log_dir) if f.endswith('.log')]
+    return wrap_response(filenames)
 
 
 @app.route('/getRecentLog')
@@ -84,24 +104,26 @@ def get_recent_log():
         log_num = 1000
     fp = os.path.join('logs', log_name)
     if not os.path.exists(fp):
-        return ''
+        return wrap_response(success=False, msg=f'No such file: {log_num}')
     with open(fp, 'r', encoding='utf8') as fd:
         lines = fd.readlines()
         text = ''.join(lines[-min(len(lines), log_num):])
-    return Response(text, mimetype='text/plain')
+    return wrap_response(text)
 
 
 @app.route('/getImageFolderTree')
 def get_image_folder_tree():
     tree = {}
     img_folder = os.path.join(ROOT, 'img')
+    if not os.path.exists(img_folder):
+        return wrap_response(None, False, 'Empty image folder')
     for dir_path, dir_names, filenames in os.walk(img_folder):
         key = os.path.relpath(os.path.realpath(dir_path), img_folder)
         if key == '.':
             key = ''
-        key = key.strip('\\/').replace('/', '\\')
+        key = key.strip('\\/').replace('\\', '/')
         tree[key] = {'files': sorted(filenames, reverse='_drops' in key), 'folders': sorted(dir_names)}
-    return jsonify(tree)
+    return wrap_response(tree)
 
 
 @app.route('/getFile')
@@ -117,7 +139,7 @@ def get_file():
         image = screenshot(monitor=monitor)
     else:
         filepath = os.path.join('img', filepath)
-        if not os.path.isfile(filepath):
+        if not os.path.isfile(os.path.abspath(filepath)):
             return abort(404)
         elif imghdr.what(filepath):
             image = Image.open(filepath)
@@ -128,7 +150,7 @@ def get_file():
 
 @app.route('/getTaskStatus')
 def get_task_status():
-    return repr(config.task_thread)
+    return wrap_response(repr(config.task_thread))
 
 
 @app.route('/shutdownTask')
@@ -140,65 +162,87 @@ def shutdown_task():
         if force == '1':
             kill_thread(config.task_thread)
             # actually, won't return since server is killed.
-            return f'Task has been terminated. Thread: {config.task_thread}'
+            return wrap_response(None, True, f'Task has been terminated. Thread: {config.task_thread}')
         else:
-            return 'Task run in main thread, check force stop to terminate it.'
+            return wrap_response(None, False, 'Task run in main thread, check force stop to terminate it.')
     elif config.task_thread and config.task_thread.is_alive():
         kill_thread(config.task_thread)
-        return f'Task has been terminated. Thread: {config.task_thread}'
+        return wrap_response(None, True, f'Task has been terminated. Thread: {config.task_thread}')
     else:
-        return f'No running task. Thread: {config.task_thread}'
+        return wrap_response(None, False, f'No running task. Thread: {config.task_thread}')
 
 
 @app.route('/putNewTask')
 def put_new_task():
     if config.task_thread and config.task_thread.is_alive():
-        return f'Task is still alive: {config.task_thread}'
+        return wrap_response(None, False, f'Task is still alive: {config.task_thread}')
     elif config.task_queue.full():
-        return f'Task already in queue. Try or check again later.'
+        return wrap_response(None, False, 'Task already in queue. Try or check again later.')
     else:
         config.task_queue.put_nowait(1)
         app.logger.info('put a new task to queue')
-        return f'Put a task into queue, check it later'
+        return wrap_response(None, False, 'Put a task into queue, check it later')
 
 
 @app.route('/toggleVisibility')
 def toggle_visibility():
     import pyautogui as pag
     if config.is_wda:
-        return 'invalid request for WDA', 403
+        return wrap_response(None, False, 'invalid request for WDA')
     else:
         pag.hotkey(*config.hide_hotkey)
-        return f'Toggle visibility: {config.hide_hotkey}'
+        return wrap_response(None, True, f'Toggle visibility: {config.hide_hotkey}')
 
 
 @app.route('/switchTab')
 def switch_tab():
     import pyautogui as pag
     if config.is_wda:
-        return 'Invalid request for WDA', 403
+        return wrap_response(None, False, 'invalid request for WDA')
     else:
         pag.hotkey(*config.switch_tab_hotkey)
-        return f'Switch Tab: {config.switch_tab_hotkey}'
+        return wrap_response(None, True, f'Switch Tab: {config.switch_tab_hotkey}')
+
+
+@app.route('/getConfigList')
+def get_config_list():
+    if not os.path.exists('data/'):
+        return wrap_response({}, False, 'No data folder')
+    return wrap_response({
+        'current': os.path.basename(config.fp),
+        'files': [fn for fn in os.listdir('data/') if fn.lower().endswith('.json')]
+    })
 
 
 @app.route('/configuration', methods=['GET', 'POST'])
 def configuration():
     if request.method == 'GET':
-        return json.dumps(config.to_json(), ensure_ascii=False)
+        config_file = request.args.get('file')
+        if config_file:
+            # set config file
+            fp = os.path.join('data/', config_file)
+            if os.path.exists(fp) and os.path.isfile(fp):
+                if config.task_thread and config.task_thread.is_alive():
+                    return wrap_response(None, False, 'Task is still alive')
+                config.load(fp)
+                return wrap_response(get_config_list()['body'], True, f'config is set to {os.path.basename(config.fp)}')
+            else:
+                return wrap_response(None, False, f'Invalid file arg: {config_file}')
+        else:
+            # get config content
+            return wrap_response(json.dumps(config.to_json(), ensure_ascii=False, indent=2))
     else:
+        # update config according uploaded content
         # don't directly save to config file, since there may be errors.
         data = request.get_data().decode('utf8')
         config.from_json(json.loads(data))
         config.save()
-        return json.dumps(config.to_json(), ensure_ascii=False)
+        return wrap_response(json.dumps(config.to_json(), ensure_ascii=False, indent=2), True, 'config updated')
 
 
 # %%
 if __name__ == '__main__':
     from util.base import check_sys_setting
-
-    # from util.config import config
 
     config.load()
     check_sys_setting(False)

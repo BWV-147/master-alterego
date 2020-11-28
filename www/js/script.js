@@ -9,6 +9,24 @@ $(document).ready(function () {
   })
   $('.footer-placeholder').html(`<footer class="text-muted">
     <div class="container">
+            <!--logs accordion-->
+            <div class="accordion" id="logsAccordion">
+                <div class="card">
+                    <div class="card-header" id="logsHeading">
+                        <h2 class="mb-0">
+                            <button class="btn btn-block text-left" type="button" data-toggle="collapse"
+                                    data-target="#logsCollapse" aria-expanded="true" aria-controls="logsCollapse">
+                                logs
+                            </button>
+                        </h2>
+                    </div>
+                    <div id="logsCollapse" class="collapse show" aria-labelledby="logsHeading">
+                      <div class="card-body">
+                          <pre id="taskStatus"></pre>
+                      </div>
+                    </div>
+                </div>
+            </div>
         <p>Hello World 2020!</p>
     </div></footer>`)
 })
@@ -32,19 +50,20 @@ function trimChar(string, chars = ' \n\t\r', pos = 0) {
   return string;
 }
 
-/**
- * Task related
- */
-function addTaskLog(msg) {
+
+function addLog(msg) {
   let $status = $('#taskStatus')
-  if ($status.length > 0) {
+  if ($status.length > 0 && msg !== null && msg !== undefined) {
     $status.text(`[${new Date().toLocaleString(undefined, {hour12: false})}] ${msg}\n` + $status.text())
   }
 }
 
+/**
+ * Task page
+ */
 function getTaskStatus() {
   $.get('/getTaskStatus', function (result) {
-    addTaskLog(result)
+    addLog(result['body'])
   })
 }
 
@@ -52,32 +71,43 @@ function shutdownTask() {
   let force = $('#forceTerminateCheck').is(':checked')
   $('#shutdownModal').modal('hide')
   $.get('/shutdownTask', {'force': force ? 1 : 0}, function (result) {
-    addTaskLog(result)
+    addLog(result['msg'])
   })
 }
 
 function putNewTask() {
   $.get('/putNewTask', function (result) {
-    addTaskLog(result)
+    addLog(result['msg'])
   })
 }
 
 function toggleVisibility() {
   $.get('/toggleVisibility', function (result) {
-    addTaskLog(result)
+    addLog(result['msg'])
   })
 }
 
 function switchTab() {
   $.get('/switchTab', function (result) {
-    addTaskLog(result)
+    addLog(result['msg'])
+  })
+}
+
+function setConfigFile(filename) {
+  $.get('/configuration', {'file': filename}, function (result) {
+    if (result['success']) {
+      $('#configDropdown').text(result['body']['current'])
+    } else {
+      alert('Cannot switch config: ' + result['msg'])
+    }
+    addLog(result['msg'])
   })
 }
 
 function pullConfig() {
   $.get('/configuration', function (result) {
-    $('#configEditor').val(JSON.stringify(JSON.parse(result), null, 2))
-    addTaskLog('pulled config')
+    $('#configEditor').val(result['body'])
+    addLog(result['msg'])
   })
 }
 
@@ -86,13 +116,12 @@ function pushConfig() {
   try {
     JSON.parse(data)
   } catch {
-    addTaskLog('Invalid json format')
+    addLog('Invalid json format')
   }
   $.post('/configuration', data, function (result) {
-    $('#configEditor').val(JSON.stringify(JSON.parse(result), null, 2))
-    addTaskLog('config updated')
+    $('#configEditor').val(result['body'])
+    addLog('config updated')
   })
-
 }
 
 /**
@@ -106,10 +135,11 @@ function pushConfig() {
 function downloadAndShowLog(logName, num = 0) {
   let logs = []
   $.get('/getRecentLog', {'name': logName, 'num': num}, function (result) {
-    if (result === '')
+    let logContent = result['body']
+    if (logContent === '')
       logs = [`There is no log in ${logName}.`]
     else
-      logs = result.trimEnd().split(/[\n\r]+/)
+      logs = logContent.trimEnd().split(/[\n\r]+/)
     $('#totalLogCount').text(logs.length)
     let perPage = 30,
       totalPages = Math.ceil(logs.length / perPage)
@@ -122,7 +152,7 @@ function refreshLog() {
   let logName = $('#dropdownLogs button').text()
   if (trimChar(logName) !== '......') {
     downloadAndShowLog(logName)
-    console.log('refresh log: ' + logName)
+    addLog('refresh log: ' + logName)
   }
 }
 
@@ -135,7 +165,6 @@ function refreshLog() {
  * @param {int} shownNum shown pagination button number,
  **/
 function createPagination(pageCount, curPage = -1, callback, shownNum = 10) {
-  // TODO: add 'reversed'
   // validation for params
   if (pageCount < shownNum) {
     shownNum = pageCount
@@ -245,13 +274,13 @@ function showLogsAtPage(data, index, perPage) {
  */
 function jumpToDirectory(path = '') {
   if (path === '.') path = ''
-  path = trimChar(path, '\\ ')
+  path = trimChar(path, '\\ /')
   window.location.hash = '#' + path
   curPath = path
   let folders = path.split(/[/\\]+/)
   let items = [`<li class="breadcrumb-item"><a data-path="" href="#">root</a></li>`]
   for (let i = 0; i < folders.length - 1; i++) {
-    let nodePath = folders.slice(0, i + 1).join('\\')
+    let nodePath = folders.slice(0, i + 1).join('/')
     items.push(`<li class="breadcrumb-item"><a data-path="${nodePath}" href="#${nodePath}">${folders[i]}</a></li>`)
   }
   items.push(`<li class="breadcrumb-item active" aria-current="page">${folders[folders.length - 1]}</li>`)
@@ -265,7 +294,7 @@ function listDir(data) {
   let treeNodes = []
   $('#fileStat').text(`  Total ${data.folders.length} folders, ${data.files.length} files.`)
   $.each(data.folders, function (index, value) {
-    treeNodes.push(`<a data-path="${curPath + '\\' + value}" class="list-group-item list-group-item-action">
+    treeNodes.push(`<a data-path="${curPath + '/' + value}" class="list-group-item list-group-item-action">
         <svg class="bi bi-folder" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
           <path d="M9.828 4a3 3 0 01-2.12-.879l-.83-.828A1 1 0 006.173 2H2.5a1 1 0 00-1 .981L1.546 4h-1L.5 3a2 2 0 012-2h3.672a2 2 0 011.414.586l.828.828A2 2 0 009.828 3v1z"/>
           <path fill-rule="evenodd" d="M13.81 4H2.19a1 1 0 00-.996 1.09l.637 7a1 1 0 00.995.91h10.348a1 1 0 00.995-.91l.637-7A1 1 0 0013.81 4zM2.19 3A2 2 0 00.198 5.181l.637 7A2 2 0 002.826 14h10.348a2 2 0 001.991-1.819l.637-7A2 2 0 0013.81 3H2.19z" clip-rule="evenodd"/>
@@ -273,7 +302,7 @@ function listDir(data) {
   })
   $.each(data.files, function (index, value) {
     treeNodes.push(
-      `<button data-path="${curPath + '\\' + value}" type="button" class="list-group-item list-group-item-action"
+      `<button data-path="${curPath + '/' + value}" type="button" class="list-group-item list-group-item-action"
             data-toggle="modal" data-target="#imageModal">${value}</button>`)
   })
   $('#dirTree').html(treeNodes.join(''))

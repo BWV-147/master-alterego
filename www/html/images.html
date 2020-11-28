@@ -68,12 +68,12 @@
   window.dirTreeData = {}
   let curPath = ''
   $.getJSON('/getImageFolderTree', function (data) {
-    window.dirTreeData = data
+    window.dirTreeData = data['body']
     // console.log(data)
     let _hash = window.location.hash
     if (_hash.startsWith('#'))
       _hash = _hash.slice(1)
-    jumpToDirectory(data.hasOwnProperty(_hash) ? _hash : '')
+    jumpToDirectory(data['body'].hasOwnProperty(_hash) ? _hash : '')
   })
   $('#searchInput').change(function () {
     onSearch($(this).val())

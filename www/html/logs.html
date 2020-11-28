@@ -87,7 +87,7 @@
 <script>
   $.getJSON('/getLogList', function (data) {
     let items = []
-    data.forEach(function (logName) {
+    data['body'].forEach(function (logName) {
       items.push(`<a class="dropdown-item" href="#${logName}" data-name="${logName}">${logName}</a>`)
     })
 

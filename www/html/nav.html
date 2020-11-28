@@ -21,14 +21,25 @@
             <li class="nav-item">
                 <a class="nav-link" href="/html/task.html">Task</a>
             </li>
-            <li class="nav-item active">
-                <span class="nav-link" id="curId"></span>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" id="configDropdown" role="button" data-toggle="dropdown"
+                   aria-haspopup="true" aria-expanded="false">
+                    Config
+                </a>
+                <div class="dropdown-menu" id="configMenu" aria-labelledby="configDropdown">
+                    <!--                    <a class="dropdown-item" href="#">iOS(config.json)</a>-->
+                </div>
             </li>
         </ul>
     </div>
 </nav>
 <script>
-    $.get('/getId',function(result){
-        $('#curId').text(result)
+  $.get('/getConfigList', function (data) {
+    $('#configDropdown').text(data['body']['current'])
+    let configHtml = []
+    $.each(data['body']['files'], function (i, file) {
+      configHtml.push(`<a class="dropdown-item" onclick="setConfigFile('${file}')">${file}</a>`)
     })
+    $('#configMenu').html(configHtml.join())
+  })
 </script>

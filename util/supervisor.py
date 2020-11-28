@@ -40,7 +40,7 @@ def supervise_log_time(thread, time_out=60, mail=None, interval=10, alert_type=N
                 kill_thread(thread)
             break
         # case 3: thread terminated but not finished task
-        if not config.task_finished and not config.task_thread.is_alive():
+        if not config.task_finished and config.task_thread and not config.task_thread.is_alive():
             logger.warning(f'thread terminated unexpectedly...')
             loops = -1
 
