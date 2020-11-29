@@ -13,6 +13,7 @@ class Lottery(BaseAgent):
         # pre-processing
         self.pre_process(cfg)
         config.mail = config.lottery.mail
+        self.LOC.relocate(config.lottery.location)
         self.T.read_templates(config.lottery.dir)
         config.T = self.T
         config.LOC = self.LOC

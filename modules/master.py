@@ -286,7 +286,6 @@ class Master:
                 for i_point in range(drag_point_num):
                     shot = screenshot()
                     y_peaks = search_peaks(shot.crop(LOC.support_team_column), support0.crop(LOC.support_team_icon))
-                    print(f'y_peaks={y_peaks}')
                     for y_peak in y_peaks:
                         y_offset = y_peak - (LOC.support_team_icon[1] - LOC.support_team_column[1])
                         matched = False

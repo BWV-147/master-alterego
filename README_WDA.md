@@ -62,6 +62,7 @@ Python version >=3.7, only 3.7 and 3.8 are tested.
       trust developer's profile in phone's settings(iPhone-Settings-General-Profiles & Device Management).
       - then run test again, Xcode project should be testing WDA now.
       - **you can also run test in terminal use `xcodebuild`**
+      - `xcodebuild -project WebDriverAgent.xcodeproj -scheme WebDriverAgentRunner -destination 'id=<id>' test`
 - in Terminal, run `iproxy LOCAL_PORT:DEVICE_PORT`(usually `iproxy 8100 8100`) to map your device's port to localhost
 - open any browser, visit `http://localhost:8100/status`, a json response about test and device info will be returned.
 
@@ -75,6 +76,6 @@ Check [README](./README.md) for details.
 
 ## For Later Running
 - connect iPhone to macOS with USB
-- open Xcode Project, select the correct scheme and destination device, run Test
-- in Terminal, run `iproxy 8100 8100`
+- run Xcode Test through Xcode.app or xcodebuild command
+- proxy device port to localhost, run `iproxy 8100 8100`
 - finally run python scripts

@@ -244,7 +244,8 @@ def wait_which_target(targets, regions, threshold=None, at=None, lapse=0.0, clic
         if res >= 0:
             return res
         if clicking is not None:
-            click(clicking, 0)
+            for _ in range(3):
+                click(clicking, 0)
         sleep(interval)
 
 

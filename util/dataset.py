@@ -25,6 +25,10 @@ class _Regions:
     _test_cn = (0, 0, 100, 100)
     _test_jp = (0, 0, 90, 90)
 
+    def __init__(self):
+        # can only relocate once
+        self._relocated = False
+
     @property
     def test(self):
         return self._test_jp if config.is_jp else self._test_cn
@@ -53,13 +57,18 @@ class _Regions:
         else:
             raise ValueError(f'elements must be numbers: {region}')
 
-    def relocate(self, box: Sequence):
+    def relocate(self, box: Sequence = None):
         """
         Recursively resize regions of original class attributes not `self`.
 
         :param box: new region located in screenshot, (x0,y0,x1,y1): 0 <= x0 < x1 < width, 0 <= y0 < y1 < height.
                      old box always use `self.__class__.box`
         """
+        if box is None or tuple(box) == self.box:
+            return
+        if self._relocated:
+            raise RuntimeError(f'{self.__class__.__name__} has already been relocated!')
+        self._relocated = True
         assert len(box) == 4, f'box must be length 4: {box}'
         self.width = int(box[2] - box[0])
         self.height = int(box[3] - box[1])
@@ -142,7 +151,7 @@ class Regions(_Regions):
     ce_select_button = (1680, 980, 1777, 1040)
     ce_select_start = (210, 800)
     ce_select_middle = (1407, 800)
-    ce_select_end = (1407, 1040)
+    ce_select_end = (1407, 1076)
     ce_enhance_lv2 = (1253, 671, 1322, 717)
     ce_enhance_confirm = (1203, 855, 1316, 913)
     # from bag to drawer

@@ -71,10 +71,10 @@ def drag(start: Sequence, end: Sequence, duration=1.0, down_time=1.0, up_time=0.
     start = apply_offset(get_center_coord(start), config.offset)
     end = apply_offset(get_center_coord(end), config.offset)
     if config.is_wda:
-        # yet, wda cannot swipe at a complex path, so down and up event must be done in oen drag event
+        # yet, wda cannot swipe at a complex path, and only down_time(=duration in .swipe()) can be set
         start = apply_wda_scale(start, config.wda_client.scale)
         end = apply_wda_scale(end, config.wda_client.scale)
-        config.wda_client.swipe(*start, *end, duration=duration)
+        config.wda_client.swipe(*start, *end, duration=down_time)
     else:
         pyautogui.moveTo(start[0], start[1])
         if down_time is not None:

@@ -224,6 +224,7 @@ class BattleConfig(BaseConfig):
         super().__init__()
         self.mail = MAIL_MUTE
         self.battle_func = None
+        self.location = None  # default to (0,0,1920,1080)
         self.num = 1  # max battle num once running, auto decrease
         self.finished = 0  # all finished battles sum, auto increase, don't edit
         self.check_drop = 1  # check dropped craft or item. 0-not check; 1-check 1st drop item; 2-check dropbox(rainbow)
@@ -248,6 +249,7 @@ class LotteryConfig(BaseConfig):
         super().__init__()
         self.mail = MAIL_MUTE
         self.dir = None
+        self.location = None  # default to (0,0,1920,1080)
         self.start_func = 'draw'  # draw->clean->sell
         self.num = 10  # lottery num running once, auto decrease
         self.finished = 1  # auto increase， don't edit
@@ -262,6 +264,7 @@ class FpGachaConfig(BaseConfig):
         super().__init__()
         self.mail = MAIL_MUTE
         self.dir = None
+        self.location = None
         self.num = 0
         self.finished = 0
         self.sell_num = 10

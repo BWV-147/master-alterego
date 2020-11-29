@@ -92,19 +92,6 @@ capture('net_error')
 # %% for hunting
 capture('bag_full_alert')
 
-# %% ---------- battle extra parts ----------
-capture('cards4')
-# %%
-capture('cards5')
-# %%
-capture('cards6')
-# %%
-capture('cards7')
-# %%
-capture('cards8')
-# %%
-capture('cards9')
-
 # %% -------------- lottery part --------------
 capture('lottery_initial')
 # %%
@@ -148,8 +135,10 @@ capture('gacha_fp_page')
 capture('gacha_fp_confirm')
 # %%
 capture('gacha_fp_result')
-# %%
-capture('gacha_fp_bag2_full')
+# %%-
+capture('gacha_fp_svt_full')
+# %%-
+capture('gacha_fp_ce_full')
 # %%
 capture('ce_enhance_empty')
 # %%
@@ -162,8 +151,6 @@ capture('ce_items_selected')
 capture('ce_enhance_page')
 # %%
 capture('ce_enhance_confirm')
-# %%
-capture('gacha_fp_bag1_full')
 # %%
 capture('bag_unselected')
 # %%

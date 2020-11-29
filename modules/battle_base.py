@@ -26,6 +26,7 @@ class BattleBase(BaseAgent):
         self.pre_process(cfg)
         self.master.LOC = self.LOC
         config.mail = config.battle.mail
+        self.LOC.relocate(config.battle.location)
         battle_func = getattr(self, config.battle.battle_func)
         battle_func(True)
         config.T = self.T

@@ -14,6 +14,7 @@
   label xxx
   ```
 - OS:
+    - **IMPORTANT**: full screen display won't be adapted, valid render region must be **16:9**
     - Windows + Android or iOS emulator
         - keep running at foreground, usually fullscreen
     - macOS + Android emulator (not tested)

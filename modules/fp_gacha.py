@@ -13,6 +13,7 @@ class FpGacha(BaseAgent):
         # pre-processing
         self.pre_process(cfg)
         config.mail = config.fp_gacha.mail
+        self.LOC.relocate(config.fp_gacha.location)
         self.T.read_templates(config.fp_gacha.dir)
         config.T = self.T
         config.LOC = self.LOC
@@ -59,9 +60,6 @@ class FpGacha(BaseAgent):
                     logger.info('servant bag full, make sure only show *LOW RARITY<=3* servants.')
                     click(LOC.fp_bag_full_sell_button)
                     self.sell(config.fp_gacha.sell_num, 1, 4)
-                    wait_targets(T.gacha_fp_result, LOC.gacha_fp_result_summon)
-                    logger.debug('fp gacha will start in 5 secs, don\'t move mouse now')
-                    time.sleep(5)
                 else:
                     logger.info('CE bag full, make sure only show *LOW RARITY<=2* CE.')
                     click(LOC.fp_bag_full_enhance_button)
@@ -75,9 +73,11 @@ class FpGacha(BaseAgent):
                         if match_targets(shot, T.gacha_quartz_page, LOC.gacha_quartz_logo):
                             click(LOC.gacha_arrow_left)
                         elif match_targets(shot, T.gacha_fp_page, LOC.gacha_fp_logo):
-                            logger.debug('back to fp gacha page')
+                            logger.debug('back to fp gacha page, will start in 3 secs, don\'t move mouse now')
+                            time.sleep(3)
                             break
                 else:
+                    # to make sure in fp_gacha rather quartz gacha, start gacha after once manual gacha in manual mode
                     wait_targets(T.gacha_fp_result, [LOC.gacha_fp_logo, LOC.gacha_fp_result_summon])
         config.mark_task_finish()
 
@@ -111,6 +111,7 @@ class FpGacha(BaseAgent):
             wait_targets(T.ce_enhance_page, LOC.ce_target_box, at=LOC.ce_select_items_box)
             wait_targets(T.ce_items_unselected, LOC.ce_select_button)
             drag(LOC.ce_select_start, LOC.ce_select_end, 0.5, 0.5, 0.2, 0)
+            sleep(0.3, 1)
             # TODO: verify it
             # drag(LOC.ce_select_start, LOC.ce_select_middle, 0.5, 0.5, None, 0)
             # drag(LOC.ce_select_middle, LOC.ce_select_end, 0.1, None, 0.2)
