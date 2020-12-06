@@ -8,6 +8,8 @@ img/
 *.lock
 /**/*.json
 /test*.*
+# the file is include in git, bug ignore all changes forever
+/battles_local.py
 
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio and WebStorm
 # Reference: https://intellij-support.jetbrains.com/hc/en-us/articles/206544839

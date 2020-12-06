@@ -3,6 +3,7 @@ Master class
 additional, Card class included.
 """
 import contextlib
+import enum
 
 from util.addon import *
 from util.autogui import *
@@ -30,14 +31,15 @@ class Card:
     def color(self):
         return self._color
 
-    def get_color_string(self):
+    @property
+    def color_string(self):
         return ['NP', 'Quick', 'Arts', 'Buster', '?'][self.color]
 
     def __repr__(self):
-        return f'{self.__class__.__name__}({self._svt}, {self.get_color_string()}, {self.loc})'
+        return f'{self.__class__.__name__}({self._svt}, {self.color_string}, {self.loc})'
 
     def __hash__(self):
-        return hash(f'{self.__class__.__name__}({self._svt}, {self.get_color_string()})')
+        return hash(f'{self.__class__.__name__}({self._svt}, {self.color_string})')
 
     def __eq__(self, other):
         if type(other) == type(self):
@@ -52,6 +54,13 @@ class Card:
             if card.svt == svt and card.color == color:
                 locs.append(i)
         return locs
+
+
+class AttackMode(enum.Enum):
+    damage = 1
+    alter = 2
+    gaining_np = 3
+    xjbd = 4
 
 
 class Master:
@@ -97,27 +106,31 @@ class Master:
 
         :param svt: svt name
         :param fp: json file path. Json file and images should be in the same folder.
-                format: {"svt": {"NP/Quick/Arts/Buster":"k1,1,k2,2,k3,3"}}.
-                in which "k1,1,..." is serials of (img, loc).
-                default `img/share/{device}/cards.json`
+                default `img/share/{device}/cards/cards.json`.
+                two equivalent format (here TYPE=NP/Buster/Arts/Quick):
+                - {"svt": {"TYPE":"a1-1,a2-2,a3-3"}}.
+                - {"svt": {"prefix":"a","TYPE":"1-1,2-2,3-3"}}.
+                in which "a1-1,..." is serials of (img, loc).
         :param key: svt key in json, default is `svt`
         :return:
         """
         import json
         key = key or svt
-        fp2 = f'img/share/{fp}/cards.json'
+        fp2 = f'img/share/{fp}/cards/cards.json'
         if not os.path.exists(fp) and os.path.exists(fp2):
             fp = fp2
         _folder = os.path.dirname(os.path.abspath(fp))
         data: Dict[str, str] = json.load(open(fp, encoding='utf8'))[key]
+        prefix = data.get('prefix', '')
         params = []
         for card in ('NP', 'Quick', 'Arts', 'Buster'):
             params.append([])
-            pair_str = data[card]
-            pairs = pair_str.split(',') if pair_str else []
-            assert len(pairs) % 2 == 0, f'cards format should be (img1, loc1, ...): \n({card}) {pair_str}'
-            for i in range(len(pairs) // 2):
-                params[-1].append((pairs[2 * i], int(pairs[2 * i + 1])))
+            pairs_str = data[card]
+            for pair in pairs_str.split(','):
+                img, loc = pair.split('-')
+                img = prefix + img
+                loc = int(loc)
+                params[-1].append([img, loc])
         self.set_cards(svt, *params, images=ImageTemplates(_folder))
 
     def set_card_weight(self, weights: Union[Sequence, Dict[str, Union[float, List]]], color_weight: str = 'QAB'):
@@ -471,14 +484,13 @@ class Master:
                     break
         return cards, np_cards
 
-    def auto_attack(self, nps: Union[List[int], int] = None, mode='dmg', parse_np=False, allow_unknown=False,
-                    no_play_card=False, buster_first=False):
+    def auto_attack(self, nps: Union[List[int], int] = None, mode=AttackMode.damage, parse_np=False,
+                    allow_unknown=False, no_play_card=False, buster_first=False):
         """
-        TODO: add buster first params.
 
         :param parse_np:
         :param nps:
-        :param mode: dmg/xjbd/alter
+        :param mode: see `AttackMode`
         :param allow_unknown: if parse cards failed(more than 5s), just chose cards[1,2,3]
         :param no_play_card: if True, return chosen_cards but no to play cards automatically.
         :param buster_first:
@@ -510,8 +522,8 @@ class Master:
             self.play_cards(chosen_cards)
         return chosen_cards
 
-    def xjbd(self, target, regions, mode='dmg', turns=100, allow_unknown=False, nps=None):
-        # type:(Union[Image.Image,Sequence[Image.Image]],Sequence,str,int,bool,Union[int,Sequence])->List[List]
+    def xjbd(self, target, regions, mode=AttackMode.damage, turns=100, allow_unknown=False, nps=None):
+        # type:(Union[Image.Image,Sequence[Image.Image]],Sequence,AttackMode,int,bool,Union[int,Sequence])->List[List]
         cur_turn = 0
         turn_cards = []
         while cur_turn < turns:
@@ -608,27 +620,26 @@ class Master:
                          f' nps={self.str_cards(np_cards)}', extra=LOG_TIME)
         return cards, np_cards
 
-    def choose_cards(self, cards, np_cards, nps=None, mode='dmg', buster_first=False):
-        # type:(Dict[int,Card],Dict[int,Card],Union[List[int],int],str,bool)->List[Card]
+    def choose_cards(self, cards, np_cards, nps=None, mode=AttackMode.damage, buster_first=False):
+        # type:(Dict[int,Card],Dict[int,Card],Union[List[int],int],AttackMode,bool)->List[Card]
         """
         :param cards:loc 1~5 {loc+1:svt*10+color}
         :param np_cards:
         :param nps: chosen nps to attack (6~8).
-        :param mode: dmg,np
+        :param mode:
         :param buster_first:
         :return: locations of chosen cards
         """
         if len(cards) < 5:
             logger.warning(f'in choose_cards: cards count less then 5! {cards}')
-        mode = mode.lower()
         nps = convert_to_list(nps)
         chosen_nps = [np_cards.get(_np, Card(f'{Card.UNKNOWN}{_np}', 0, _np)) for _np in nps]
-        if mode == 'xjbd':
+        if mode == AttackMode.xjbd:
             s_cards = sorted(cards.values(), key=lambda _c: _c.loc)
             chosen_cards = s_cards[0:3]
         else:
             s_cards = sorted(cards.values(), key=lambda _c: self.card_weights.get(_c, 0))
-            if mode == 'dmg':
+            if mode == AttackMode.damage:
                 np_num = len(chosen_nps)
                 if np_num > 0:
                     chosen_cards = s_cards[-(3 - np_num):] + list(reversed(s_cards[0:np_num + 2]))
@@ -638,7 +649,7 @@ class Master:
                             s_cards[i], s_cards[-3] = s_cards[-3], s_cards[i]
                             break
                     chosen_cards = s_cards[-3:]
-            elif mode == 'alter':
+            elif mode == AttackMode.alter:
                 s_cards.reverse()
                 chosen_cards = [s_cards.pop(0)]
                 for i in range(2):

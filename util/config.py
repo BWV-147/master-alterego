@@ -1,4 +1,4 @@
-__all__ = ['Config', 'config', 'MAIL_MUTE', 'MAIL_DEBUG', 'MAIL_INFO', 'MAIL_WARNING']
+__all__ = ['Config', 'config', 'MAIL_MUTE', 'MAIL_DEBUG', 'MAIL_INFO', 'MAIL_WARNING', 'MAIL_CRITICAL']
 
 import json
 import os
@@ -13,6 +13,7 @@ MAIL_MUTE = 0
 MAIL_DEBUG = 1
 MAIL_INFO = 2
 MAIL_WARNING = 3
+MAIL_CRITICAL = 4
 
 
 class JsonSerializable:
@@ -125,7 +126,7 @@ class Config(BaseConfig):
         self.task_finished = False  # all battles finished, set to True before child process exist.
         self.task_thread: Optional[threading.Thread] = None
         self.task_queue = Queue(1)
-        self.temp = {}  # save temp vars at runtime
+        self.temp = {'click_xy': (0, 0)}  # save temp vars at runtime
 
         self._ignored = ['mail', 'fp', 'T', 'LOC', 'log_time', 'wda_client', 'task_finished', 'task_thread',
                          'task_queue', 'temp']
@@ -156,6 +157,9 @@ class Config(BaseConfig):
     @property
     def battle(self):
         return self.battles[self.battle_name]
+
+    def initiate(self):
+        self.init_wda()
 
     def init_wda(self):
         if self.is_wda:

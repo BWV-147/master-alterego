@@ -78,6 +78,8 @@ def _fix_length(images: Union[Image.Image, Sequence[Image.Image]], regions: Sequ
     # fix to equal length of images and regions
     if isinstance(images, Image.Image):
         images = [images]
+    # if images is None:
+    #     images = [None]
     images = list(images)
     if regions is None:
         regions = [None] * len(images)

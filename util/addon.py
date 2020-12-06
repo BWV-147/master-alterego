@@ -5,7 +5,8 @@ __all__ = [
     'raise_alert',
     'kill_thread',
     'threading',
-    'os'
+    'os',
+    'check_sys_setting'
 ]
 
 import ctypes
@@ -22,6 +23,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 import numpy
+import wda  # noqa
 
 if 'PYGAME_HIDE_SUPPORT_PROMPT' not in os.environ:
     os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
@@ -175,8 +177,6 @@ def raise_alert(alert_type=None, loops=5, wait=True):
 
 
 # %% system
-
-
 def kill_thread(thread: threading.Thread):
     """
     Support killing thread both in terminal and interactive console.
@@ -205,3 +205,54 @@ def kill_thread(thread: threading.Thread):
     while thread.is_alive():
         time.sleep(0.01)
     logger.info(f'{friendly_name} have been killed!')
+
+
+def check_sys_setting(check_admin=True, check_wda=False):
+    if check_wda is True:
+        # WDA+iOS real device, check in config.init_wda()
+        if config.is_wda:
+            client = config.wda_client = wda.Client(config.wda_settings.get('url', None))
+            try:
+                # quality:
+                # 0-max(time is wasted to transfer large image),
+                # 1-middle,
+                # 2-lowest, may not clear enough
+                # once changed the quality value, image templates should be updated
+                print(f"window size = {client.window_size()}")
+                print(f"screenshot size = {client.screenshot().size}")
+                print(f"scale = {client.scale}")
+                print(f'WDA connected, current app: {client.app_current()["bundleId"]}')
+                default_settings = client.appium_settings()
+                settings = {k: v for k, v in config.wda_settings.items() if k in default_settings}
+                if settings:
+                    print(f'set WDA: {settings}')
+                    print(client.appium_settings(settings))
+            except Exception as e:
+                print(f'Error:\n {e}')
+                raise EnvironmentError(f'WebDriverAgent is not configured properly!')
+
+    if sys.platform == 'win32':
+        # Android/iOS emulator in Windows
+        # check admin permission & set process dpi awareness
+        # please run cmd/powershell or Pycharm as administrator.
+        from init import initial
+        initial()
+        if ctypes.windll.shell32.IsUserAnAdmin() == 0:
+            if check_admin:
+                print('[Emulator] Please run cmd/Pycharm as admin to click inside emulators with admin permission.')
+                # To run a new process as admin, no effect in Pycharm's Python Console mode.
+                # print('applying admin permission in a new process, and no effect when in console mode.')
+                # ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, __file__, None, 1)
+                raise PermissionError('Please run as administrator!')
+            else:
+                print('Running without admin permission.\n'
+                      'Operations (e.g. click) within admin programs will take no effects!')
+        else:
+            # print('already admin')
+            pass
+    elif sys.platform == 'darwin':
+        # Android emulator in macOS
+        print('[Android Emulators] For the app who is running the script(PyCharm/Terminal/...), '
+              'two permissions are required:\n'
+              '   "Accessibility" and "Screen Recording" inside "System Preferences/Security & Privacy/"\n',
+              file=sys.stderr)

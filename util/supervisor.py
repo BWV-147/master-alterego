@@ -3,12 +3,10 @@ from .autogui import *
 from .log import *
 
 
-def supervise_log_time(thread, time_out=60, mail=None, interval=10, alert_type=None, alert_loops=15):
-    # type: (threading.Thread,float,int,float,bool,int)->None
+def supervise_log_time(thread, time_out=60, interval=10, alert_type=None, alert_loops=15):
+    # type: (threading.Thread,float,float,bool,int)->None
     assert thread is not None, thread
     config.task_thread = thread
-    if mail is None:
-        mail = config.mail
     if alert_type is None:
         alert_type = config.alert_type
 
@@ -59,10 +57,21 @@ def supervise_log_time(thread, time_out=60, mail=None, interval=10, alert_type=N
         # case 5: task alive and need re-login after 3am in jp server
         # if match menu button, click save_area until match quest1234, click 1234
         if callable(config.battle.login_handler):
+            logger.warning('Refresh login in jp server around 3am')
             if match_targets(screenshot(), T.quest, LOC.menu_button):
                 config.battle.login_handler()
 
-        # case 6: task alive but unrecognized error - waiting user to handle (in 2*loops seconds)
+        # case 6: svt status window is popped unexpectedly when execute svt skill(actually not executed yet)
+        if T.svt_status_window is not None:
+            if match_targets(screenshot(), T.svt_status_window, LOC.svt_status_window_close):
+                screenshot().save(f'img/svt_status_window_error_{time.time()}.png')
+                xy = config.temp.get('click_xy', (0, 0))  # skill location last clicked
+                logger.warning(f'Servant status window is popped unexpectedly! Re-click at {xy}')
+                click(LOC.svt_status_window_close, 2)
+                click(xy)
+                config.update_time(30)
+
+        # case 7: task alive but unrecognized error - waiting user to handle (in 2*loops seconds)
         if loops == alert_loops:
             logger.warning(f'Something wrong, please solve it, or it will be force stopped...\n'
                            f' - thread  alive: {thread.is_alive()}.\n'
@@ -87,7 +96,7 @@ def supervise_log_time(thread, time_out=60, mail=None, interval=10, alert_type=N
                       f' - current  time: {time.asctime()}\n' \
                       f' - last log time: {time.asctime(time.localtime(config.log_time))}\n' \
                       f' - over time: {time.time() - config.log_time:.2f} secs (timeout={time_out}).\n'
-            send_mail(err_msg, subject=f'[{thread.name}]Went wrong!', mail_level=MAIL_WARNING)
+            send_mail(err_msg, subject=f'[{thread.name}]Went wrong!', mail_level=MAIL_CRITICAL)
             break
     raise_alert(alert_type, loops=10)
     logger.info('exit supervisor.')

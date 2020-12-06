@@ -52,6 +52,7 @@ For WDA+iOS users, you need an Apple developer account to deploy WDA to your dev
  - [appium/WebDriverAgent](https://github.com/appium/WebDriverAgent)
  - [python-wda](https://github.com/openatx/facebook-wda)
  - some blogs, appium test kit is not required:
+    - https://github.com/appium/appium-xcuitest-driver/blob/master/docs/real-device-config.md
     - https://www.jianshu.com/p/8be4718ee179
     - https://testerhome.com/topics/8375
     - https://blog.csdn.net/bibi1003/article/details/87182731
@@ -64,12 +65,14 @@ For WDA+iOS users, you need an Apple developer account to deploy WDA to your dev
 **WDA Orientation**
 - try set screenshotOrientation to portrait or landscapeLeft/Right...
 
+**Xcode certification**
+- test failed because of security: trust profile in Settings-General-Profiles
+- signing certificate will be expired in 6 days for free developer account's,
+ restart Xcode and signing again to refresh
+- access security of keychains for new generated certificate
 
 ## TODO
-- change config file on served webpage
 - kizuna->clicking->rewards, kizuna page should be optional, and add rewards-init page
 - add param to check master cloth at team page
 - play card check: no floating if checked
-- move supervisor from main thread to child thread
-- save more than one battle in config.battles{battle_name:battle}, then specific battle_name
 - capture android emulator's screenshot directly rather take windows' screen.

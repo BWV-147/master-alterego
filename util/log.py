@@ -50,7 +50,7 @@ def color_extra(color: str, extra: dict = None):
 
 
 _date_fmt = "%m-%d %H:%M:%S"
-_fmt = '{asctime} - {filename:<11.11s}[line:{lineno:>3d}] - {levelname:<5s}: [{threadName}] {message}'
+_fmt = '{asctime} - {filename:<11.11s}[line:{lineno:>3d}] - {levelname:<5s}: [{threadName}] {message:.2000s}'
 LOG_FORMATTER = logging.Formatter(style='{', fmt=_fmt, datefmt=_date_fmt)
 COLOR_FORMATTER = ColorFormatter(style='{', fmt=_fmt, datefmt=_date_fmt)
 

@@ -2,40 +2,69 @@
 from init import initial
 
 initial()
+
 # %%
 from util.autogui import *
+from util.addon import check_sys_setting
+import matplotlib.pyplot as plt
+
+if __name__ == '__main__' and not is_interactive_mode():
+    raise EnvironmentError("Don't run the script directly")
 
 check_sys_setting(False)
 config.load('data/config.json')
-config.init_wda()
+config.initiate()
 
 # %%
 base_path: Optional[str] = None
 
 
 # %%
-def capture(fn: str, _base=None):
+def capture(fn: str = None, _base: str = None):
     # pyautogui.hotkey('alt', 'tab')
-    # avoid running template.py directly
-    assert (_base or base_path) is not None
+    _base = _base or base_path
     time.sleep(0.1)
     t0 = time.time()
-    full_fp = os.path.join(_base or base_path, fn + '.png')
     img = screenshot()
-    if os.path.exists(full_fp):
-        print(f'! Replace: "{full_fp}"', end='')
-    else:
-        print(f'   Save  : "{full_fp}" saved', end='')
-    print(f'\t\t{time.time() - t0:.4f} sec')
-    img.save(full_fp)
+    plt.figure('screenshot')
+    plt.imshow(img)
+    plt.xticks([])
+    plt.yticks([])
+    plt.axis('off')
+    plt.show()
+    if fn and _base is not None:
+        full_fp = os.path.join(_base or base_path, fn + '.png')
+        if os.path.exists(full_fp):
+            print(f'! Replace: "{full_fp}"', end='')
+        else:
+            print(f'   Save  : "{full_fp}" saved', end='')
+        print(f'\t\t{time.time() - t0:.4f} sec')
+        img.save(full_fp)
     # pyautogui.hotkey('alt', 'tab')
 
 
-# %%
-def save_rewards(quest_name):
-    fn = f'img/_drops/{quest_name}/rewards-{quest_name}-{time.strftime("%m%d-%H%M")}.png'
-    print(f'Save "{fn}"')
-    screenshot().save(fn)
+def save_rewards(quest_name: str = None, drop: int = None):
+    plt.figure('rewards')
+    img = screenshot()
+    if quest_name:
+        fn = f'img/_drops/{quest_name}/rewards-{quest_name}-{time.strftime("%m%d-%H%M")}'
+        fn = fn + (f'-drop{drop}.png' if drop else '.png')
+        print(f'Save "{fn}"')
+        img.save(fn)
+    plt.show()
+
+
+def compare(fp1, fp2, region, dx=0, dy=0, dw=0, dh=0):
+    plt.figure('compare', clear=True)
+    m1 = Image.open(fp1)
+    m2 = Image.open(fp2)
+    plt.subplot(1, 2, 1)
+    plt.imshow(m1.crop(region))
+    plt.subplot(1, 2, 2)
+    region2 = [region[0] + dx, region[1] + dy, region[2] + dx + dw, region[3] + dy + dh]
+    plt.imshow(m2.crop(region2))
+    print(f'{region}\n{tuple(region2)}')
+    plt.show()
 
 
 # %% ------------- battle part --------------
@@ -54,6 +83,8 @@ capture('team')
 capture('wave1a')
 # %% !!!
 capture('skill_targets')
+# %% !!!
+capture('svt_status_window')
 # %% !!!
 capture('wave1b')
 # %% !!!

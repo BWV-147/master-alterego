@@ -1,7 +1,7 @@
 """Basic functions or classes, should be independent of others"""
 import argparse
-import ctypes
 import sys
+import threading
 import time
 from typing import List, Tuple, Union, Dict, Callable, Sequence, Optional  # noqas
 
@@ -79,37 +79,31 @@ def is_interactive_mode():
     return False
 
 
-def check_sys_setting(admin=True, wda=False):
-    if sys.platform == 'win32':
-        # Android/iOS emulator in Windows
-        # check admin permission & set process dpi awareness
-        # please run cmd/powershell or Pycharm as administrator.
-        from init import initial
-        initial()
-        if ctypes.windll.shell32.IsUserAnAdmin() == 0:
-            if admin:
-                print('Please run cmd/Pycharm as admin to click inside programs with admin permission(e.g. MuMu).')
-                # To run a new process as admin, no effect in Pycharm's Python Console mode.
-                # print('applying admin permission in a new process, and no effect when in console mode.')
-                # ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, __file__, None, 1)
-                raise PermissionError('Please run as administrator!')
-            else:
-                print('Running without admin permission.\n'
-                      'Operations (e.g. click) within admin programs will take no effects!')
-        else:
-            # print('already admin')
-            pass
-    elif wda is True:
-        # WDA+iOS real device, check in config.init_wda()
-        pass
-    elif sys.platform == 'darwin':
-        # Android emulator in macOS
-        print('Allow the app(PyCharm/Terminal/...) to control your computer '
-              'in "System Preferences/Security & Privacy/Accessibility",\n'
-              'or mouse events will take no effects!', file=sys.stderr)
-        pass
-    else:
-        raise EnvironmentError(f'Unsupported system: {sys.platform}. please run in windows/macOS.')
+def catch_exception(func):
+    """Catch exception then print error and traceback to logger.
+
+    Decorator can be applied to multi-threading but multi-processing
+    """
+    from .log import logger
+
+    def catch_exception_wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except KeyboardInterrupt:
+            raise
+        except:  # noqas
+            s = f'=== Error in {threading.current_thread()}, {func} ===\n'
+            if args:
+                s += f'args={str(args):.200s}\n'
+            if kwargs:
+                s += f'kwargs={str(kwargs):.200s}\n'
+            logger.error(s, exc_info=sys.exc_info())
+
+    return catch_exception_wrapper
+
+
+def datetime_str():
+    return time.strftime("%m%d-%H%M")
 
 
 class Timer:

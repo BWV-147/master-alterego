@@ -15,9 +15,7 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
 
     <!-- Favicons -->
-    <link rel="icon"
-          href="https://img.icons8.com/ultraviolet/40/000000/binoculars.png"
-          type="image/png">
+    <link rel="icon" href="https://img.icons8.com/ultraviolet/40/000000/binoculars.png" type="image/png">
 
     <meta name="theme-color" content="#563d7c">
 
@@ -32,33 +30,32 @@
     <!-- Main jumbotron for a primary marketing message or call to action -->
     <div class="" style="padding-top: 4rem">
         <div class="container">
-            <div class="text-center ">
+            <div class="text-center">
                 <button class="btn btn-primary" id="refreshScreenshotBtn">Refresh Screenshot</button>
                 <button class="btn btn-primary" id="putNewTaskBtn" onclick="putNewTask()">New Task</button>
                 <button class="btn btn-primary" id="toggleVisibilityBtn" onclick="toggleVisibility()">Show/Hide</button>
                 <button class="btn btn-primary" id="switchTabBtn" onclick="switchTab()">Switch Tab</button>
-                <div id="monitorGroup">
-                    <b>Monitor</b>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="inlineRadioOptions" id="monitorDefaultRadio"
-                               value="" checked>
-                        <label class="form-check-label" for="monitorDefaultRadio">default</label>
-                    </div>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="inlineRadioOptions" id="monitor0Radio"
-                               value="0">
-                        <label class="form-check-label" for="monitor0Radio">all</label>
-                    </div>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="inlineRadioOptions" id="monitor1Radio"
-                               value="1">
-                        <label class="form-check-label" for="monitor1Radio">1</label>
-                    </div>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="inlineRadioOptions" id="monitor2Radio"
-                               value="2">
-                        <label class="form-check-label" for="monitor2Radio">2</label>
-                    </div>
+                <div class="row justify-content-center align-items-center">
+                     <span class="form-inline">
+                        <label class="my-1 mr-sm-2" for="monitorSelect">Monitor</label>
+                        <select class="custom-select my-1 mr-sm-2" id="monitorSelect">
+                            <option selected value="">default</option>
+                            <option value="0">all</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                        </select>
+                    </span>
+                    <span class="form-inline">
+                        <label class="my-1 mr-sm-2" for="refreshIntervalSelect">Auto Refresh</label>
+                        <select class="custom-select my-1 mr-sm-2" id="refreshIntervalSelect">
+                            <option selected value="0">Off</option>
+                            <option value="1000">1s</option>
+                            <option value="2000">2s</option>
+                            <option value="3000">3s</option>
+                            <option value="4000">4s</option>
+                            <option value="5000">5s</option>
+                        </select>
+                    </span>
                 </div>
             </div>
             <div style="padding-top: 5px">
@@ -71,11 +68,23 @@
 </main>
 <script>
   let monitor = null
-  $('#monitorGroup').find('input').click(function () {
+  $('#monitorSelect').on('change', function () {
     monitor = $(this).val()
   })
   $('#refreshScreenshotBtn').click(function () {
     $('#screenshot').attr('src', `/getFile?path=screenshot&mon=${monitor}&time=${new Date().getTime()}`)
+  })
+  let autoRefreshClock = 0;
+  $('#refreshIntervalSelect').on('change', function () {
+    let interval = Number.parseFloat($(this).val())
+    console.log(`select interval ${interval} milliseconds`)
+    clearInterval(autoRefreshClock)
+    if (interval > 0) {
+      autoRefreshClock = setInterval(function () {
+        $('#refreshScreenshotBtn').click()
+      }, interval)
+      console.log(`clock=${autoRefreshClock}`)
+    }
   })
 </script>
 <div class="footer-placeholder"></div>

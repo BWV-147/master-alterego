@@ -12,6 +12,7 @@ class BattleBase(BaseAgent):
         self.T = self.master.T
         self.LOC = self.master.LOC
 
+    @catch_exception
     def start(self, supervise=True, cfg=None, force_jump=False):
         """
         Start battle.
@@ -104,7 +105,7 @@ class BattleBase(BaseAgent):
             dt = timer.lapse()
             logger.info(f'Battle {finished_num}/{battle_num} finished, '
                         f'time = {int(dt // 60)} min {int(dt % 60)} sec. '
-                        f'(total {config.battle.finished})', extra=LOG_TIME)
+                        f'(total {config.battle.finished + 1})', extra=LOG_TIME)
             rewards = screenshot()
             drop_dir = f'img/_drops/{self.master.quest_name}'
             if not os.path.exists(drop_dir):
@@ -167,14 +168,14 @@ class BattleBase(BaseAgent):
         # pre-processing: e.g. set templates, only once
         if pre_process:
             logger.info(f'pre-process for {master.quest_name}...', extra=LOG_TIME)
-            T.read_templates(['img/battles/.a', 'img/battles/a-charlotte/'])
+            T.read_templates(['img/share/android', 'img/battles/a-charlotte/'])
 
             # LOC.relocate((0, 0, 1920, 1080))
 
             # --------------  name       NP    Quick    Arts   Buster -----------
             master.set_cards(names[0], (3, 6), (1, 5), (1, 3), (3, 3))
             master.set_cards(names[1], (1, 7), (2, 2), (1, 1), (2, 4))
-            # here 'android' default to 'img/battles/cards/android/cards-android.json',
+            # here 'android' default to 'img/share/{device}/cards/cards.json',
             # use full path if not match the default pattern
             master.set_cards_from_json('孔明', 'android')
 
@@ -185,7 +186,7 @@ class BattleBase(BaseAgent):
                 # ....
                 wait_targets(T.quest, LOC.quest)
 
-            config.battle.login_handler = _handler
+            config.battle.login_handler = _handler or None
             return
 
         # battle part
@@ -232,6 +233,6 @@ class BattleBase(BaseAgent):
             master.svt_skill(1, 3)
             master.svt_skill(1, 1)
             master.svt_skill(1, 2)
-        master.auto_attack(nps=6, mode='alter', buster_first=True)
-        master.xjbd(T.kizuna, LOC.kizuna, mode='alter', allow_unknown=True)
+        master.auto_attack(nps=6, mode=AttackMode.alter, buster_first=True)
+        master.xjbd(T.kizuna, LOC.kizuna, mode=AttackMode.alter, allow_unknown=True)
         return

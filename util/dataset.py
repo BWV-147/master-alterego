@@ -7,6 +7,7 @@ from PIL import Image
 
 from .base import *
 from .config import *
+from .log import logger
 
 THR = 0.85  # default threshold
 
@@ -25,9 +26,10 @@ class _Regions:
     _test_cn = (0, 0, 100, 100)
     _test_jp = (0, 0, 90, 90)
 
-    def __init__(self):
+    def __init__(self, box: Sequence = None):
         # can only relocate once
         self._relocated = False
+        self.relocate(box)
 
     @property
     def test(self):
@@ -44,7 +46,7 @@ class _Regions:
             length = len(region)
             assert length % 2 == 0, f'region length must be 2(point) or 4(rect): {region}'
             if length > 4:
-                print(f'warning: more than 4 elements: {region}')
+                logger.warning(f'warning: more than 4 elements: {region}')
             out = []
             for i in range(length // 2):
                 x, y = region[i * 2:i * 2 + 2]
@@ -76,6 +78,7 @@ class _Regions:
             attr = getattr(self.__class__, key)
             if not key.startswith('__') and isinstance(attr, Sequence):
                 setattr(self, key, self.relocate_one(attr, box, self.__class__.box))
+        logger.info(f'Relocate Regions from {Regions.box} to {tuple(self.box)}')
 
 
 # database: regions & saved screenshot
@@ -91,6 +94,7 @@ class Regions(_Regions):
     # common, or for supervisor
     net_error = ((599, 814, 720, 872), (1138, 813, 1378, 876))
     safe_area = (1460, 100)  # for battle
+    svt_status_window_close = (1607, 67, 1660, 100)
 
     # ---------- lottery part ----------
     lottery_point = (600, 650)
@@ -213,7 +217,7 @@ class Regions(_Regions):
     skill_to_target = ((490, 700), (970, 700), (1429, 700))
     master_skill = (1736, 440, 1841, 507)
     master_skills = ((1319, 427, 1404, 512), (1450, 427, 1535, 512), (1581, 427, 1666, 512))
-    loc_wave = [wave_num, master_skill]
+    loc_wave = [master_skill, wave_num]
     attack = (1599, 957, 1688, 1010)  # 大小可变的attack字样以下部分，且与cards_back不重叠
     cards_back = (1725, 1007, 1878, 1043)
     cards = (
@@ -238,7 +242,7 @@ class Regions(_Regions):
                            range(0, 3)]
     rewards_items = [[(241 + j * 206, 196 + i * 213, 401 + j * 206, 290 + i * 213) for j in range(0, 7)] for i in
                      range(0, 3)]
-    rewards_item1 = (454, 216, 623, 386)  # first dropped item rect
+    rewards_item1 = rewards_items[0][1]  # first dropped item rect
     rewards_rainbow = (1418, 18, 1442, 50)
     rewards_check_drop = [(0, 0, 0, 0), rewards_item1, rewards_rainbow]
     rewards_next = (1576, 980, 1750, 1061)
@@ -311,6 +315,7 @@ class ImageTemplates:
         self.templates: Dict[str, Image.Image] = {}
         # ============ battle part ============
         self.net_error: Optional[Image.Image] = None
+        self.svt_status_window: Optional[Image.Image] = None
         self.apple_confirm: Optional[Image.Image] = None
         self.apple_page: Optional[Image.Image] = None
         self.apply_friend: Optional[Image.Image] = None

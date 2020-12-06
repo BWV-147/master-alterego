@@ -34,6 +34,8 @@ def click(xy: Sequence = None, lapse=0.5):
     """
     # in desktop, xy=None means the current pos of mouse,
     # but mobile device cannot remember the last position, so store it in `temp` dict
+    # from .log import logger
+    # logger.debug(f'click {xy}')
     if xy is None:
         xy = config.temp.get('click_xy', (0, 0))
     else:

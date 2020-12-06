@@ -1,9 +1,8 @@
 import platform
-import threading
 
 import wda  # noqa
 
-from util.addon import raise_alert
+from util.addon import raise_alert, check_sys_setting
 from util.autogui import *
 from .server import app
 
@@ -18,7 +17,7 @@ class BaseAgent:
     def pre_process(self, cfg):
         config.load(cfg)
         self.LOC = RegionsJP() if config.is_jp else Regions()
-        config.init_wda()
+        config.initiate()
         check_sys_setting(config.need_admin, config.is_wda)
         if config.www_host_port is not None:
             self.run_sever(*config.www_host_port)

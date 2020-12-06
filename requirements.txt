@@ -4,6 +4,7 @@ flask
 facebook-wda
 goto-statement
 imagecodecs
+matplotlib
 mss
 numpy
 opencv-python

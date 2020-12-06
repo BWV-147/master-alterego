@@ -92,7 +92,7 @@ def get_log_list():
     if not os.path.exists(log_dir):
         filenames = []
     else:
-        filenames = [f for f in os.listdir(log_dir) if f.endswith('.log')]
+        filenames = [f for f in os.listdir(log_dir) if '.log' in f]
     return wrap_response(filenames)
 
 
@@ -242,7 +242,7 @@ def configuration():
 
 # %%
 if __name__ == '__main__':
-    from util.base import check_sys_setting
+    from util.addon import check_sys_setting
 
     config.load()
     check_sys_setting(False)
