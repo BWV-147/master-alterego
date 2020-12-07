@@ -1,6 +1,6 @@
-from init import initial
+from init import initialize
 
-initial()
+initialize()
 
 from . import addon
 from . import autogui

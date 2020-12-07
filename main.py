@@ -1,7 +1,7 @@
 # %% make sure correct dpi awareness at startup
-from init import initial
+from init import initialize
 
-initial()
+initialize()
 # %%
 from battles import Battle, start_loop
 from modules.fp_gacha import FpGacha

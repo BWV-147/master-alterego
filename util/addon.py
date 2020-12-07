@@ -6,7 +6,6 @@ __all__ = [
     'kill_thread',
     'threading',
     'os',
-    'check_sys_setting'
 ]
 
 import ctypes
@@ -235,8 +234,8 @@ def check_sys_setting(check_admin=True, check_wda=False):
         # Android/iOS emulator in Windows
         # check admin permission & set process dpi awareness
         # please run cmd/powershell or Pycharm as administrator.
-        from init import initial
-        initial()
+        from init import initialize
+        initialize()
         if ctypes.windll.shell32.IsUserAnAdmin() == 0:
             if check_admin:
                 print('[Emulator] Please run cmd/Pycharm as admin to click inside emulators with admin permission.')

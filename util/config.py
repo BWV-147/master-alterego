@@ -1,7 +1,9 @@
 __all__ = ['Config', 'config', 'MAIL_MUTE', 'MAIL_DEBUG', 'MAIL_INFO', 'MAIL_WARNING', 'MAIL_CRITICAL']
 
+import ctypes
 import json
 import os
+import sys
 import threading
 import time
 from queue import Queue
@@ -84,6 +86,59 @@ class BaseConfig(JsonSerializable):
         return fp
 
 
+# sub member of Config
+class BattleConfig(BaseConfig):
+    def __init__(self):
+        super().__init__()
+        self.mail = MAIL_MUTE
+        self.battle_func = None
+        self.location = None  # default to (0,0,1920,1080)
+        self.num = 1  # max battle num once running, auto decrease
+        self.finished = 0  # all finished battles sum, auto increase, don't edit
+        self.check_drop = 1  # check dropped craft or item. 0-not check; 1-check 1st drop item; 2-check dropbox(rainbow)
+        self.apples = []  # invalid: stop, 0-rainbow, 1-gold, 2-sliver, 3-cropper, 4-zihuiti, 5-manually(wait ~7min)
+        self.end_until_eating_apple = False  # if True, continue battles even finished>=num, be sure the least AP left
+        self.jump_battle = False  # goto decoration in Battle.battle_func
+        self.login_handler = None  # JP: re-login at 3am(UTC+08)
+        self.sell_num = 0  # usually used in hunting event
+
+        self.craft_num = 0
+        self.craft_history = {}
+
+        # if crash_num in list, send_mail to remind crafts enhancing, e.g. 5 bonus(self 4 + friend 1).
+        # 5 bonus: (7, 8, 11, 12, 15, 16, 20)
+        # 6 bonus: (5, 8, 9, 12, 13, 16, 17, 20, 21, 25)
+        self.enhance_craft_nums = (7, 8, 11, 12, 15, 16, 20)
+        self._ignored = ['login_handler', ]
+
+
+class LotteryConfig(BaseConfig):
+    def __init__(self):
+        super().__init__()
+        self.mail = MAIL_MUTE
+        self.dir = None
+        self.location = None  # default to (0,0,1920,1080)
+        self.start_func = 'draw'  # draw->clean->sell
+        self.num = 10  # lottery num running once, auto decrease
+        self.finished = 1  # auto increase， don't edit
+        self.clean_num = 100  # < max_num - 10 - retained_num
+        self.clean_drag_times = 20  # max drag times during clean mailbox
+        self.sell_times = 0  # sell times, if >0, sell. if =0: don't sell. if <0: manual mode
+        self.event_banner_no = 0  # values: 0,1,2. Move from shop -> banner list -> event shop
+
+
+class FpGachaConfig(BaseConfig):
+    def __init__(self):
+        super().__init__()
+        self.mail = MAIL_MUTE
+        self.dir = None
+        self.location = None
+        self.num = 0
+        self.finished = 0
+        self.sell_num = 10
+        self.enhance_num = 100
+
+
 class Config(BaseConfig):
     def __init__(self, fp=None):
         super().__init__()
@@ -158,10 +213,10 @@ class Config(BaseConfig):
     def battle(self):
         return self.battles[self.battle_name]
 
-    def initiate(self):
-        self.init_wda()
+    def initialize(self, check_permission=None):
+        from init import initialize
+        initialize()
 
-    def init_wda(self):
         if self.is_wda:
             self.wda_client = wda.Client(self.wda_settings.get('url', None))
             try:
@@ -182,6 +237,29 @@ class Config(BaseConfig):
             except Exception as e:
                 print(f'Error:\n {e}')
                 raise EnvironmentError(f'WebDriverAgent is not configured properly!')
+        elif sys.platform == 'win32':
+            # Android/iOS emulator in Windows
+            # check admin permission & set process dpi awareness
+            # please run cmd/powershell or Pycharm as administrator.
+            if ctypes.windll.shell32.IsUserAnAdmin() == 0:
+                if check_permission:
+                    print('[Emulator] Please run cmd/Pycharm as admin to click inside emulators with admin permission.')
+                    # To run a new process as admin, no effect in Pycharm's Python Console mode.
+                    # print('applying admin permission in a new process, and no effect when in console mode.')
+                    # ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, __file__, None, 1)
+                    raise PermissionError('Please run as administrator!')
+                else:
+                    print('Running without admin permission.\n'
+                          'Operations (e.g. click) within admin programs will take no effects!')
+            else:
+                # print('already admin')
+                pass
+        elif sys.platform == 'darwin':
+            # Android emulator in macOS
+            print('[Android Emulators] For the app who is running the script(PyCharm/Terminal/...), '
+                  'confirm these two permissions are granted:\n'
+                  '   "Accessibility" and "Screen Recording" inside "System Preferences/Security & Privacy/"\n',
+                  file=sys.stderr)
 
     def count_lottery(self):
         self.lottery.finished += 1
@@ -220,59 +298,6 @@ class Config(BaseConfig):
         """
         from .addon import kill_thread
         kill_thread(self.task_thread or threading.current_thread())
-
-
-# sub member of Config
-class BattleConfig(BaseConfig):
-    def __init__(self):
-        super().__init__()
-        self.mail = MAIL_MUTE
-        self.battle_func = None
-        self.location = None  # default to (0,0,1920,1080)
-        self.num = 1  # max battle num once running, auto decrease
-        self.finished = 0  # all finished battles sum, auto increase, don't edit
-        self.check_drop = 1  # check dropped craft or item. 0-not check; 1-check 1st drop item; 2-check dropbox(rainbow)
-        self.apples = []  # invalid: stop, 0-rainbow, 1-gold, 2-sliver, 3-cropper, 4-zihuiti, 5-manually(wait ~7min)
-        self.end_until_eating_apple = False  # if True, continue battles even finished>=num, be sure the least AP left
-        self.jump_battle = False  # goto decoration in Battle.battle_func
-        self.login_handler = None  # JP: re-login at 3am(UTC+08)
-        self.sell_num = 0  # usually used in hunting event
-
-        self.craft_num = 0
-        self.craft_history = {}
-
-        # if crash_num in list, send_mail to remind crafts enhancing, e.g. 5 bonus(self 4 + friend 1).
-        # 5 bonus: (7, 8, 11, 12, 15, 16, 20)
-        # 6 bonus: (5, 8, 9, 12, 13, 16, 17, 20, 21, 25)
-        self.enhance_craft_nums = (7, 8, 11, 12, 15, 16, 20)
-        self._ignored = ['login_handler', ]
-
-
-class LotteryConfig(BaseConfig):
-    def __init__(self):
-        super().__init__()
-        self.mail = MAIL_MUTE
-        self.dir = None
-        self.location = None  # default to (0,0,1920,1080)
-        self.start_func = 'draw'  # draw->clean->sell
-        self.num = 10  # lottery num running once, auto decrease
-        self.finished = 1  # auto increase， don't edit
-        self.clean_num = 100  # < max_num - 10 - retained_num
-        self.clean_drag_times = 20  # max drag times during clean mailbox
-        self.sell_times = 0  # sell times, if >0, sell. if =0: don't sell. if <0: manual mode
-        self.event_banner_no = 0  # values: 0,1,2. Move from shop -> banner list -> event shop
-
-
-class FpGachaConfig(BaseConfig):
-    def __init__(self):
-        super().__init__()
-        self.mail = MAIL_MUTE
-        self.dir = None
-        self.location = None
-        self.num = 0
-        self.finished = 0
-        self.sell_num = 10
-        self.enhance_num = 100
 
 
 config = Config()

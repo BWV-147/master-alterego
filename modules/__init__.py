@@ -1,6 +1,6 @@
-from init import initial
+from init import initialize
 
-initial()
+initialize()
 
 from . import battle_base
 from . import drops_stat

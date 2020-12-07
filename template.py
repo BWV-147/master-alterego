@@ -1,19 +1,17 @@
 # %% make sure correct dpi awareness at startup
-from init import initial
+from init import initialize
 
-initial()
+initialize()
 
 # %%
 from util.autogui import *
-from util.addon import check_sys_setting
 import matplotlib.pyplot as plt
 
 if __name__ == '__main__' and not is_interactive_mode():
     raise EnvironmentError("Don't run the script directly")
 
-check_sys_setting(False)
 config.load('data/config.json')
-config.initiate()
+config.initialize(False)
 
 # %%
 base_path: Optional[str] = None

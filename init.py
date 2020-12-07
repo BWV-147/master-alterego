@@ -1,18 +1,19 @@
+"""Initialization should be called at program startup before other tasks run"""
 import ctypes
 import platform
 import sys
 
 # initiate only once
-_initiated = False
+_initialized = False
 
 
-def initial():
+def initialize():
     """
     Initiation must be called at the startup of program. Otherwise, some settings may take no sense.
     :return:
     """
-    global _initiated
-    if _initiated:
+    global _initialized
+    if _initialized:
         return
     # 1st-DPI
     set_dpi_awareness()
@@ -20,7 +21,7 @@ def initial():
     import pyautogui
     pyautogui.FAILSAFE = False
 
-    _initiated = True
+    _initialized = True
 
 
 def set_dpi_awareness():
@@ -34,7 +35,6 @@ def set_dpi_awareness():
             #     created and adjusts the scale factor whenever the DPI changes.
             #     These applications are not automatically scaled by the system.
             res = ctypes.windll.shcore.SetProcessDpiAwareness(2)
-
         elif (6, 0) <= version < (6, 3):
             # Windows Vista, 7, 8 and Server 2012
             res = ctypes.WinDLL('user32').SetProcessDPIAware()

@@ -242,10 +242,8 @@ def configuration():
 
 # %%
 if __name__ == '__main__':
-    from util.addon import check_sys_setting
-
     config.load()
-    check_sys_setting(False)
+    config.initialize(False)
     parser = argparse.ArgumentParser()
     parser.add_argument('-p', '--port', default=8080, type=int)
     _port = parser.parse_known_intermixed_args()[0].port
