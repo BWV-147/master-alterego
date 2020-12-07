@@ -120,11 +120,11 @@ class BattleBase(BaseAgent):
                 rewards.save(f'{png_fn}-drop{config.battle.craft_num}.png')
                 if config.battle.craft_num in config.battle.enhance_craft_nums:
                     logger.warning('need to change party or enhance crafts. Exit.')
-                    send_mail(f'Enhance! {config.battle.craft_num}th craft dropped!!!', mail_level=MAIL_WARNING)
+                    send_mail(f'Enhance! {config.battle.craft_num}th craft dropped!!!', level=MAIL_WARNING)
                     config.mark_task_finish()
                     return
                 else:
-                    send_mail(f'{config.battle.craft_num}th craft dropped!!!', mail_level=MAIL_WARNING)
+                    send_mail(f'{config.battle.craft_num}th craft dropped!!!', level=MAIL_WARNING)
                 click(LOC.rewards_next)
             else:
                 config.count_battle(False)
@@ -133,7 +133,7 @@ class BattleBase(BaseAgent):
             # ready to restart a battle
             if finished_num % 30 == 0:
                 send_mail(f'Progress: {finished_num}/{battle_num} battles finished.',
-                          attach_shot=False, mail_level=MAIL_INFO)
+                          attach_shot=False, level=MAIL_INFO)
             while True:
                 shot = screenshot()
                 if search_target(shot.crop(LOC.quest_outer), T.quest.crop(LOC.quest))[0] > THR:
@@ -145,7 +145,7 @@ class BattleBase(BaseAgent):
                     logger.debug('not to apply friend')
                 sleep(0.5)
         logger.info(f'>>>>> All {finished_num} battles "{self.master.quest_name}" finished. <<<<<')
-        send_mail(f'All {finished_num} battles "{self.master.quest_name}" finished', mail_level=MAIL_INFO)
+        send_mail(f'All {finished_num} battles "{self.master.quest_name}" finished', level=MAIL_INFO)
         config.mark_task_finish()
         return
 

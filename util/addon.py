@@ -32,10 +32,10 @@ from .log import *
 
 
 # %% email
-def send_mail(body, subject=None, receiver=None, attach_shot=True, mail_level=MAIL_DEBUG):
+def send_mail(body, subject=None, receiver=None, attach_shot=True, level=MAIL_DEBUG):
     from .autogui import screenshot
     # check email params
-    if not (MAIL_MUTE < config.mail <= mail_level):
+    if not (MAIL_MUTE < config.mail <= level):
         logger.info(f'Don\'t send mail.\nSubject: {subject}\nBody: {body}')
         return
     if receiver is None:

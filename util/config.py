@@ -1,4 +1,4 @@
-__all__ = ['Config', 'config', 'MAIL_MUTE', 'MAIL_DEBUG', 'MAIL_INFO', 'MAIL_WARNING', 'MAIL_CRITICAL']
+__all__ = ['Config', 'config', 'MAIL_MUTE', 'MAIL_DEBUG', 'MAIL_INFO', 'MAIL_WARNING', 'MAIL_ERROR']
 
 import ctypes
 import json
@@ -15,7 +15,7 @@ MAIL_MUTE = 0
 MAIL_DEBUG = 1
 MAIL_INFO = 2
 MAIL_WARNING = 3
-MAIL_CRITICAL = 4
+MAIL_ERROR = 4
 
 
 class JsonSerializable:
