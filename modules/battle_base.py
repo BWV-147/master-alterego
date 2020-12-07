@@ -1,5 +1,4 @@
-from goto import with_goto  # noqas
-
+from util.goto import *
 from util.supervisor import *
 from .base_agent import *
 from .master import *

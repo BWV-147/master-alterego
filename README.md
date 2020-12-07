@@ -6,13 +6,7 @@
 
 ## Requirements
 - Python: 3.7
-    - as `goto-statement` not adapt Python 3.8 or higher,
-    remove all occurrences of these 3 statements if you want to run in 3.8 or higher
-    ```
-  @with_goto
-  goto xxx
-  label xxx
-  ```
+    - since `goto-statement` not adapted for Python 3.8 or higher, `@with_goto`, `goto`and `label` take no effect.
 - OS:
     - **IMPORTANT**: full screen display won't be adapted, valid render region must be **16:9**
     - Windows + Android or iOS emulator

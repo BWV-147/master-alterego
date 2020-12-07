@@ -136,9 +136,12 @@ def screenshot(region: Sequence = None, filepath: str = None, monitor: int = Non
                         logger.error(f'Fail to grab screenshot using ImageGrad. Error:\n{e}')
     if _image is None:
         # grab failed, return an empty image with single color
+        # wait for a moment for grabbing next screenshot
         _image = Image.new('RGB', size, (0, 255, 255)).crop(region)
-    if filepath is not None:
-        _image.save(filepath)
+        time.sleep(5)
+    else:
+        if filepath is not None:
+            _image.save(filepath)
     return _image
 
 

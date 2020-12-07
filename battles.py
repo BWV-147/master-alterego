@@ -11,6 +11,15 @@ from modules.battle_base import *
 try:
     from battles_local import BattleLocal
 except ImportError:
+    # write default file content
+    with open('battles_local.py', 'w', encoding='utf8') as fd:
+        fd.write('from modules.battle_base import *\n\n\n'
+                 '# noinspection DuplicatedCode\n'
+                 'class BattleLocal(BattleBase):\n'
+                 '    pass\n')
+        print('generated empty battles_local.py')
+
+
     class BattleLocal(BattleBase):
         pass
 
