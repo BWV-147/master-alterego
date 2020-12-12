@@ -13,6 +13,8 @@ from .dataset import *
 from .gui import *
 from .log import *
 
+_screenshot_locker = threading.Lock()
+
 
 # %% image processing
 def get_mean_color(img: Image.Image, region: Sequence):
@@ -106,43 +108,44 @@ def screenshot(region: Sequence = None, filepath: str = None, monitor: int = Non
     :param monitor: 0-total size of all monitors, >0: monitor N, shown in system settings
     :return: PIL.Image.Image
     """
-    if monitor is None:
-        monitor = config.monitor
-    _image = None
-    size = (1920, 1080)  # default size
-    if config.is_wda:
-        try:
-            _image = config.wda_client.screenshot().convert('RGB')
-            size = _image.size
-        except Exception as e:
-            logger.error(f'Fail to grab screenshot WDA. Error:\n{e}')
-    else:
-        with mss() as sct:
+    with _screenshot_locker:
+        if monitor is None:
+            monitor = config.monitor
+        _image = None
+        size = (1920, 1080)  # default size
+        if config.is_wda:
             try:
-                mon = dict(sct.monitors[monitor])  # copy
-                # mon['width'], mon['height'] = size[0], size[1]  # first introduce by dpi issue, force set screen size
-                shot = sct.grab(mon)
-                size = shot.size
-                # import pprint
-                # pprint.pprint(sct._monitors)
-                _image = Image.frombytes('RGB', size, shot.bgra, 'raw', 'BGRX').crop(region)
+                _image = config.wda_client.screenshot().convert('RGB')
+                size = _image.size
             except Exception as e:
-                logger.error(f'Fail to grab screenshot using mss(). Error:\n{e}')
-                if tuple(config.offset) == (0, 0):
-                    # ImageGrab can only grab the main screen
-                    try:
-                        _image = ImageGrab.grab()
-                    except Exception as e:
-                        logger.error(f'Fail to grab screenshot using ImageGrad. Error:\n{e}')
-    if _image is None:
-        # grab failed, return an empty image with single color
-        # wait for a moment for grabbing next screenshot
-        _image = Image.new('RGB', size, (0, 255, 255)).crop(region)
-        time.sleep(5)
-    else:
-        if filepath is not None:
-            _image.save(filepath)
-    return _image
+                logger.error(f'Fail to grab screenshot WDA. Error:\n{e}')
+        else:
+            with mss() as sct:
+                try:
+                    mon = dict(sct.monitors[monitor])  # copy
+                    # mon['width'], mon['height'] = size[0], size[1]  # introduce by dpi issue, force set screen size
+                    shot = sct.grab(mon)
+                    size = shot.size
+                    # import pprint
+                    # pprint.pprint(sct._monitors)
+                    _image = Image.frombytes('RGB', size, shot.bgra, 'raw', 'BGRX').crop(region)
+                except Exception as e:
+                    logger.error(f'Fail to grab screenshot using mss(). Error:\n{e}')
+                    if tuple(config.offset) == (0, 0):
+                        # ImageGrab can only grab the main screen
+                        try:
+                            _image = ImageGrab.grab()
+                        except Exception as e:
+                            logger.error(f'Fail to grab screenshot using ImageGrad. Error:\n{e}')
+        if _image is None:
+            # grab failed, return an empty image with single color
+            # wait for a moment for grabbing next screenshot
+            _image = Image.new('RGB', size, (0, 255, 255)).crop(region)
+            time.sleep(5)
+        else:
+            if filepath is not None:
+                _image.save(filepath)
+        return _image
 
 
 def match_one_target(img: Image.Image, target: Image.Image, region: Sequence, threshold: float = None) -> bool:

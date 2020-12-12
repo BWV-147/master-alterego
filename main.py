@@ -3,6 +3,7 @@ from init import initialize
 
 initialize()
 # %%
+from modules.base_agent import BaseAgent
 from battles import Battle, start_loop
 from modules.fp_gacha import FpGacha
 from modules.lottery import Lottery
@@ -13,13 +14,16 @@ def start(cfg=None):
     parser = ArgParser()
     cfg = cfg or parser.config
     if parser.task == 'battle':
-        task = globals()['battle'] = Battle()
+        task = Battle()
     elif parser.task == 'lottery':
-        task = globals()['lottery'] = Lottery()
+        task = Lottery()
     elif parser.task == 'fp':
-        task = globals()['fp_gacha'] = FpGacha()
+        task = FpGacha()
+    elif parser.task == 'server':
+        task = BaseAgent()
     else:
         raise KeyError
+    globals()['task'] = task
     task.start(supervise=parser.supervise, cfg=cfg)
 
 

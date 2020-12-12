@@ -55,6 +55,7 @@ function addLog(msg) {
   let $status = $('#taskStatus')
   if ($status.length > 0 && msg !== null && msg !== undefined) {
     $status.text(`[${new Date().toLocaleString(undefined, {hour12: false})}] ${msg}\n` + $status.text())
+    console.log(msg)
   }
 }
 

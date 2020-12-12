@@ -44,7 +44,7 @@ class ArgParser:
         if self._parser is not None:
             return
         _parser = argparse.ArgumentParser(conflict_handler='resolve')
-        _parser.add_argument('task', nargs='?', default='battle', choices=['battle', 'lottery', 'fp'],
+        _parser.add_argument('task', nargs='?', default='battle', choices=['battle', 'lottery', 'fp', 'server'],
                              help='specific a task')
         _parser.add_argument('-c', '--config', default='data/config.json',
                              help='config file path or {} part of data/config-{}.json, default "data/config.json".')

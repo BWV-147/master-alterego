@@ -9,6 +9,7 @@ class FpGacha(BaseAgent):
         self.LOC = Regions()
         logger.set_cur_logger('gacha')
 
+    @catch_exception
     def start(self, supervise=True, cfg=None):
         # pre-processing
         self.pre_process(cfg)

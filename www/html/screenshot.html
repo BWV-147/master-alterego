@@ -56,11 +56,16 @@
                             <option value="5000">5s</option>
                         </select>
                     </span>
+                    <span class="form-inline custom-control custom-switch">
+                        <input type="checkbox" class="custom-control-input" id="clickableSwitch">
+                        <label class="custom-control-label" for="clickableSwitch">Enable click</label>
+                    </span>
                 </div>
             </div>
             <div style="padding-top: 5px">
-                <!--suppress HtmlUnknownTarget -->
-                <img src="/getFile?path=screenshot" class="card-img-top" id="screenshot" alt="Screenshot">
+                <canvas id="screenshotCanvas" class="card-img-top" style="width: 100%;">Don't
+                    support canvas
+                </canvas>
             </div>
             <hr>
         </div>
@@ -72,7 +77,7 @@
     monitor = $(this).val()
   })
   $('#refreshScreenshotBtn').click(function () {
-    $('#screenshot').attr('src', `/getFile?path=screenshot&mon=${monitor}&time=${new Date().getTime()}`)
+    loadScreenshot()
   })
   let autoRefreshClock = 0;
   $('#refreshIntervalSelect').on('change', function () {
@@ -81,11 +86,46 @@
     clearInterval(autoRefreshClock)
     if (interval > 0) {
       autoRefreshClock = setInterval(function () {
-        $('#refreshScreenshotBtn').click()
+        loadScreenshot()
       }, interval)
       console.log(`clock=${autoRefreshClock}`)
     }
   })
+
+  function loadScreenshot() {
+    let canvas = document.getElementById('screenshotCanvas')
+    let ctx = canvas.getContext('2d')
+    const img = new Image()
+    img.src = `/getFile?path=screenshot&mon=${monitor}&time=${new Date().getTime()}`
+    img.onload = () => {
+      canvas.width = img.width
+      canvas.height = img.height
+      ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, canvas.width, canvas.height)
+    }
+    img.onerror = () => {
+      addLog('load screenshot failed, stop auto refresh.')
+      $('#refreshIntervalSelect').val('0').change()
+    }
+  }
+
+  $('#screenshotCanvas').click(function (event) {
+    let canvas = document.getElementById('screenshotCanvas')
+    let relX = event.offsetX / canvas.offsetWidth,
+      relY = event.offsetY / canvas.offsetHeight;
+    let absX = relX * canvas.width,
+      absY = relY * canvas.height;
+    console.log('relative:', [relX.toFixed(3), relY.toFixed(3)])
+    console.log('absolute:', [absX.toFixed(3), absY.toFixed(3)])
+    if (document.getElementById('clickableSwitch').checked) {
+      $.get('/clickAbsolute', {x: absX, y: absY}, function (result) {
+        addLog(result['msg'])
+        loadScreenshot()
+      })
+    } else {
+      console.log('click is disabled')
+    }
+  })
+  loadScreenshot()
 </script>
 <div class="footer-placeholder"></div>
 </body>

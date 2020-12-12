@@ -67,7 +67,7 @@ def send_mail(body, subject=None, receiver=None, attach_shot=True, level=MAIL_DE
         crash_folder = 'img/crash'
         img_fn = os.path.join(crash_folder, f'mail-{datetime_str()}.jpg')
         if not os.path.exists(crash_folder):
-            os.mkdir(crash_folder)
+            os.makedirs(crash_folder)
         body += '<b>Screenshot before shutdown</b>:<br>\n' \
                 '<img src="cid:screenshot" style="width: 100%; max-width: 720px;"><br><hr>\n'
         shot = screenshot()

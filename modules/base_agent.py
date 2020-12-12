@@ -19,6 +19,11 @@ class BaseAgent:
         if config.www_host_port is not None:
             self.run_sever(*config.www_host_port)
 
+    @catch_exception
+    def start(self, supervise=True, cfg=None):
+        """overrider and implement detail procedures"""
+        self.pre_process(cfg)
+
     # noinspection PyMethodMayBeStatic
     def post_process(self):
         # server thread should be daemon, make it possible to be terminated by Ctrl-C

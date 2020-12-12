@@ -50,7 +50,7 @@ werkzeug_logger = logging.getLogger('werkzeug')
 werkzeug_logger.addHandler(logging.StreamHandler())
 _log_folder = os.path.join(ROOT, 'logs')
 if not os.path.exists(_log_folder):
-    os.mkdir(_log_folder)
+    os.makedirs(_log_folder)
 for _logger in (werkzeug_logger, app.logger):  # type:logging.Logger
     _logger.setLevel(logging.DEBUG)
     fh = RotatingFileHandler(os.path.join(_log_folder, f'{_logger.name}.log'),
@@ -238,6 +238,19 @@ def configuration():
         config.from_json(json.loads(data))
         config.save()
         return wrap_response(json.dumps(config.to_json(), ensure_ascii=False, indent=2), True, 'config updated')
+
+
+@app.route('/clickAbsolute')
+def remote_click():
+    x = request.args.get('x', None)
+    y = request.args.get('y', None)
+    if x is not None and y is not None:
+        x, y = float(x), float(y)
+        from util.gui import click
+        click([x, y])
+        return wrap_response(msg=f'click at {(x, y)}')
+    else:
+        return wrap_response(success=False, msg='invalid params')
 
 
 # %%
