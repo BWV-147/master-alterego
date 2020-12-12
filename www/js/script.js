@@ -311,11 +311,29 @@ function listDir(data) {
     jumpToDirectory($(this).data('path'))
   })
   $('#dirTree button').click(function () {
-    let imgPath = $(this).data('path')
     $('#imageModalLabel').text($(this).text())
-    $('#imageModal .modal-body img').attr('src', '/getFile?path=' + imgPath)
+    $('#imageModal .modal-body img').attr('src', '/getFile?path=' + $(this).data('path'))
   })
-
+  $('#previousBtn').unbind().click(function () {
+    let $label = $('#imageModalLabel')
+    let fn = $label.text()
+    let previousIndex = data.files.indexOf(fn) - 1
+    if (previousIndex >= 0) {
+      let newFilename = data.files[previousIndex]
+      $label.text(newFilename)
+      $('#imageModal .modal-body img').attr('src', `/getFile?path=${curPath}/${newFilename}`)
+    }
+  })
+  $('#nextBtn').unbind().click(function () {
+    let $label = $('#imageModalLabel')
+    let fn = $label.text()
+    let nextIndex = data.files.indexOf(fn) + 1
+    if (nextIndex < data.files.length) {
+      let newFilename = data.files[nextIndex]
+      $label.text(newFilename)
+      $('#imageModal .modal-body img').attr('src', `/getFile?path=${curPath}/${newFilename}`)
+    }
+  })
 }
 
 function onSearch(string) {

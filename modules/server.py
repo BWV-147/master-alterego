@@ -119,6 +119,7 @@ def get_image_folder_tree():
         return wrap_response(None, False, 'Empty image folder')
     for dir_path, dir_names, filenames in os.walk(img_folder):
         key = os.path.relpath(os.path.realpath(dir_path), img_folder)
+        filenames = [f for f in filenames if f.rsplit('.')[-1].lower() in ['png', 'jpg', 'jpeg']]
         if key == '.':
             key = ''
         key = key.strip('\\/').replace('\\', '/')
