@@ -67,7 +67,7 @@ class Master:
     def __init__(self, quest=''):
         self.quest_name = quest
         # realtime member list, auto-update with order-change, but Arash/Chen Gong need to update manually.
-        self.members = list('ABCDEF')
+        self.members: List[str] = list('ABCDEF')
         self.T = ImageTemplates()
         # initiate inside BattleBase after pre_process
         self.LOC: Optional[Regions] = None

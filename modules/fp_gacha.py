@@ -59,12 +59,12 @@ class FpGacha(BaseAgent):
                 if bag_no == 0:
                     logger.info('servant bag full, make sure only show *LOW RARITY<=3* servants.')
                     click(LOC.fp_bag_full_sell_button)
-                    self.sell(config.fp_gacha.sell_num, 1, 4)
+                    self.sell(config.fp_gacha.sell_times, 1, 4)
                 else:
                     logger.info('CE bag full, make sure only show *LOW RARITY<=2* CE.')
                     click(LOC.fp_bag_full_enhance_button)
                     self.enhance_ce(config.fp_gacha.enhance_num)
-                if [config.fp_gacha.sell_num, config.fp_gacha.enhance_num][bag_no] > 0:
+                if [config.fp_gacha.sell_times, config.fp_gacha.enhance_num][bag_no] > 0:
                     wait_targets(T.shop, LOC.menu_button, at=0)
                     wait_targets(T.menu, LOC.menu_gacha_button, at=0)
                     while True:

@@ -98,7 +98,7 @@ class Lottery(BaseAgent):
 
         no = 0
         skipped_drag_num = 0
-        MAX_SKIP_NUM = drag_num * 0.2
+        MAX_SKIP_NUM = drag_num * 0.3
         while True:
             page_no = wait_which_target([T.mailbox_unselected1, T.bag_full_alert],
                                         [LOC.mailbox_get_all_action, LOC.bag_full_sell_button])
@@ -123,12 +123,14 @@ class Lottery(BaseAgent):
                 while drag_no < drag_num and no < num:
                     drag_no += 1
                     sleep(0.2)
-                    for mailbox_unselect in [T.mailbox_unselected1, T.mailbox_unselected2]:
-                        shot = screenshot()
-                        peaks = search_peaks(shot.crop(LOC.mailbox_check_column),
-                                             mailbox_unselect.crop(LOC.mailbox_first_checkbox))
-                        for y_peak in peaks:
-                            y_offset = y_peak - (LOC.mailbox_first_checkbox[1] - LOC.mailbox_check_column[1])
+                    shot = screenshot()
+                    peaks = search_peaks(shot.crop(LOC.mailbox_check_column),
+                                         T.mailbox_unselected1.crop(LOC.mailbox_first_checkbox))
+                    for y_peak in peaks:
+                        y_offset = y_peak - (LOC.mailbox_first_checkbox[1] - LOC.mailbox_check_column[1])
+                        for mailbox_unselect in [T.mailbox_unselected1, T.mailbox_unselected2, T.mailbox_unselected3]:
+                            if mailbox_unselect is None:
+                                continue
                             if _is_match_offset(shot, mailbox_unselect, LOC.mailbox_first_xn, y_offset) \
                                     or (_is_match_offset(shot, mailbox_unselect, LOC.mailbox_first_icon, y_offset)
                                         and _is_match_offset(shot, mailbox_unselect, LOC.mailbox_first_xn2, y_offset)):
@@ -137,14 +139,13 @@ class Lottery(BaseAgent):
                                 skipped_drag_num = 0
                                 if no % 10 == 0 or no == num:
                                     logger.debug(f'got items {no}/{num}...', extra=LOG_TIME)
-                                if no == num:
-                                    break
+                                break
                         if no >= num:
                             break
-                        sleep(0.3)
                     if no < num:
                         drag(start=LOC.mailbox_drag_start, end=LOC.mailbox_drag_end,
                              duration=0.5, down_time=0.1, up_time=0.3, lapse=0.1)
+                        sleep(0, 0.2)
                         skipped_drag_num += 1
                     if skipped_drag_num > MAX_SKIP_NUM:
                         break
@@ -160,6 +161,8 @@ class Lottery(BaseAgent):
                     wait_targets(T.shop, LOC.shop_event_item_exchange, at=0)
                     wait_targets(T.shop_event_banner_list,
                                  LOC.shop_event_banner_list[config.lottery.event_banner_no], at=0)
-                wait_targets(T.lottery_initial, LOC.lottery_10_initial, clicking=LOC.lottery_tab)
+                    wait_targets(T.lottery_initial, LOC.lottery_10_initial, clicking=LOC.lottery_tab)
+                else:
+                    wait_targets(T.lottery_initial, LOC.lottery_10_initial)
                 logger.info('from shop back to lottery', extra=LOG_TIME)
                 return

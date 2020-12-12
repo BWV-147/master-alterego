@@ -21,6 +21,9 @@ base_path: Optional[str] = None
 def capture(fn: str = None, _base: str = None):
     # pyautogui.hotkey('alt', 'tab')
     _base = _base or base_path
+    if not os.path.exists(_base):
+        os.mkdir(_base)
+        print(f'make dir: {_base}')
     time.sleep(0.1)
     t0 = time.time()
     img = screenshot()
@@ -78,11 +81,11 @@ capture('support_confirm')
 # %% !!!
 capture('team')
 # %% !!!
-capture('wave1a')
-# %% !!!
 capture('skill_targets')
 # %% !!!
 capture('svt_status_window')
+# %% !!!
+capture('wave1a')
 # %% !!!
 capture('wave1b')
 # %% !!!

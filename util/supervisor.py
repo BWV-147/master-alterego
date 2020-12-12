@@ -64,7 +64,7 @@ def supervise_log_time(thread, time_out=60, interval=10, alert_type=None, alert_
         # case 6: svt status window is popped unexpectedly when execute svt skill(actually not executed yet)
         if T.svt_status_window is not None:
             if match_targets(screenshot(), T.svt_status_window, LOC.svt_status_window_close):
-                screenshot().save(f'img/svt_status_window_error_{time.time()}.png')
+                screenshot().save(f'img/crash/svt_status_window_error_{time.time()}.png')
                 xy = config.temp.get('click_xy', (0, 0))  # skill location last clicked
                 logger.warning(f'Servant status window is popped unexpectedly! Re-click at {xy}')
                 click(LOC.svt_status_window_close, 2)
@@ -81,7 +81,7 @@ def supervise_log_time(thread, time_out=60, interval=10, alert_type=None, alert_
             click()
         if loops >= 0:
             # print(f'{loops}...\r', end='')
-            print(f'count down {loops}...')
+            print(f'\rcount down {loops}...', end='\r')
         loops -= 1
         if alert_type:
             beep(1, 2)

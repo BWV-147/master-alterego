@@ -411,7 +411,8 @@ class ImageTemplates:
         if item in self.templates:
             return self.templates[item]
         else:
-            raise AttributeError(f'{item} for class {self.__class__.__name__}')
+            return None
+            # raise AttributeError(f'{item} for class {self.__class__.__name__}')
 
     def get(self, item, k=None):
         # type:(Union[str, Sequence[str]],Image.Image)-> Union[Image.Image, Sequence[Image.Image]]

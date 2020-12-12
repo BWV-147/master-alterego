@@ -14,9 +14,7 @@ import html
 import os
 import smtplib
 import socket
-import sys
 import threading
-import time
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -29,6 +27,7 @@ if 'PYGAME_HIDE_SUPPORT_PROMPT' not in os.environ:
 import pygame
 from .config import *
 from .log import *
+from .base import *
 
 
 # %% email
@@ -64,15 +63,18 @@ def send_mail(body, subject=None, receiver=None, attach_shot=True, level=MAIL_DE
            f'<hr><b>Computer name:</b><br>{socket.getfqdn(socket.gethostname())}<br><hr>\n'
 
     # body.screenshot
-    crash_fp = 'img/crash.jpg'
     if attach_shot:
+        crash_folder = 'img/crash'
+        img_fn = os.path.join(crash_folder, f'mail-{datetime_str()}.jpg')
+        if not os.path.exists(crash_folder):
+            os.mkdir(crash_folder)
         body += '<b>Screenshot before shutdown</b>:<br>\n' \
                 '<img src="cid:screenshot" style="width: 100%; max-width: 720px;"><br><hr>\n'
         shot = screenshot()
-        shot.save(crash_fp + '.png')  # save a backup of origin screenshot
+        shot.save(img_fn + '.png')  # save a backup of origin screenshot
         # shrink the image/email size
-        shot.resize((numpy.array(shot.size) / 1.5).astype('int')).save(crash_fp, format='jpeg', quality=40)
-        with open(crash_fp, 'rb') as fd:
+        shot.resize((numpy.array(shot.size) / 1.5).astype('int')).save(img_fn, format='jpeg', quality=40)
+        with open(img_fn, 'rb') as fd:
             image = MIMEImage(fd.read())
             image.add_header('Content-ID', '<screenshot>')
             mail.attach(image)

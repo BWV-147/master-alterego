@@ -81,7 +81,7 @@ class BattleBase(BaseAgent):
                         # usually used in hunting events.
                         logger.info('bag full, to sell...')
                         click(LOC.bag_full_sell_button)
-                        self.sell(config.battle.sell_num, 1, 3)
+                        self.sell(config.battle.sell_times, 1, 3)
                         wait_search_template(T.quest.crop(LOC.quest), LOC.quest_outer)
                         logger.debug('back from shop to quest', extra=LOG_TIME)
                     elif match_targets(shot, T.restart_quest, LOC.restart_quest_yes):

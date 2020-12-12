@@ -100,12 +100,12 @@ class BattleConfig(BaseConfig):
         self.end_until_eating_apple = False  # if True, continue battles even finished>=num, be sure the least AP left
         self.jump_battle = False  # goto decoration in Battle.battle_func
         self.login_handler = None  # JP: re-login at 3am(UTC+08)
-        self.sell_num = 0  # usually used in hunting event
+        self.sell_times = 0  # usually used in hunting event
 
         self.craft_num = 0
         self.craft_history = {}
 
-        # if crash_num in list, send_mail to remind crafts enhancing, e.g. 5 bonus(self 4 + friend 1).
+        # if craft_num in list, send_mail to remind crafts enhancing, e.g. 5 bonus(self 4 + friend 1).
         # 5 bonus: (7, 8, 11, 12, 15, 16, 20)
         # 6 bonus: (5, 8, 9, 12, 13, 16, 17, 20, 21, 25)
         self.enhance_craft_nums = (7, 8, 11, 12, 15, 16, 20)
@@ -135,7 +135,7 @@ class FpGachaConfig(BaseConfig):
         self.location = None
         self.num = 0
         self.finished = 0
-        self.sell_num = 10
+        self.sell_times = 10
         self.enhance_num = 100
 
 
