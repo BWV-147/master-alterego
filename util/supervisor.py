@@ -109,5 +109,5 @@ def start_loop(func: Callable):
             time.sleep(0.5)
         else:
             config.task_queue.get()
-            func(config.fp)
+            func()
             logger.info('waiting new task...')

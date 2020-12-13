@@ -94,12 +94,22 @@ function switchTab() {
   })
 }
 
+/**
+ * nav
+ */
+function setAction(action) {
+  $.get('/taskAction', {'action': action}, function (result) {
+    if (result['success']) {
+      $('#actionDropdown').text(result['body']['current'])
+    }
+    addLog(result['msg'])
+  })
+}
+
 function setConfigFile(filename) {
   $.get('/configuration', {'file': filename}, function (result) {
     if (result['success']) {
       $('#configDropdown').text(result['body']['current'])
-    } else {
-      alert('Cannot switch config: ' + result['msg'])
     }
     addLog(result['msg'])
   })

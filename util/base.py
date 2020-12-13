@@ -10,15 +10,20 @@ _BUNDLE_ID_JP = 'com.aniplex.fategrandorder'
 
 
 class ArgParser:
+    instance = None  # type:ArgParser
+    override_action = None
+    override_config = None
+    valid_actions = ('battle', 'lottery', 'fp', 'server')
+
     def __init__(self, args: list = None):
         self._parser: Optional[argparse.ArgumentParser] = None
         self._init_parser()
-        self.task = None
+        self.action = None
         self.supervise = None
         self.config = None
         self.parse(args)
 
-    def parse(self, args):
+    def parse(self, args=None):
         # args without filename
         resolved_args = self._parser.parse_known_intermixed_args(args)[0]
         print(resolved_args)
@@ -32,7 +37,7 @@ class ArgParser:
                 config.save(fp)
                 print(f'default config file saved at {fp}')
             exit(0)
-        self.task = resolved_args.task
+        self.action = resolved_args.action
         self.supervise = not resolved_args.disable_supervisor
         self.config = resolved_args.config
 
@@ -44,7 +49,7 @@ class ArgParser:
         if self._parser is not None:
             return
         _parser = argparse.ArgumentParser(conflict_handler='resolve')
-        _parser.add_argument('task', nargs='?', default='battle', choices=['battle', 'lottery', 'fp', 'server'],
+        _parser.add_argument('action', nargs='?', default='battle', choices=ArgParser.valid_actions,
                              help='specific a task')
         _parser.add_argument('-c', '--config', default='data/config.json',
                              help='config file path or {} part of data/config-{}.json, default "data/config.json".')

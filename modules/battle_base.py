@@ -11,7 +11,6 @@ class BattleBase(BaseAgent):
         self.T = self.master.T
         self.LOC = self.master.LOC
 
-    @catch_exception
     def start(self, supervise=True, cfg=None, force_jump=False):
         """
         Start battle.

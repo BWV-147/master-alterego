@@ -42,6 +42,7 @@ if os.path.normpath(ROOT) not in [os.path.normpath(p) for p in sys.path]:
 # after add project root to paths, import will work normally
 from util.config import config
 from util.autogui import screenshot, compress_image
+from util.base import ArgParser
 
 app = Flask('flask.app', root_path=os.path.join(ROOT, 'www'), static_folder='/', static_url_path='/')
 
@@ -191,8 +192,11 @@ def toggle_visibility():
     if config.is_wda:
         return wrap_response(None, False, 'invalid request for WDA')
     else:
-        pag.hotkey(*config.hide_hotkey)
-        return wrap_response(None, True, f'Toggle visibility: {config.hide_hotkey}')
+        if config.hide_hotkey:
+            pag.hotkey(*config.hide_hotkey)
+            return wrap_response(f'Toggle visibility: {config.hide_hotkey}')
+        else:
+            return wrap_response(success=False, msg='Toggle visibility: no hotkey specified')
 
 
 @app.route('/switchTab')
@@ -201,8 +205,30 @@ def switch_tab():
     if config.is_wda:
         return wrap_response(None, False, 'invalid request for WDA')
     else:
-        pag.hotkey(*config.switch_tab_hotkey)
-        return wrap_response(None, True, f'Switch Tab: {config.switch_tab_hotkey}')
+        if config.switch_tab_hotkey:
+            pag.hotkey(*config.switch_tab_hotkey)
+            return wrap_response(msg=f'Switch tab: {config.switch_tab_hotkey}')
+        else:
+            return wrap_response(success=False, msg='Switch tab: no hotkey specified')
+
+
+@app.route('/taskAction')
+def task_action():
+    new_action = request.args.get('action')
+    msg = None
+    success = True
+    if new_action in ArgParser.valid_actions:
+        ArgParser.override_action = new_action
+        msg = f'action is set to "{new_action}"'
+    elif new_action:
+        success = False
+        msg = f'invalid action "{new_action}"'
+    cur_action = ArgParser.override_action or (ArgParser.instance.action if ArgParser.instance is not None else None)
+
+    return wrap_response({
+        'current': cur_action,
+        'actions': ArgParser.valid_actions
+    }, success, msg)
 
 
 @app.route('/getConfigList')
@@ -211,6 +237,7 @@ def get_config_list():
         return wrap_response({}, False, 'No data folder')
     return wrap_response({
         'current': os.path.basename(config.fp),
+        'id': config.id,
         'files': [fn for fn in os.listdir('data/') if fn.lower().endswith('.json')]
     })
 
@@ -225,6 +252,7 @@ def configuration():
             if os.path.exists(fp) and os.path.isfile(fp):
                 if config.task_thread and config.task_thread.is_alive():
                     return wrap_response(None, False, 'Task is still alive')
+                ArgParser.override_config = fp
                 config.load(fp)
                 return wrap_response(get_config_list()['body'], True, f'config is set to {os.path.basename(config.fp)}')
             else:
@@ -246,7 +274,7 @@ def remote_click():
     x = request.args.get('x', None)
     y = request.args.get('y', None)
     if x is not None and y is not None:
-        x, y = float(x), float(y)
+        x, y = int(float(x)), int(float(y))
         from util.gui import click
         click([x, y])
         return wrap_response(msg=f'click at {(x, y)}')
