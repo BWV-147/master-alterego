@@ -218,8 +218,12 @@ def task_action():
     msg = None
     success = True
     if new_action in ArgParser.valid_actions:
-        ArgParser.override_action = new_action
-        msg = f'action is set to "{new_action}"'
+        if config.task_thread and config.task_thread.is_alive():
+            success = False
+            msg = 'Task is still alive'
+        else:
+            ArgParser.override_action = new_action
+            msg = f'action is set to "{new_action}"'
     elif new_action:
         success = False
         msg = f'invalid action "{new_action}"'

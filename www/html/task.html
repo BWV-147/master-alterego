@@ -146,6 +146,7 @@
 </div>
 
 <script>
+  // init
   let monitor = null
   $('#monitorSelect').on('change', function () {
     monitor = $(this).val()
@@ -153,18 +154,33 @@
   $('#refreshScreenshotBtn').click(function () {
     loadScreenshot()
   })
-  let autoRefreshClock = 0;
-  $('#refreshIntervalSelect').on('change', function () {
+
+  // auto refresh screenshot
+  let autoRefreshClock = 0
+  let autoRefreshCount = 0
+  let $refreshIntervalSelect = $('#refreshIntervalSelect')
+  $refreshIntervalSelect.on('change', function () {
     let interval = Number.parseFloat($(this).val())
     console.log(`select interval ${interval} milliseconds`)
     clearInterval(autoRefreshClock)
+    autoRefreshCount = 0
     if (interval > 0) {
       autoRefreshClock = setInterval(function () {
         loadScreenshot()
+        autoRefreshCount += 1
+        if (autoRefreshCount > 100) {
+          // if refresh 100+ times without interaction, stop it
+          addLog('long time no interaction, stop auto refresh')
+          stopAutoRefresh()
+        }
       }, interval)
       console.log(`clock=${autoRefreshClock}`)
     }
   })
+
+  function stopAutoRefresh() {
+    $refreshIntervalSelect.val('0').change()
+  }
 
   function loadScreenshot() {
     let canvas = document.getElementById('screenshotCanvas')
@@ -178,11 +194,14 @@
     }
     img.onerror = () => {
       addLog('load screenshot failed, stop auto refresh.')
-      $('#refreshIntervalSelect').val('0').change()
+      stopAutoRefresh()
     }
   }
 
   $('#screenshotCanvas').click(function (event) {
+    if (!document.getElementById('clickableSwitch').checked)
+      return
+
     let canvas = document.getElementById('screenshotCanvas')
     let relX = event.offsetX / canvas.offsetWidth,
       relY = event.offsetY / canvas.offsetHeight;
@@ -190,16 +209,14 @@
       absY = relY * canvas.height;
     // console.log('relative:', [relX.toFixed(3), relY.toFixed(3)])
     // console.log('absolute:', [absX.toFixed(3), absY.toFixed(3)])
-    if (document.getElementById('clickableSwitch').checked) {
-      $.get('/clickAbsolute', {x: absX, y: absY}, function (result) {
-        addLog(result['msg'])
-        if (Number.parseFloat($('#refreshIntervalSelect').val()) === 0)
-          loadScreenshot()
-      })
-    } else {
-      console.log('click is disabled')
-    }
+    $.get('/clickAbsolute', {x: absX, y: absY}, function (result) {
+      addLog(result['msg'])
+      if (Number.parseFloat($refreshIntervalSelect.val()) === 0)
+        loadScreenshot()
+    })
+    autoRefreshCount = 0
   })
+
   loadScreenshot()
 </script>
 <div class="footer-placeholder"></div>
