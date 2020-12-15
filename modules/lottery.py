@@ -112,7 +112,7 @@ class Lottery(BaseAgent):
                 if skipped_drag_num > MAX_SKIP_NUM:  # no item checked:
                     if no == 0:
                         logger.warning('mailbox is full but no item can be cleaned')
-                        send_mail('mailbox is full but nothing can be cleaned', level=MAIL_WARNING)
+                        send_mail('mailbox is full but nothing can be cleaned', level=MailLevel.warning)
                         config.mark_task_finish()
                         return
                     logger.debug(f'no item available, stop cleaning.', extra=LOG_TIME)

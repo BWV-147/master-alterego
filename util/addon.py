@@ -31,10 +31,10 @@ from .base import *
 
 
 # %% email
-def send_mail(body, subject=None, receiver=None, attach_shot=True, level=MAIL_DEBUG):
+def send_mail(body, subject=None, receiver=None, attach_shot=True, level=MailLevel.debug):
     from .autogui import screenshot
     # check email params
-    if not (MAIL_MUTE < config.mail <= level):
+    if not (MailLevel.mute < config.mail <= level):
         logger.info(f'Don\'t send mail.\nSubject: {subject}\nBody: {body}')
         return
     if receiver is None:

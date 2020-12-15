@@ -6,7 +6,7 @@ To expose to public network, the following operations are needed.
  - if there's no public network address, consider using "port mapping" on NAT device which has public address
    or NAT traversal tools(e.g. ngrok) to expose local web server.
 
-On windows, host="::" ony bind ipv6, and host="0.0.0.0" only bind ipv4.
+On windows, host="::" only bind ipv6?, and host="0.0.0.0" only bind ipv4.
 
 REST API: returned response format
 {
@@ -93,7 +93,7 @@ def get_log_list():
     if not os.path.exists(log_dir):
         filenames = []
     else:
-        filenames = [f for f in os.listdir(log_dir) if '.log' in f]
+        filenames = sorted([f for f in os.listdir(log_dir) if '.log' in f])
     return wrap_response(filenames)
 
 
@@ -255,7 +255,7 @@ def config_files():
     return wrap_response({
         'current': os.path.basename(config.fp),
         'id': config.id,
-        'options': [fn for fn in os.listdir('data/') if fn.lower().endswith('.json')]
+        'options': sorted([fn for fn in os.listdir('data/') if fn.lower().endswith('.json')])
     }, success, msg)
 
 

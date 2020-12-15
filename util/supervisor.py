@@ -32,7 +32,7 @@ def supervise_log_time(thread, time_out=60, interval=10, alert_type=None, alert_
         if config.task_finished:
             # thread finished: all battles finished(thread exit normally)
             logger.info(f'Thread-{thread.ident}({thread.name}) finished. Stop supervising.')
-            send_mail(f'[{thread.name}]Task finished.', level=MAIL_INFO)
+            send_mail(f'[{thread.name}]Task finished.', level=MailLevel.info)
             # make sure thread is stopped
             if thread.is_alive():
                 kill_thread(thread)
@@ -96,7 +96,7 @@ def supervise_log_time(thread, time_out=60, interval=10, alert_type=None, alert_
                       f' - current  time: {time.asctime()}\n' \
                       f' - last log time: {time.asctime(time.localtime(config.log_time))}\n' \
                       f' - over time: {time.time() - config.log_time:.2f} secs (timeout={time_out}).\n'
-            send_mail(err_msg, subject=f'[{thread.name}]Went wrong!', level=MAIL_ERROR)
+            send_mail(err_msg, subject=f'[{thread.name}]Went wrong!', level=MailLevel.error)
             break
     raise_alert(alert_type, loops=10)
     logger.info('exit supervisor.')

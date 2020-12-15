@@ -310,7 +310,7 @@ class ImageTemplates:
     @DynamicAttrs
     """
 
-    def __init__(self, directory: str = None):
+    def __init__(self, directory: str = None, recursive=False):
         self.dirs: str = directory
         self.templates: Dict[str, Image.Image] = {}
         # ============ battle part ============
@@ -369,16 +369,33 @@ class ImageTemplates:
         self.ce_items_selected = None
         self.ce_enhance_page = None
         self.ce_enhance_confirm = None
-
+        # ============ mystic code part ============
+        self.mystic_code_01_chaldea = None  # 初始服
+        self.mystic_code_04_battle = None  # 战斗服
+        self.mystic_code_02_mages = None  # 魔术协会制服
+        self.mystic_code_03_atlas = None  # 阿特拉斯院制服
+        self.mystic_code_05_blonde = None  # 金色庆典
+        self.mystic_code_06_brand = None  # 王室品牌
+        self.mystic_code_07_summer = None  # 明亮夏日
+        self.mystic_code_08_extra = None  # 月之海的记忆
+        self.mystic_code_09_ccc = None  # 月之背面的记忆
+        self.mystic_code_10_fuyuki = None  # 2004年的碎片
+        self.mystic_code_11_polar = None  # 极地服
+        self.mystic_code_12_tropical = None  # 热带夏日
+        self.mystic_code_13_fine = None  # 华美新年
+        self.mystic_code_14_captain = None  # 迦勒底船长 太空服
+        self.mystic_code_15_true_element = None  # 第五真实元素环境用迦勒底制服
+        self.mystic_code_16_pathfinder = None  # 迦勒底开拓者
         # =========== End Props =========== #
         if directory is not None:
-            self.read_templates(directory)
+            self.read_templates(directory, recursive=recursive)
 
-    def read_templates(self, directory: Union[str, List[str]], append=False):
+    def read_templates(self, directory: Union[str, List[str]], append=False, recursive=False):
         """
         Read template .png images from one or more dirs. If duplicated filenames, the last image will be remained
         :param directory:
         :param append: if false, clear the templates first.
+        :param recursive:
         :return:
         """
         if isinstance(directory, (list, tuple)):
@@ -392,11 +409,22 @@ class ImageTemplates:
         if not append:
             self.templates = {}
             self.dirs = []
-        for filename in os.listdir(directory):
-            if not filename.endswith('.png'):
+        all_filepath = []
+        if recursive:
+            for root, dirs, files in os.walk(directory):
+                all_filepath.extend([os.path.join(root, f) for f in files])
+            self.dirs.append(directory.upper())
+        else:
+            for fn in os.listdir(directory):
+                fp = os.path.join(directory, fn)
+                if os.path.isfile(fp):
+                    all_filepath.append(fp)
+            self.dirs.append(directory.lower())
+        for filepath in all_filepath:
+            if not filepath.endswith('.png'):
                 continue
-            filepath = os.path.join(directory, filename)
-            key = filename[0:len(filename) - 4]
+            # filepath = os.path.join(directory, filepath)
+            key = os.path.basename(filepath)[:-4]
             if self.__dict__.get(key, None) is not None and not isinstance(self.__dict__[key], Image.Image):
                 raise ValueError(f'Key "{key}" already exist (not image): {self.__dict__[key]}')
             self.__dict__[key] = self.templates[key] = Image.open(filepath)

@@ -336,7 +336,7 @@ class Master:
             refresh_times += 1
             logger.debug(f'refresh support {refresh_times} times...', extra=LOG_TIME)
             if refresh_times % 100 == 0:
-                send_mail(body=f'refresh support more than {refresh_times} times.', level=MAIL_INFO)
+                send_mail(body=f'refresh support more than {refresh_times} times.', level=MailLevel.info)
             wait_targets(support0, LOC.support_refresh, at=0)
             wait_targets(T.support_confirm, LOC.support_confirm_title, clicking=LOC.support_refresh)
             click(LOC.support_refresh_confirm)
