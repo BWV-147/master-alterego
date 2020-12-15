@@ -60,13 +60,13 @@ def move_to(xy: Sequence):
     pyautogui.moveTo(x, y)
 
 
-def drag(start: Sequence, end: Sequence, duration=1.0, down_time=1.0, up_time=0.0, lapse=0.5):
+def drag(start: Sequence, end: Sequence, duration=1.0, down_duration=1.0, up_duration=0.0, lapse=0.5):
     """
     :param start: (x1,y1)
     :param end: (x2,y2) both absolute coordinate
     :param duration: duration of mouse moving
-    :param down_time: (None, double) time between mouse down and move start. If None, no mouse down event.
-    :param up_time: (None, double) time between move end and mouse up. If None, no mouse up event.
+    :param down_duration: (None, double) time between mouse down and move start. If None, no mouse down event.
+    :param up_duration: (None, double) time between move end and mouse up. If None, no mouse up event.
     :param lapse: lapse after mouse up
     :return:
     """
@@ -76,15 +76,15 @@ def drag(start: Sequence, end: Sequence, duration=1.0, down_time=1.0, up_time=0.
         # yet, wda cannot swipe at a complex path, and only down_time(=duration in .swipe()) can be set
         start = apply_wda_scale(start, config.wda_client.scale)
         end = apply_wda_scale(end, config.wda_client.scale)
-        config.wda_client.swipe(*start, *end, duration=down_time)
+        config.wda_client.swipe(*start, *end, duration=down_duration)
     else:
         pyautogui.moveTo(start[0], start[1])
-        if down_time is not None:
+        if down_duration is not None:
             pyautogui.mouseDown()
-            time.sleep(down_time)
+            time.sleep(down_duration)
         pyautogui.dragRel(end[0] - start[0], end[1] - start[1], duration, mouseDownUp=False)
-        if up_time is not None:
-            time.sleep(up_time)
+        if up_duration is not None:
+            time.sleep(up_duration)
             pyautogui.mouseUp()
     time.sleep(lapse)
 

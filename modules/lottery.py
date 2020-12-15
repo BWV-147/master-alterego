@@ -144,7 +144,7 @@ class Lottery(BaseAgent):
                             break
                     if no < num:
                         drag(start=LOC.mailbox_drag_start, end=LOC.mailbox_drag_end,
-                             duration=0.5, down_time=0.1, up_time=0.3, lapse=0.1)
+                             duration=0.5, down_duration=0.1, up_duration=0.3, lapse=0.1)
                         sleep(0, 0.2)
                         skipped_drag_num += 1
                     if skipped_drag_num > MAX_SKIP_NUM:

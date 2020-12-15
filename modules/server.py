@@ -267,23 +267,27 @@ def modify_config_file():
     else:
         # update config according uploaded content
         # don't directly save to config file, since there may be errors.
-        data = request.get_data().decode('utf8')
+        data = request.get_data(as_text=True)
         config.from_json(json.loads(data))
         config.save()
         return wrap_response(json.dumps(config.to_json(), ensure_ascii=False, indent=2), True, 'config updated')
 
 
-@app.route('/clickAbsolute')
-def remote_click():
-    x = request.args.get('x', None)
-    y = request.args.get('y', None)
-    if x is not None and y is not None:
-        x, y = int(float(x)), int(float(y))
-        from util.gui import click
-        click([x, y])
-        return wrap_response(msg=f'click at {(x, y)}')
-    else:
-        return wrap_response(success=False, msg='invalid params')
+@app.route('/remoteMouseEvent', methods=['POST'])
+def remote_mouse_event():
+    from util.gui import click, drag
+    data = json.loads(request.get_data(as_text=True))
+    if data['event'] == 'click':
+        pos = data['pos']
+        click(pos)
+        return wrap_response(msg=f"click at {tuple(pos)}")
+    elif data['event'] == 'drag':
+        from_pos, to_pos, duration, down_duration, up_duration = \
+            data['from'], data['to'], data['duration'], data['downDuration'], data['upDuration']
+        drag(from_pos, to_pos, duration, down_duration, up_duration)
+        return wrap_response(msg=f"drag from {from_pos} to {to_pos},"
+                                 f" duration={duration}/{down_duration}/{up_duration} secs.")
+    return wrap_response(success=False, msg='invalid params')
 
 
 # %%
