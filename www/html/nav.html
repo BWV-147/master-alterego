@@ -40,24 +40,6 @@
     </div>
 </nav>
 <script>
-  $.get('/getConfigList', function (result) {
-    let data = result['body']
-    $('#configDropdown').text(`${data['current']} (${data['id']})`)
-    let configHtml = []
-    $.each(data['files'], function (i, file) {
-      configHtml.push(`<a class="dropdown-item" onclick="setConfigFile('${file}')">${file}</a>`)
-    })
-    $('#configMenu').html(configHtml.join())
-  })
-  $.get('/taskAction',function (result){
-    let data=result['body']
-    if(result['success']){
-      $('#actionDropdown').text(data['current'])
-      let actionsHtml = []
-      $.each(data['actions'], function (i, action) {
-        actionsHtml.push(`<a class="dropdown-item" onclick="setAction('${action}')">${action}</a>`)
-      })
-      $('#actionMenu').html(actionsHtml.join())
-    }
-  })
+  setConfigFile()
+  setAction()
 </script>

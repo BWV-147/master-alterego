@@ -98,25 +98,33 @@ function switchTab() {
  * nav
  */
 function setAction(action) {
-  $.get('/taskAction', {'action': action}, function (result) {
-    if (result['success']) {
-      $('#actionDropdown').text(result['body']['current'])
-    }
+  $.get('/taskActions', {'action': action}, function (result) {
+    let data = result['body']
+    $('#actionDropdown').text(data['current'])
+    let actionsHtml = ['<h6 class="dropdown-header">Select Action</h6>\n']
+    $.each(data['options'], function (i, option) {
+      actionsHtml.push(`<a class="dropdown-item" onclick="setAction('${option}')">${option}</a>`)
+    })
+    $('#actionMenu').html(actionsHtml.join(''))
     addLog(result['msg'])
   })
 }
 
 function setConfigFile(filename) {
-  $.get('/configuration', {'file': filename}, function (result) {
-    if (result['success']) {
-      $('#configDropdown').text(result['body']['current'])
-    }
+  $.get('/configFiles', {'file': filename}, function (result) {
+    let data = result['body']
+    $('#configDropdown').text(`${data['current']} (${data['id']})`)
+    let configHtml = ['<h6 class="dropdown-header">Select Config</h6>']
+    $.each(data['options'], function (i, option) {
+      configHtml.push(`<a class="dropdown-item" onclick="setConfigFile('${option}')">${option}</a>`)
+    })
+    $('#configMenu').html(configHtml.join(''))
     addLog(result['msg'])
   })
 }
 
 function pullConfig() {
-  $.get('/configuration', function (result) {
+  $.get('/modifyConfigFile', function (result) {
     $('#configEditor').val(result['body'])
     addLog(result['msg'])
   })
@@ -126,12 +134,13 @@ function pushConfig() {
   let data = $('#configEditor').val()
   try {
     JSON.parse(data)
-  } catch {
-    addLog('Invalid json format')
+  } catch (e) {
+    addLog(`Error parsing json: ${e}`)
+    return
   }
-  $.post('/configuration', data, function (result) {
+  $.post('/modifyConfigFile', data, function (result) {
     $('#configEditor').val(result['body'])
-    addLog('config updated')
+    addLog(result['msg'])
   })
 }
 

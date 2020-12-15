@@ -194,7 +194,7 @@ def toggle_visibility():
     else:
         if config.hide_hotkey:
             pag.hotkey(*config.hide_hotkey)
-            return wrap_response(f'Toggle visibility: {config.hide_hotkey}')
+            return wrap_response(msg=f'Toggle visibility: {config.hide_hotkey}')
         else:
             return wrap_response(success=False, msg='Toggle visibility: no hotkey specified')
 
@@ -212,8 +212,8 @@ def switch_tab():
             return wrap_response(success=False, msg='Switch tab: no hotkey specified')
 
 
-@app.route('/taskAction')
-def task_action():
+@app.route('/taskActions')
+def task_actions():
     new_action = request.args.get('action')
     msg = None
     success = True
@@ -231,39 +231,39 @@ def task_action():
 
     return wrap_response({
         'current': cur_action,
-        'actions': ArgParser.valid_actions
+        'options': ArgParser.valid_actions
     }, success, msg)
 
 
-@app.route('/getConfigList')
-def get_config_list():
-    if not os.path.exists('data/'):
-        return wrap_response({}, False, 'No data folder')
+@app.route('/configFiles')
+def config_files():
+    new_config = request.args.get('file')
+    msg = None
+    success = True
+    if new_config:
+        fp = os.path.join('data/', new_config)
+        if os.path.exists(fp) and os.path.isfile(fp):
+            if config.task_thread and config.task_thread.is_alive():
+                success, msg = False, 'Task is still alive'
+            else:
+                ArgParser.override_config = fp
+                config.load(fp)
+                success, msg = True, f'config is set to {os.path.basename(config.fp)}'
+        else:
+            success, msg = False, f'Invalid file arg: {new_config}'
+
     return wrap_response({
         'current': os.path.basename(config.fp),
         'id': config.id,
-        'files': [fn for fn in os.listdir('data/') if fn.lower().endswith('.json')]
-    })
+        'options': [fn for fn in os.listdir('data/') if fn.lower().endswith('.json')]
+    }, success, msg)
 
 
-@app.route('/configuration', methods=['GET', 'POST'])
-def configuration():
+@app.route('/modifyConfigFile', methods=['GET', 'POST'])
+def modify_config_file():
     if request.method == 'GET':
-        config_file = request.args.get('file')
-        if config_file:
-            # set config file
-            fp = os.path.join('data/', config_file)
-            if os.path.exists(fp) and os.path.isfile(fp):
-                if config.task_thread and config.task_thread.is_alive():
-                    return wrap_response(None, False, 'Task is still alive')
-                ArgParser.override_config = fp
-                config.load(fp)
-                return wrap_response(get_config_list()['body'], True, f'config is set to {os.path.basename(config.fp)}')
-            else:
-                return wrap_response(None, False, f'Invalid file arg: {config_file}')
-        else:
-            # get config content
-            return wrap_response(json.dumps(config.to_json(), ensure_ascii=False, indent=2))
+        # get config content
+        return wrap_response(json.dumps(config.to_json(), ensure_ascii=False, indent=2), True, 'config content pulled')
     else:
         # update config according uploaded content
         # don't directly save to config file, since there may be errors.
