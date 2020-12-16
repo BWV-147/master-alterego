@@ -1,7 +1,7 @@
 import sys
 
 _version = sys.version_info
-if _version.major == 3 and _version.minor <= 7 and False:
+if _version.major == 3 and _version.minor <= 7:
     # goto-statement only support Python <=3.7
     from goto import with_goto  # noqa
 else:
@@ -17,3 +17,4 @@ else:
 
     goto = _GotoKeyword()
     label = _GotoKeyword()
+    print('WARNING: goto-statement is not supported!', file=sys.stderr)

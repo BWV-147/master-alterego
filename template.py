@@ -168,8 +168,6 @@ capture('gacha_fp_confirm')
 # %%
 capture('gacha_fp_result')
 # %%-
-capture('gacha_fp_svt_full')
-# %%-
 capture('gacha_fp_ce_full')
 # %%
 capture('ce_enhance_empty')
@@ -183,6 +181,8 @@ capture('ce_items_selected')
 capture('ce_enhance_page')
 # %%
 capture('ce_enhance_confirm')
+# %%
+capture('gacha_fp_svt_full')
 # %%
 capture('bag_unselected')
 # %%

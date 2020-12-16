@@ -138,7 +138,7 @@ class FpGachaConfig(BaseConfig):
         self.num = 0
         self.finished = 0
         self.sell_times = 10
-        self.enhance_num = 100
+        self.enhance_times = 100
 
 
 class Config(BaseConfig):

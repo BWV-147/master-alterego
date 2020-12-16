@@ -63,8 +63,8 @@ class FpGacha(BaseAgent):
                 else:
                     logger.info('CE bag full, make sure only show *LOW RARITY<=2* CE.')
                     click(LOC.fp_bag_full_enhance_button)
-                    self.enhance_ce(config.fp_gacha.enhance_num)
-                if [config.fp_gacha.sell_times, config.fp_gacha.enhance_num][bag_no] > 0:
+                    self.enhance_ce(config.fp_gacha.enhance_times)
+                if [config.fp_gacha.sell_times, config.fp_gacha.enhance_times][bag_no] > 0:
                     wait_targets(T.shop, LOC.menu_button, at=0)
                     wait_targets(T.menu, LOC.menu_gacha_button, at=0)
                     while True:
@@ -110,7 +110,7 @@ class FpGacha(BaseAgent):
                         break
             wait_targets(T.ce_enhance_page, LOC.ce_target_box, at=LOC.ce_select_items_box)
             wait_targets(T.ce_items_unselected, LOC.ce_select_button)
-            drag(LOC.ce_select_start, LOC.ce_select_end, 0.5, 0.5, 0.2, 0)
+            drag(LOC.ce_select_start, LOC.ce_select_end, 0.5, 1, 0.5, 0)
             sleep(0.3, 1)
             # TODO: verify it
             # drag(LOC.ce_select_start, LOC.ce_select_middle, 0.5, 0.5, None, 0)
