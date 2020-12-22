@@ -9,24 +9,25 @@ $(document).ready(function () {
   })
   $('.footer-placeholder').html(`<footer class="text-muted">
     <div class="container">
-            <!--logs accordion-->
-            <div class="accordion" id="logsAccordion">
-                <div class="card">
-                    <div class="card-header" id="logsHeading">
-                        <h2 class="mb-0">
-                            <button class="btn btn-block text-left" type="button" data-toggle="collapse"
-                                    data-target="#logsCollapse" aria-expanded="true" aria-controls="logsCollapse">
-                                logs
-                            </button>
-                        </h2>
-                    </div>
-                    <div id="logsCollapse" class="collapse show" aria-labelledby="logsHeading">
-                      <div class="card-body">
-                          <pre id="taskStatus"></pre>
-                      </div>
-                    </div>
+        <hr>
+        <!--logs accordion-->
+        <div class="accordion" id="logsAccordion">
+            <div class="card">
+                <div class="card-header" id="logsHeading">
+                    <h2 class="mb-0">
+                        <button class="btn btn-block text-left" type="button" data-toggle="collapse"
+                                data-target="#logsCollapse" aria-expanded="true" aria-controls="logsCollapse">
+                            logs
+                        </button>
+                    </h2>
+                </div>
+                <div id="logsCollapse" class="collapse show" aria-labelledby="logsHeading">
+                  <div class="card-body">
+                      <pre id="taskStatus"></pre>
+                  </div>
                 </div>
             </div>
+        </div>
         <p>Hello World 2020!</p>
     </div></footer>`)
 })

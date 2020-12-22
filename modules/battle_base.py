@@ -112,8 +112,7 @@ class BattleBase(BaseAgent):
             png_fn = os.path.join(drop_dir, f'rewards-{self.master.quest_name}-{time.strftime("%m%d-%H%M")}'
                                             f'-{config.battle.finished + 1}')
 
-            if config.battle.check_drop > 0 and match_targets(rewards, T.rewards,
-                                                              LOC.rewards_check_drop[config.battle.check_drop]):
+            if config.battle.check_drop > 0 and self.master.check_rewards(rewards, config.battle.check_drop):
                 config.count_battle(True)
                 logger.warning(f'{config.battle.craft_num}th craft dropped!!!')
                 rewards.save(f'{png_fn}-drop{config.battle.craft_num}.png')

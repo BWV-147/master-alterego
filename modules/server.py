@@ -152,7 +152,7 @@ def get_file():
 
 @app.route('/getTaskStatus')
 def get_task_status():
-    return wrap_response(repr(config.task_thread))
+    return wrap_response(f'Current task thread: {repr(config.task_thread)}')
 
 
 @app.route('/shutdownTask')
@@ -166,9 +166,10 @@ def shutdown_task():
             # actually, won't return since server is killed.
             return wrap_response(None, True, f'Task has been terminated. Thread: {config.task_thread}')
         else:
-            return wrap_response(None, False, 'Task run in main thread, check force stop to terminate it.')
+            return wrap_response(None, False, 'Task run in main thread, check force stop to terminate it, '
+                                              'server will be shutdown too.')
     elif config.task_thread and config.task_thread.is_alive():
-        kill_thread(config.task_thread)
+        config.mark_task_finish()
         return wrap_response(None, True, f'Task has been terminated. Thread: {config.task_thread}')
     else:
         return wrap_response(None, False, f'No running task. Thread: {config.task_thread}')

@@ -244,7 +244,7 @@ class Regions(_Regions):
                      range(0, 3)]
     rewards_item1 = rewards_items[0][1]  # first dropped item rect
     rewards_rainbow = (1418, 18, 1442, 50)
-    rewards_check_drop = [(0, 0, 0, 0), rewards_item1, rewards_rainbow]
+    rewards_suochi_character = (463, 288, 465, 298)  # "所"最后一竖
     rewards_next = (1576, 980, 1750, 1061)
     restart_quest_yes = (1122, 812, 1386, 879)
     # friend_point = (460, 810, 580, 880)
@@ -286,7 +286,6 @@ class RegionsJP(Regions):
                      range(0, 3)]
     rewards_item1 = (447, 142, 607, 236)  # first dropped item rect
     rewards_rainbow = (1452, 16, 1459, 32)
-    rewards_check_drop = [(0, 0, 0, 0), rewards_item1, rewards_rainbow]
     rewards_next = (1576, 920, 1750, 1001)
 
     support_scrollbar_start = (1882, 294)

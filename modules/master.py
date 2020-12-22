@@ -234,6 +234,10 @@ class Master:
                         elif page_no == 1:
                             click(LOC.apple_confirm, lapse=1)
                         elif page_no == 2:
+                            if apple == 0:
+                                logger.set_cur_logger('quartz', 10)
+                                logger.info(f'Account {config.id}: eating saint quartz as apple!')
+                                logger.set_cur_logger()
                             return
 
     def choose_support(self, match_svt=True, match_skills=True, match_ce=False, match_ce_max=False, friend_only=False,
@@ -691,3 +695,16 @@ class Master:
             for loc in locs:
                 if loc in (6, 7, 8):
                     click(self.LOC.cards[loc - 1], lapse=0.3)
+
+    def check_rewards(self, img: Image.Image = None, check_type: int = 0):
+        if img is None:
+            img = screenshot()
+        if check_type == 0:
+            return False
+        elif check_type == 1:
+            return match_targets(img, self.T.rewards, self.LOC.rewards_item1)
+        elif check_type == 2:
+            return match_targets(img, self.T.rewards, self.LOC.rewards_rainbow)
+        elif check_type == 3:
+            # rewards should not contains craft
+            return not match_targets(img, self.T.rewards, self.LOC.rewards_suochi_character, 0.7)

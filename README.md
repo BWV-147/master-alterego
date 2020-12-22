@@ -9,7 +9,7 @@
     - since `goto-statement` not adapted for Python 3.8 or higher, `@with_goto`, `goto`and `label` take no effect.
 - OS:
     - **IMPORTANT**: full screen display won't be adapted, valid render region must be **16:9**
-    - Windows + Android or iOS emulator
+    - Windows + Android/iOS emulator
         - keep running at foreground, usually fullscreen
     - macOS + Android emulator (not tested)
     - macOS + iOS real device
@@ -31,13 +31,13 @@
 
 
 ## Usage
-- clone this repository and activate virtual environment, e.g. `venv`, `conda`. Use `pip` to install require libraries.
+- clone this repository and activate virtual environment, e.g. `venv`, `conda`. Use `pip` to install required libraries.
     ```Shell
     pip install -r requirements.txt
     ```
 
-- `python main.py --gen-config` to generate default config file.
-- edit config file, default config file will be saved at `data/config.json` once run. See Configuration part for details.
+- `python main.py --gen-config` to generate default config file at `data/config.json`.
+- edit config file. See Configuration part for details.
 - capture desired template screenshots of running app to `img/` folder. Frequently used templates are listed in `template.py`.
 - `python main.py` to start battles. Append `-h` for arguments help.
 
@@ -60,8 +60,8 @@ For WDA+iOS users, you need an Apple developer account to deploy WDA to your dev
 - try set screenshotOrientation to portrait or landscapeLeft/Right...
 
 **Xcode certification**
-- test failed because of security: trust profile in Settings-General-Profiles
-- signing certificate will be expired in 6 days for free developer account's,
+- test failed because of security: trust profile in Settings-General-Profiles (network connection needed)
+- signing certificate will be expired in 6 days for free developer account,
  restart Xcode and signing again to refresh
 - access security of keychains for new generated certificate
 

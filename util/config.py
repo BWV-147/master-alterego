@@ -97,7 +97,10 @@ class BattleConfig(BaseConfig):
         self.location = None  # default to (0,0,1920,1080)
         self.num = 1  # max battle num once running, auto decrease
         self.finished = 0  # all finished battles sum, auto increase, don't edit
-        self.check_drop = 1  # check dropped craft or item. 0-not check; 1-check 1st drop item; 2-check dropbox(rainbow)
+        # check dropped craft or item.
+        # 0-don't check; 1-check 1st drop item; 2-check dropbox(rainbow);
+        # 3-check 汉字"所持", rewards.png should not contain craft
+        self.check_drop = 1
         self.apples = []  # invalid: stop, 0-rainbow, 1-gold, 2-sliver, 3-cropper, 4-zihuiti, 5-manually(wait ~7min)
         self.end_until_eating_apple = False  # if True, continue battles even finished>=num, be sure the least AP left
         self.jump_battle = False  # goto decoration in Battle.battle_func
