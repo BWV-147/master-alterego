@@ -2,8 +2,9 @@
 import io
 
 import cv2
+import imagehash as imagehash
 import numpy
-from PIL import ImageGrab
+from PIL import ImageGrab, ImageFilter
 from mss import mss
 from scipy.signal import find_peaks
 from skimage.feature import match_template as sk_match_template
@@ -33,15 +34,23 @@ def cal_sim(img1: Image.Image, img2: Image.Image, region=None, method='ssim') ->
     :param img1:
     :param img2:
     :param region: region to crop.
-    :param method: 'ssim': compute the mean structural similarity using `skimage`.
-                   'hist': compute the similarity of color histogram
-    :return: similarity, float between (0,1).
+    :param method: 'ssim': compute the mean structural similarity using `skimage`,
+                   'hist': compute the similarity of color histogram,
+                   'hash': image hash, value may be larger as expected.
+    :return: similarity, float less than 1, may be negative.
     """
     if region is not None:
         img1 = img1.crop(region)
         img2 = img2.crop(region)
-    img1 = img1.convert('RGB')
-    img2 = img2.convert('RGB')
+    if img1.width < img2.width:
+        img2 = img2.resize((img1.width, img1.height))
+    else:
+        img1 = img1.resize((img2.width, img2.height))
+    if img1.mode != 'RGB':
+        img1 = img1.convert('RGB')
+    if img2.mode != 'RGB':
+        img2 = img2.convert('RGB')
+
     if method == 'ssim':
         try:
             # noinspection PyTypeChecker,PyUnusedLocal
@@ -50,17 +59,27 @@ def cal_sim(img1: Image.Image, img2: Image.Image, region=None, method='ssim') ->
             """When cropped image size is too small(like <7), it will raise
             ValueError: win_size exceeds image extent.  If the input is a multichannel (color) image, 
             set multichannel=True."""
-            logger.exception('skimage.metrics.structural_similarity failed. Use hist method instead.')
-            method = 'hist'
-    if method == 'hist':
+            logger.debug('skimage.metrics.structural_similarity failed. Use hist method instead.')
+            sim = cal_sim(img1, img2, method='hist')
+    elif method == 'hist':
         size = tuple(numpy.min((img1.size, img2.size), 0))
         if size != img1.size:
             img1 = img1.resize(size)
             img2 = img2.resize(size)
         lh = img1.histogram()
         rh = img2.histogram()
-
-        sim = sum(1 - (0 if _l == _r else float(abs(_l - _r)) / max(_l, _r)) for _l, _r in zip(lh, rh)) / len(lh)
+        # remove unused color where _l=_r=0
+        diff = [1 - (0 if _l == _r else float(abs(_l - _r)) / max(_l, _r)) for _l, _r in zip(lh, rh) if
+                _l != 0 or _r != 0]
+        sim = sum(diff) / len(diff)
+    elif method == 'hash':
+        # https://stackoverflow.com/questions/843972/image-comparison-fast-algorithm
+        img1 = img1.filter(ImageFilter.BoxBlur(radius=3))
+        img2 = img2.filter(ImageFilter.BoxBlur(radius=3))
+        phashvalue = imagehash.phash(img1) - imagehash.phash(img2)
+        ahashvalue = imagehash.average_hash(img1) - imagehash.average_hash(img2)
+        totalaccuracy = phashvalue + ahashvalue
+        sim = 1 - totalaccuracy / 100
     else:
         raise ValueError(f'invalid method "{method}", only "ssim" and "hist" supported')
     # print(f'sim={sim:.4f}')

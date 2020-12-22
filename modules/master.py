@@ -70,7 +70,7 @@ class Master:
         self.members: List[str] = list('ABCDEF')
         self.T = ImageTemplates()
         # initiate inside BattleBase after pre_process
-        self.LOC: Optional[Regions] = None
+        self.LOC: Regions = Regions()
         self.card_templates: Dict[Card, List[Image.Image]] = {}
         self.card_weights: Dict[Card, float] = {}
         self._wave_a = None

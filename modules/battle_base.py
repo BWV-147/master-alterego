@@ -8,8 +8,18 @@ class BattleBase(BaseAgent):
     def __init__(self):
         super().__init__()
         self.master = Master()
-        self.T = self.master.T
-        self.LOC = self.master.LOC
+
+    @property
+    def T(self):  # noqa
+        return self.master.T
+
+    @property
+    def LOC(self):  # noqa
+        return self.master.LOC
+
+    @LOC.setter
+    def LOC(self, value):  # noqa
+        self.master.LOC = value
 
     def start(self, supervise=True, cfg=None, force_jump=False):
         """
@@ -23,7 +33,6 @@ class BattleBase(BaseAgent):
         """
         # pre-processing
         self.pre_process(cfg)
-        self.master.LOC = self.LOC
         config.mail = config.battle.mail
         self.LOC.relocate(config.battle.location)
         battle_func = getattr(self, config.battle.battle_func)
