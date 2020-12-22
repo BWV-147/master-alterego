@@ -95,7 +95,7 @@
       $('#dropdownLogs button').text(logName)
       downloadAndShowLog(logName)
     })
-    $(`#dropdownLogs a[href="${window.location.hash}"]`).click()
+    $(`#dropdownLogs a[href="${window.location.hash|| '#log.log'}"]`).click()
   })
 </script>
 <div class="footer-placeholder"></div>

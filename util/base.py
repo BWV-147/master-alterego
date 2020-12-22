@@ -95,6 +95,7 @@ def catch_exception(func):
         try:
             return func(*args, **kwargs)
         except KeyboardInterrupt:
+            # interrupt from user
             raise
         except:  # noqas
             s = f'=== Error in {threading.current_thread()}, {func} ===\n'
@@ -102,7 +103,7 @@ def catch_exception(func):
                 s += f'args={str(args):.200s}\n'
             if kwargs:
                 s += f'kwargs={str(kwargs):.200s}\n'
-            logger.error(s, exc_info=sys.exc_info())
+            logger.exception(s)
 
     return catch_exception_wrapper
 

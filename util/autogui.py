@@ -43,9 +43,16 @@ def cal_sim(img1: Image.Image, img2: Image.Image, region=None, method='ssim') ->
     img1 = img1.convert('RGB')
     img2 = img2.convert('RGB')
     if method == 'ssim':
-        # noinspection PyTypeChecker
-        sim = structural_similarity(numpy.array(img1), numpy.array(img2), multichannel=True)
-    elif method == 'hist':
+        try:
+            # noinspection PyTypeChecker,PyUnusedLocal
+            sim = structural_similarity(numpy.array(img1), numpy.array(img2), multichannel=True)
+        except ValueError:
+            """When cropped image size is too small(like <7), it will raise
+            ValueError: win_size exceeds image extent.  If the input is a multichannel (color) image, 
+            set multichannel=True."""
+            logger.exception('skimage.metrics.structural_similarity failed. Use hist method instead.')
+            method = 'hist'
+    if method == 'hist':
         size = tuple(numpy.min((img1.size, img2.size), 0))
         if size != img1.size:
             img1 = img1.resize(size)
