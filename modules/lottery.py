@@ -51,8 +51,7 @@ class Lottery(BaseAgent):
             shot = screenshot()
             if match_targets(shot, T.lottery_empty, LOC.lottery_empty) and \
                     not match_targets(shot, T.lottery_empty, LOC.lottery_reset_action):
-                logger.warning('no ticket left!')
-                config.mark_task_finish()
+                config.mark_task_finish('Finished: tickets have been used up')
                 return
             if match_targets(shot, T.lottery_empty, LOC.lottery_reset_action):
                 click(LOC.lottery_reset_action)
@@ -63,8 +62,7 @@ class Lottery(BaseAgent):
                 wait_targets(T.lottery_reset_finish, LOC.lottery_reset_finish, at=0)
                 wait_targets(T.lottery_initial, LOC.lottery_10_initial)
                 if reset_i >= num:
-                    logger.info(f'All {num} lotteries finished.', extra=LOG_TIME)
-                    config.mark_task_finish()
+                    config.mark_task_finish(f'Finished: all {num} lotteries')
                     return
             elif match_targets(shot, T.mailbox_full_alert, LOC.mailbox_full_confirm):
                 click(LOC.mailbox_full_confirm)
@@ -113,9 +111,8 @@ class Lottery(BaseAgent):
                 drag_no = 0
                 if skipped_drag_num > MAX_SKIP_NUM:  # no item checked:
                     if no == 0:
-                        logger.warning('mailbox is full but no item can be cleaned')
-                        send_mail('mailbox is full but nothing can be cleaned', level=MailLevel.warning)
-                        config.mark_task_finish()
+                        config.mark_task_finish(f'Interrupted: mailbox is full but nothing can be cleaned',
+                                                MailLevel.warning)
                         return
                     logger.debug(f'no item available, stop cleaning.', extra=LOG_TIME)
                     wait_targets(T.mailbox_unselected1, LOC.mailbox_get_all_action)

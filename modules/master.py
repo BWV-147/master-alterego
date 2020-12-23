@@ -108,7 +108,7 @@ class Master:
 
         :param svt: svt name
         :param fp: json file path. Json file and images should be in the same folder.
-                default `img/share/{device}/cards/cards.json`.
+                default `img/share/{device}/cards/_cards.json`.
                 two equivalent format (here TYPE=NP/Buster/Arts/Quick):
                 - {"svt": {"TYPE":"a1-1,a2-2,a3-3"}}.
                 - {"svt": {"prefix":"a","TYPE":"1-1,2-2,3-3"}}.
@@ -118,7 +118,7 @@ class Master:
         """
         import json
         key = key or svt
-        fp2 = f'img/share/{fp}/cards/cards.json'
+        fp2 = f'img/share/{fp}/cards/_cards.json'
         if not os.path.exists(fp) and os.path.exists(fp2):
             fp = fp2
         _folder = os.path.dirname(os.path.abspath(fp))
@@ -189,7 +189,15 @@ class Master:
             return _str_card(cards)
 
     # battle procedures
-    def eat_apple(self, apples=None):
+    def eat_apple(self, apples: Union[int, List[int]] = None):
+        """
+        Apple:
+            - 0: colorful saint quartz
+            - 1,2,3: gold/silver/copper apple
+            - 4: zi hui ti
+            - 5: choose apple manually
+        :return:
+        """
         T, LOC = self.T, self.LOC
         apples = convert_to_list(apples)
         if not apples:  # empty list
@@ -197,18 +205,15 @@ class Master:
         if config.is_jp is True and not callable(config.battle.login_handler):
             t = time.localtime()
             if t.tm_hour == 2 and t.tm_min > 45:
-                logger.info('Around 3am, stop eating apples and battles for jp server.')
-                config.mark_task_finish()
+                config.mark_task_finish('Around 3am, stop eating apples and battles for jp server.')
                 config.kill()
         for apple in apples:
             if apple == 0:  # 不舍得吃彩苹果
                 # apple = 3
                 pass
             if apple not in (0, 1, 2, 3, 4, 5):
-                logger.info(f'apple={apple} ({apples}), don\'t eat apple or no left apples, task finish.')
                 click(LOC.apple_close)
-                config.mark_task_finish()
-                config.kill()
+                config.mark_task_finish(f'Finished: stop eating apple ({apple}/{apples})')
                 return
             elif apple == 5:
                 logger.debug('Choose apple manually...')
@@ -242,9 +247,7 @@ class Master:
                             if apple == 0:
                                 quartz_logger.info(f'Account {config.id}: eating saint quartz as apple!')
                             return
-        logger.info(f'No apples left:{apples}')
-        send_mail(f'No apples left: {apples}')
-        config.mark_task_finish()
+        config.mark_task_finish(f'Finished: all apples in {apples} have been used out')
         config.kill()
         return
 
@@ -380,14 +383,13 @@ class Master:
         # type: (Image.Image,Image.Image,int,int,int,int,bool)->Master
         """
         Release servant skill to <self/all friends/all enemies>.
-        TODO: bug fix, first skill to enemy in this wave may not set enemy correctly.
 
         :param before: image before the skill released.
         :param after: image after the skill released. if null, not to check.
         :param who: who to release the skill.value in [left=1,mid=2,right=3], the same below.
         :param skill: which skill to release.
         :param friend: which friend
-        :param enemy: which enemy
+        :param enemy: which enemy, set enemy ONLY if target enemy is NOT current one
         :param no_wait: if True, not to wait `after`
         :return: master self.
         """
@@ -402,6 +404,9 @@ class Master:
 
         # start
         if enemy is not None:
+            # if enter a new wave, cannot switch enemy in a few seconds, make sure attack button is shown
+            if not config.is_wda:
+                wait_targets(before or T.wave1a, LOC.attack)
             click(LOC.enemies[enemy - 1])
         region = LOC.skills[who - 1][skill - 1]
         wait_targets(before, region, at=0, lapse=1)
@@ -454,6 +459,8 @@ class Master:
 
         region = LOC.master_skills[skill - 1]
         if enemy is not None:
+            if not config.is_wda:
+                wait_targets(before or T.wave1a, LOC.attack)
             click(LOC.enemies[enemy - 1])
         flag = 0
         while True:

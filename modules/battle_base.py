@@ -87,7 +87,7 @@ class BattleBase(BaseAgent):
                         click((_x, _y))
                     elif match_targets(shot, T.apple_page, LOC.apple_close):
                         if finished_num > battle_num and config.battle.end_until_eating_apple:
-                            self.master.eat_apple(-1)
+                            config.mark_task_finish(f'Finished: all {battle_num} battles finished and AP cleared')
                         else:
                             self.master.eat_apple(apples)
                     elif T.bag_full_alert is not None \
@@ -124,8 +124,7 @@ class BattleBase(BaseAgent):
             page_no = wait_which_target([T.craft_detail, T.rewards_init], [LOC.craft_detail_tab1, LOC.rewards_show_num],
                                         clicking=LOC.rewards_clicking)
             if page_no == 0:
-                send_mail('Bone craft!!!', level=MailLevel.warning)
-                config.mark_task_finish()
+                config.mark_task_finish('Interrupted: Bone craft!!!', MailLevel.warning)
                 return
 
             click(LOC.rewards_show_num, lapse=1)
@@ -143,8 +142,7 @@ class BattleBase(BaseAgent):
                 rewards.save(f'{png_fn}-drop{config.battle.craft_num}.png')
                 if config.battle.craft_num in config.battle.enhance_craft_nums:
                     logger.warning('need to change party or enhance crafts. Exit.')
-                    send_mail(f'Enhance! {config.battle.craft_num}th craft dropped!!!', level=MailLevel.warning)
-                    config.mark_task_finish()
+                    config.mark_task_finish(f'Enhance! {config.battle.craft_num}th craft dropped!!!', MailLevel.warning)
                     return
                 else:
                     send_mail(f'{config.battle.craft_num}th craft dropped!!!', level=MailLevel.warning)
@@ -169,7 +167,7 @@ class BattleBase(BaseAgent):
                 sleep(0.5)
         logger.info(f'>>>>> All {finished_num} battles "{self.master.quest_name}" finished. <<<<<')
         send_mail(f'All {finished_num} battles "{self.master.quest_name}" finished', level=MailLevel.info)
-        config.mark_task_finish()
+        config.mark_task_finish(f'Finished: all {finished_num} battles of "{self.master.quest_name}"')
         return
 
     # noinspection DuplicatedCode

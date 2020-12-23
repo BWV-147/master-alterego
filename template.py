@@ -8,7 +8,7 @@ from util.autogui import *
 import matplotlib.pyplot as plt
 
 if __name__ == '__main__' and not is_interactive_mode():
-    raise EnvironmentError("Don't run the script directly")
+    raise EnvironmentError("Don't run script directly")
 
 config.load('data/config.json')
 config.initialize(False)
@@ -18,13 +18,10 @@ base_path: Optional[str] = None
 
 
 # %%
-def show_img(img, name=None, hide_axis=True):
-    plt.figure(name, clear=True)
-    plt.imshow(img)
-    if hide_axis:
-        plt.xticks([])
-        plt.yticks([])
-        plt.axis('off')
+def show_img(img, name=None):
+    fig = plt.figure(name, figsize=(6.4, 6.4 * 1080 / 1920), facecolor='red', clear=True)
+    fig.add_axes([0, 0, 1, 1])
+    plt.imshow(img, aspect='auto', interpolation='nearest')
     plt.show()
 
 
@@ -49,11 +46,12 @@ def capture(fn: str = None, _base: str = None):
     # pyautogui.hotkey('alt', 'tab')
 
 
-def save_rewards(quest_name: str = None, drop: int = None):
-    config.load()
+def save_rewards(quest_name: str = None, cfg=None, count=True, drop: int = None):
+    config.load(cfg)
     img = screenshot()
     if quest_name:
-        config.count_battle()
+        if count:
+            config.count_battle()
         fn = f'img/_drops/{quest_name}/rewards-{quest_name}-{time.strftime("%m%d-%H%M")}-{config.battle.finished}'
         if drop:
             fn += f'-drop{drop}'
@@ -124,15 +122,23 @@ capture('cards3')
 # %% !!!
 capture('kizuna')
 # %% !!!
+capture('rewards_init')
+# %% !!!
 capture('rewards')
 # %%
 capture('restart_quest')
 # %%
 capture('apply_friend')
-# %%
-capture('net_error')
 # %% for hunting
 capture('bag_full_alert')
+# %% for exceptions
+capture('net_error')
+# %%
+capture('login_news')
+# %%
+capture('login_popup')
+# %%
+capture('login_terminal')
 
 # %% -------------- lottery part --------------
 capture('lottery_initial')
@@ -166,8 +172,6 @@ capture('bag_qp_limit')
 capture('shop')
 # %%
 capture('shop_event_banner_list')
-# %%
-capture('net_error')
 
 # %% ======== fp gacha ========
 capture('gacha_quartz_page')

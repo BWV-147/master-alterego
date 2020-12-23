@@ -102,7 +102,9 @@ class LoggerDispatcher(logging.Logger):
     _instance = None
 
     def __init__(self, name, level=logging.DEBUG):
-        super().__init__(name, level)
+        super().__init__(name)
+        # don't pass level to super, or msg under level will be ignored
+        self._level = level
         # properties
         self._logger: Optional[logging.Logger] = None
         self.dispatcher_disabled = False
@@ -138,7 +140,7 @@ class LoggerDispatcher(logging.Logger):
         if name is None:
             name = self.name
         if level is None:
-            level = self.level
+            level = self._level
         # noinspection PyUnresolvedReferences
         if name in logging.Logger.manager.loggerDict:
             _logger = logging.getLogger(name)

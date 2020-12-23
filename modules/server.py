@@ -175,8 +175,7 @@ def shutdown_task():
             return wrap_response(None, False, 'Task run in main thread, check force stop to terminate it, '
                                               'server will be shutdown too.')
     elif config.task_thread and config.task_thread.is_alive():
-        config.mark_task_finish()
-        kill_thread(config.task_thread)
+        config.mark_task_finish('Interrupted: terminated via Inspector')
         return wrap_response(None, True, f'Task will be terminated soon. Thread: {config.task_thread}')
     else:
         return wrap_response(None, False, f'No running task. Thread: {config.task_thread}')
