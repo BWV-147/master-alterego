@@ -33,9 +33,10 @@ from .base import *
 # %% email
 def send_mail(body, subject=None, receiver=None, attach_shot=True, level=MailLevel.debug):
     from .autogui import screenshot
+    logger.info(f'mail sender:\n - Subject: {subject}\n - Body: {body}')
     # check email params
     if not (MailLevel.mute < config.mail <= level):
-        logger.info(f'Don\'t send mail.\nSubject: {subject}\nBody: {body}')
+        logger.info(f'Don\'t send mail.')
         return
     if receiver is None:
         receiver = config.mail_receiver
@@ -58,7 +59,6 @@ def send_mail(body, subject=None, receiver=None, attach_shot=True, level=MailLev
     subject = f'{time.strftime("[%H:%M]")}{subject}'
 
     # body
-    logger.info('send mail:\n' + html.unescape(body))
     body = f'<b><pre>{html.escape(body)}</pre></b><br>\n' \
            f'<hr><b>Computer name:</b><br>{socket.getfqdn(socket.gethostname())}<br><hr>\n'
 

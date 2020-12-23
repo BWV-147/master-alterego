@@ -156,9 +156,9 @@ class Regions(_Regions):
 
     ce_select_items_box = (600, 300, 700, 400)
     ce_select_button = (1680, 980, 1777, 1040)
-    ce_select_start = (210, 800)
-    ce_select_middle = (1407, 800)
-    ce_select_end = (1407, 1076)
+    ce_select_start = (210, 800)  # line 3, first item
+    ce_select_middle = (1407, 800)  # line 3, last item
+    ce_select_end = (1407, 1076)  # line 4, last item
     ce_enhance_lv2 = (1253, 671, 1322, 717)
     ce_enhance_confirm = (1203, 855, 1316, 913)
     # from bag to drawer
@@ -238,7 +238,8 @@ class Regions(_Regions):
     order_change_confirm = (739, 907, 1167, 974)  # length 6
 
     # kizuna = (115, 251, 580, 305)  # 与从者的羁绊text
-    kizuna = (186, 646, 205, 665)  # 羁绊点数第一格
+    # kizuna = (186, 646, 205, 665)  # 羁绊点数第一格
+    kizuna = (257, 598, 325, 613)  # 头像框下侧servant字样
     craft_detail_tab1 = (784, 177, 967, 229)
     rewards_qp = (450, 900, 472, 930)
     rewards_clicking = (70, 860)

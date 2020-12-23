@@ -9,7 +9,9 @@ class Lottery(BaseAgent):
         self.LOC = Regions()
         logger.set_cur_logger('gacha')
 
-    def start(self, supervise=True, cfg=None):
+    def start(self, timeout: int = None, cfg=None):
+        if timeout is None:
+            timeout = 120
         # pre-processing
         self.pre_process(cfg)
         config.mail = config.lottery.mail
@@ -25,10 +27,10 @@ class Lottery(BaseAgent):
                 self.clean.__name__: [config.lottery.clean_num],
                 }[start_func.__name__]
         time.sleep(2)
-        if supervise:
+        if timeout > 0:
             t_name = f'lottery-{os.path.basename(config.lottery.dir)}'
             thread = threading.Thread(target=start_func, name=t_name, args=args, daemon=True)
-            supervise_log_time(thread, 120, interval=3)
+            supervise_log_time(thread, timeout, interval=3)
         else:
             config.task_thread = threading.current_thread()
             start_func(*args)

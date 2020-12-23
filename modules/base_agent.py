@@ -76,9 +76,6 @@ class BaseAgent:
             wait_targets(T.bag_unselected, [LOC.bag_svt_tab, LOC.bag_sell_action])
             if no < num:
                 drag(LOC.bag_select_start, LOC.bag_select_end, duration, 0.6, up_time)
-                # TODO: verify it
-                # drag(LOC.bag_select_start, LOC.bag_select_middle, 0.6, 0.5, None, 0)
-                # drag(LOC.bag_select_middle, LOC.bag_select_end, duration, None, up_time)
             page_no = wait_which_target([T.bag_selected, T.bag_unselected],
                                         [LOC.bag_sell_action, LOC.bag_sell_action])
             if page_no == 0:

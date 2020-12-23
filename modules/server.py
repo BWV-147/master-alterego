@@ -131,7 +131,7 @@ def get_image_folder_tree():
 @app.route('/getFile')
 def get_file():
     """Return text file or Image(compressed)"""
-    filepath = request.args.get('path')
+    filepath: str = request.args.get('path')
     monitor = request.args.get('mon')
     if monitor is None or monitor == '' or monitor.lower() == 'null':
         monitor = config.monitor
@@ -140,7 +140,11 @@ def get_file():
     if filepath.lower() == 'screenshot':
         image = screenshot(monitor=monitor)
     else:
+        filepath = filepath.lstrip('/')  # path is relative to img/
         filepath = os.path.join('img', filepath)
+        if not os.path.abspath(filepath).startswith(os.path.abspath('img')):
+            app.logger.warning(f'trying to access file outside img folder: {filepath}')
+            return abort(404)
         if not os.path.isfile(os.path.abspath(filepath)):
             return abort(404)
         elif imghdr.what(filepath):
@@ -159,10 +163,12 @@ def get_task_status():
 def shutdown_task():
     """Shutdown running task."""
     from util.addon import kill_thread
-    force = request.args.get('force')
+    force = request.args.get('force', default=0, type=int)
     if config.task_thread is threading.main_thread() and config.task_thread.is_alive():
-        if force == '1':
+        if force != 0:
+            app.logger.warning('Force stop task and MainThread.')
             kill_thread(config.task_thread)
+            kill_thread(threading.main_thread())
             # actually, won't return since server is also killed.
             return wrap_response(None, True, f'Task&Server will be terminated. Thread: {config.task_thread}')
         else:
@@ -170,7 +176,7 @@ def shutdown_task():
                                               'server will be shutdown too.')
     elif config.task_thread and config.task_thread.is_alive():
         config.mark_task_finish()
-        # kill_thread(config.task_thread)
+        kill_thread(config.task_thread)
         return wrap_response(None, True, f'Task will be terminated soon. Thread: {config.task_thread}')
     else:
         return wrap_response(None, False, f'No running task. Thread: {config.task_thread}')
