@@ -81,7 +81,7 @@ class FpGacha(BaseAgent):
                 else:
                     # to make sure in fp_gacha rather quartz gacha, start gacha after once manual gacha in manual mode
                     wait_targets(T.gacha_fp_result, [LOC.gacha_fp_logo, LOC.gacha_fp_result_summon])
-        config.mark_task_finish()
+        config.mark_task_finish(f'Finished: all {num} times FP Gacha')
 
     def enhance_ce(self, num=100):
         T, LOC = self.T, self.LOC

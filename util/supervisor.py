@@ -24,10 +24,11 @@ def supervise_log_time(thread, timeout=60, interval=10, alert_type=None, alert_l
     while True:
         # every case: stop or continue
         # case 1: thread finished normally - stop supervision, check this first
-        if config.task_finished:
+        if config.task_finish_signal:
+            message, mail_level = config.task_finish_signal
             # thread finished: all battles finished(thread exit normally)
             logger.info(f'Thread-{thread.ident}({thread.name}) finished. Stop supervising.')
-            send_mail(f'[{thread.name}]Task finished.', level=MailLevel.info)
+            send_mail(f'[{thread.name}] {message}', level=mail_level or MailLevel.info)
             # make sure thread is stopped
             if thread.is_alive():
                 kill_thread(thread)
@@ -38,47 +39,46 @@ def supervise_log_time(thread, timeout=60, interval=10, alert_type=None, alert_l
             time.sleep(interval)
             continue
         # case 3: thread terminated but not finished task
-        if not config.task_finished and config.task_thread and not config.task_thread.is_alive():
+        if config.task_finish_signal is None and config.task_thread and not config.task_thread.is_alive():
             logger.warning(f'thread terminated unexpectedly...')
             loops = -1
+        else:
+            T: ImageTemplates = config.T
+            LOC: Regions = config.LOC
+            # case 4: task alive and network error - click "retry" and continue
+            img_net, loc_net = T.net_error, LOC.net_error
+            if img_net is not None and loc_net is not None:
+                shot = screenshot()
+                if match_targets(shot, img_net, loc_net[0]) and match_targets(shot, img_net, loc_net[1]):
+                    logger.warning('Network error! click "retry" button')
+                    click(loc_net[1], lapse=3)
+                    config.update_time(60)
+                    continue
 
-        T: ImageTemplates = config.T
-        LOC: Regions = config.LOC
-        # case 4: task alive and network error - click "retry" and continue
-        img_net, loc_net = T.net_error, LOC.net_error
-        if img_net is not None and loc_net is not None:
-            shot = screenshot()
-            if match_targets(shot, img_net, loc_net[0]) and match_targets(shot, img_net, loc_net[1]):
-                logger.warning('Network error! click "retry" button')
-                click(loc_net[1], lapse=3)
-                config.update_time(60)
-                continue
+            # case 5: svt status window is popped unexpectedly when execute svt skill(actually not executed yet)
+            if T.svt_status_window is not None:
+                if match_targets(screenshot(), T.svt_status_window, LOC.svt_status_window_close):
+                    screenshot().save(f'img/crash/svt_status_window_error_{time.time()}.png')
+                    xy = config.temp.get('click_xy', (0, 0))  # skill location last clicked
+                    logger.warning(f'Servant status window is popped unexpectedly! Re-click at {xy}')
+                    click(LOC.svt_status_window_close, 2)
+                    click(xy)
+                    config.update_time(30)
 
-        # case 5: svt status window is popped unexpectedly when execute svt skill(actually not executed yet)
-        if T.svt_status_window is not None:
-            if match_targets(screenshot(), T.svt_status_window, LOC.svt_status_window_close):
-                screenshot().save(f'img/crash/svt_status_window_error_{time.time()}.png')
-                xy = config.temp.get('click_xy', (0, 0))  # skill location last clicked
-                logger.warning(f'Servant status window is popped unexpectedly! Re-click at {xy}')
-                click(LOC.svt_status_window_close, 2)
-                click(xy)
-                config.update_time(30)
+            # case 6: task alive and need re-login after 3am in jp server
+            # if match menu button, click save_area until match quest1234, click 1234
+            if callable(config.battle.login_handler):
+                config.battle.login_handler()
 
-        # case 6: task alive and need re-login after 3am in jp server
-        # if match menu button, click save_area until match quest1234, click 1234
-        if callable(config.battle.login_handler):
-            config.battle.login_handler()
-
-        # case 7: task alive but unrecognized error - waiting user to handle (in 2*loops seconds)
-        if loops == alert_loops:
-            logger.warning(f'Something wrong, please solve it, or it will be force stopped...\n'
-                           f' - thread  alive: {thread.is_alive()}.\n'
-                           f' - task finished: {config.task_finished}.\n'
-                           f' - last log time: {time.asctime()}')
-            # if click event is not submitted actually, try click again.
-            click()
+            # case 7: task alive but unrecognized error - waiting user to handle (in 2*loops seconds)
+            if loops == alert_loops:
+                logger.warning(f'Something wrong, please solve it, or it will be force stopped...\n'
+                               f' - thread  alive: {thread.is_alive()}.\n'
+                               f' - finish signal: {config.task_finish_signal}.\n'
+                               f' - last log time: {time.asctime()}')
+                # if click event is not submitted actually, try click again.
+                click()
         if loops >= 0:
-            # print(f'{loops}...\r', end='')
             print(f'\rcount down {loops}...', end='\r')
         loops -= 1
         if alert_type:
@@ -90,7 +90,7 @@ def supervise_log_time(thread, timeout=60, interval=10, alert_type=None, alert_l
             if thread.is_alive():
                 kill_thread(thread)
             err_msg = f'{thread}:\n' \
-                      f' - task finished: {config.task_finished}\n' \
+                      f' - finish signal: {config.task_finish_signal}\n' \
                       f' - current  time: {time.asctime()}\n' \
                       f' - last log time: {time.asctime(time.localtime(config.log_time))}\n' \
                       f' - over time: {time.time() - config.log_time:.2f} secs (timeout={timeout}).\n'

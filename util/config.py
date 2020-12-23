@@ -183,13 +183,16 @@ class Config(BaseConfig):
         self.LOC = None
         self.log_time = 0  # record the time of last logging.info/debug..., set NO_LOG_TIME outside battle progress
         self.wda_client: Optional[wda.Client] = None
-        self.task_finished = False  # all battles finished, set to True before child process exist.
+        # signal = (reason, mail_level), set to default None every time start task/load config
+        # the reason will be send in mail after mark_task_finish.
+        # if signal is None when thread died: unexpected error
+        self.task_finish_signal = None
         self.task_thread: Optional[threading.Thread] = None
         self.task_queue = Queue(1)
         self.temp = {'click_xy': (0, 0)}  # save temp vars at runtime
 
-        self._ignored = ['mail', 'fp', 'T', 'LOC', 'log_time', 'wda_client', 'task_finished', 'task_thread',
-                         'task_queue', 'temp']
+        self._ignored = ['mail', 'fp', 'T', 'LOC', 'log_time', 'wda_client', 'task_finish_reason',
+                         'task_thread', 'task_queue', 'temp']
         # load config
         if fp:
             self.load()
@@ -205,7 +208,7 @@ class Config(BaseConfig):
         if not os.path.exists(fp) and os.path.exists(f'data/config-{fp}.json'):
             fp = f'data/config-{fp}.json'
         self.fp = fp
-        self.task_finished = False
+        self.task_finish_signal = None
         self.T = self.LOC = self.task_thread = None
         self.temp.clear()
         return super().load(self.fp)
@@ -292,9 +295,21 @@ class Config(BaseConfig):
     def get_dt(self):
         return time.time() - self.log_time
 
-    def mark_task_finish(self):
+    def mark_task_finish(self, msg=None, level=MailLevel.info):
+        from .log import logger
+        if msg is None:
+            import traceback
+            stack = ''.join(traceback.format_stack(limit=4))
+            logger.info('Mark finished without message, traceback stack:\n' + stack)
+            msg = 'Finished: unknown reason.'
+
+        if level >= MailLevel.warning:
+            logger.warning(msg)
+        else:
+            logger.info(msg)
+        self.task_finish_signal = (msg, level)
         self.save()
-        self.task_finished = True
+        self.kill()
 
     def kill(self):
         """
@@ -304,7 +319,9 @@ class Config(BaseConfig):
         Ke
         """
         from .addon import kill_thread
-        kill_thread(self.task_thread or threading.current_thread())
+        thread = self.task_thread or threading.current_thread()
+        if thread is not threading.main_thread():
+            kill_thread(thread)
 
 
 config = Config()
