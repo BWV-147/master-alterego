@@ -93,6 +93,9 @@ class Regions(_Regions):
 
     # common, or for supervisor
     net_error = ((599, 814, 720, 872), (1138, 813, 1378, 876))
+    login_news_close = (1835, 22, 1900, 86)
+    login_popup_clicking = (1382, 64)
+    login_terminal_event_banner = (1044, 500, 1377, 586)
     safe_area = (1460, 100)  # for battle
     svt_status_window_close = (1607, 67, 1660, 100)
 
@@ -236,7 +239,9 @@ class Regions(_Regions):
 
     # kizuna = (115, 251, 580, 305)  # 与从者的羁绊text
     kizuna = (186, 646, 205, 665)  # 羁绊点数第一格
+    craft_detail_tab1 = (784, 177, 967, 229)
     rewards_qp = (450, 900, 472, 930)
+    rewards_clicking = (70, 860)
     rewards_show_num = (1593, 115, 1711, 149)
     rewards_items_outer = [[(233 + j * 206, 186 + i * 213, 409 + j * 206, 379 + i * 213) for j in range(0, 7)] for i in
                            range(0, 3)]
@@ -312,56 +317,64 @@ class ImageTemplates:
     def __init__(self, directory: str = None, recursive=False):
         self.dirs: str = directory
         self.templates: Dict[str, Image.Image] = {}
+
+        # ============ error part ============
+        self.net_error = None
+        self.svt_status_window = None
+        self.login_news = None
+        self.login_popup = None
+        self.login_terminal = None
+
         # ============ battle part ============
-        self.net_error: Optional[Image.Image] = None
-        self.svt_status_window: Optional[Image.Image] = None
-        self.apple_confirm: Optional[Image.Image] = None
-        self.apple_page: Optional[Image.Image] = None
-        self.apply_friend: Optional[Image.Image] = None
-        self.cards1: Optional[Image.Image] = None
-        self.cards2: Optional[Image.Image] = None
-        self.cards3: Optional[Image.Image] = None
-        self.cards4: Optional[Image.Image] = None
-        self.rewards: Optional[Image.Image] = None
-        self.kizuna: Optional[Image.Image] = None
-        self.order_change: Optional[Image.Image] = None
-        self.quest: Optional[Image.Image] = None
-        self.team: Optional[Image.Image] = None
-        self.restart_quest: Optional[Image.Image] = None
-        self.support: Optional[Image.Image] = None
-        self.support_confirm: Optional[Image.Image] = None
-        self.skill_targets: Optional[Image.Image] = None
-        self.wave1a: Optional[Image.Image] = None
-        self.wave1b: Optional[Image.Image] = None
-        self.wave2a: Optional[Image.Image] = None
-        self.wave2b: Optional[Image.Image] = None
-        self.wave3a: Optional[Image.Image] = None
-        self.wave3b: Optional[Image.Image] = None
+        self.apple_confirm = None
+        self.apple_page = None
+        self.apply_friend = None
+        self.cards1 = None
+        self.cards2 = None
+        self.cards3 = None
+        self.cards4 = None
+        self.craft_detail = None
+        self.rewards_init = None
+        self.rewards = None
+        self.kizuna = None
+        self.order_change = None
+        self.quest = None
+        self.team = None
+        self.restart_quest = None
+        self.support = None
+        self.support_confirm = None
+        self.skill_targets = None
+        self.wave1a = None
+        self.wave1b = None
+        self.wave2a = None
+        self.wave2b = None
+        self.wave3a = None
+        self.wave3b = None
         # ============ lottery part ============
-        self.lottery_initial: Optional[Image.Image] = None
-        self.lottery_empty: Optional[Image.Image] = None
-        self.lottery_reset_confirm: Optional[Image.Image] = None
-        self.lottery_reset_finish: Optional[Image.Image] = None
-        self.mailbox_full_alert: Optional[Image.Image] = None
-        self.mailbox_unselected1: Optional[Image.Image] = None
-        self.mailbox_unselected2: Optional[Image.Image] = None
-        self.mailbox_selected: Optional[Image.Image] = None
-        self.bag_full_alert: Optional[Image.Image] = None
-        self.bag_unselected: Optional[Image.Image] = None
-        self.bag_selected: Optional[Image.Image] = None
-        self.bag_sell_confirm: Optional[Image.Image] = None
-        self.bag_sell_finish: Optional[Image.Image] = None
-        self.bag_qp_limit: Optional[Image.Image] = None
-        self.shop: Optional[Image.Image] = None
-        self.shop_event_banner_list: Optional[Image.Image] = None
+        self.lottery_initial = None
+        self.lottery_empty = None
+        self.lottery_reset_confirm = None
+        self.lottery_reset_finish = None
+        self.mailbox_full_alert = None
+        self.mailbox_unselected1 = None
+        self.mailbox_unselected2 = None
+        self.mailbox_selected = None
+        self.bag_full_alert = None
+        self.bag_unselected = None
+        self.bag_selected = None
+        self.bag_sell_confirm = None
+        self.bag_sell_finish = None
+        self.bag_qp_limit = None
+        self.shop = None
+        self.shop_event_banner_list = None
         # ============ fp gacha part ============
-        self.gacha_quartz_page: Optional[Image.Image] = None
-        self.gacha_fp_page: Optional[Image.Image] = None
-        self.gacha_fp_confirm: Optional[Image.Image] = None
-        self.gacha_fp_result: Optional[Image.Image] = None
-        self.gacha_fp_svt_full: Optional[Image.Image] = None
-        self.gacha_fp_ce_full: Optional[Image.Image] = None
-        self.menu: Optional[Image.Image] = None
+        self.gacha_quartz_page = None
+        self.gacha_fp_page = None
+        self.gacha_fp_confirm = None
+        self.gacha_fp_result = None
+        self.gacha_fp_svt_full = None
+        self.gacha_fp_ce_full = None
+        self.menu = None
         self.ce_enhance_empty = None
         self.ce_select_target = None
         self.ce_items_unselected = None

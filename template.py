@@ -18,6 +18,16 @@ base_path: Optional[str] = None
 
 
 # %%
+def show_img(img, name=None, hide_axis=True):
+    plt.figure(name, clear=True)
+    plt.imshow(img)
+    if hide_axis:
+        plt.xticks([])
+        plt.yticks([])
+        plt.axis('off')
+    plt.show()
+
+
 def capture(fn: str = None, _base: str = None):
     # pyautogui.hotkey('alt', 'tab')
     _base = _base or base_path
@@ -27,12 +37,6 @@ def capture(fn: str = None, _base: str = None):
     time.sleep(0.1)
     t0 = time.time()
     img = screenshot()
-    plt.figure('screenshot')
-    plt.imshow(img)
-    plt.xticks([])
-    plt.yticks([])
-    plt.axis('off')
-    plt.show()
     if fn and _base is not None:
         full_fp = os.path.join(_base or base_path, fn + '.png')
         if os.path.exists(full_fp):
@@ -41,18 +45,24 @@ def capture(fn: str = None, _base: str = None):
             print(f'   Save  : "{full_fp}" saved', end='')
         print(f'\t\t{time.time() - t0:.4f} sec')
         img.save(full_fp)
+    show_img(img, 'screenshot')
     # pyautogui.hotkey('alt', 'tab')
 
 
 def save_rewards(quest_name: str = None, drop: int = None):
-    plt.figure('rewards')
+    config.load()
     img = screenshot()
     if quest_name:
-        fn = f'img/_drops/{quest_name}/rewards-{quest_name}-{time.strftime("%m%d-%H%M")}'
-        fn = fn + (f'-drop{drop}.png' if drop else '.png')
+        config.count_battle()
+        fn = f'img/_drops/{quest_name}/rewards-{quest_name}-{time.strftime("%m%d-%H%M")}-{config.battle.finished}'
+        if drop:
+            fn += f'-drop{drop}'
+            config.record_craft_drop()
+        fn += '.png'
         print(f'Save "{fn}"')
         img.save(fn)
-    plt.show()
+        config.save()
+    show_img(img, 'rewards')
 
 
 def compare(fp1, fp2, region, dx=0, dy=0, dw=0, dh=0):

@@ -69,8 +69,7 @@ def cal_sim(img1: Image.Image, img2: Image.Image, region=None, method='ssim') ->
         lh = img1.histogram()
         rh = img2.histogram()
         # remove unused color where _l=_r=0
-        diff = [1 - (0 if _l == _r else float(abs(_l - _r)) / max(_l, _r)) for _l, _r in zip(lh, rh) if
-                _l != 0 or _r != 0]
+        diff = [1 - (0 if _l == _r else float(abs(_l - _r)) / max(_l, _r)) for _l, _r in zip(lh, rh) if _l + _r != 0]
         sim = sum(diff) / len(diff)
     elif method == 'hash':
         # https://stackoverflow.com/questions/843972/image-comparison-fast-algorithm

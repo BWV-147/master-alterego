@@ -276,12 +276,14 @@ class Config(BaseConfig):
         self.fp_gacha.num -= 1
         self.save()
 
-    def count_battle(self, craft_dropped=False):
+    def count_battle(self):
         self.battle.finished += 1
         self.battle.num -= 1
-        if craft_dropped:
-            self.battle.craft_num += 1
-            self.battle.craft_history[str(self.battle.craft_num)] = self.battle.finished
+        self.save()
+
+    def record_craft_drop(self):
+        self.battle.craft_num += 1
+        self.battle.craft_history[str(self.battle.craft_num)] = self.battle.finished
         self.save()
 
     def update_time(self, dt: float = 0):

@@ -163,14 +163,15 @@ def shutdown_task():
     if config.task_thread is threading.main_thread() and config.task_thread.is_alive():
         if force == '1':
             kill_thread(config.task_thread)
-            # actually, won't return since server is killed.
-            return wrap_response(None, True, f'Task has been terminated. Thread: {config.task_thread}')
+            # actually, won't return since server is also killed.
+            return wrap_response(None, True, f'Task&Server will be terminated. Thread: {config.task_thread}')
         else:
             return wrap_response(None, False, 'Task run in main thread, check force stop to terminate it, '
                                               'server will be shutdown too.')
     elif config.task_thread and config.task_thread.is_alive():
         config.mark_task_finish()
-        return wrap_response(None, True, f'Task has been terminated. Thread: {config.task_thread}')
+        # kill_thread(config.task_thread)
+        return wrap_response(None, True, f'Task will be terminated soon. Thread: {config.task_thread}')
     else:
         return wrap_response(None, False, f'No running task. Thread: {config.task_thread}')
 

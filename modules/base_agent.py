@@ -9,8 +9,13 @@ class BaseAgent:
     _server_thread: threading.Thread = None
 
     def __init__(self):
-        self.T: Optional[ImageTemplates] = None
-        self.LOC: Optional[Regions] = None
+        # If define property getter and setter for T/LOC, don't initiate its value.
+        if 'T' not in self.__dir__():
+            print(f'{self.__class__.__name__} init T')
+            self.T: Optional[ImageTemplates] = None
+        if 'LOC' not in self.__dir__():
+            print(f'{self.__class__.__name__} init LOC')
+            self.LOC: Optional[Regions] = None
 
     def pre_process(self, cfg):
         config.load(cfg)

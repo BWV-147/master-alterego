@@ -23,12 +23,7 @@ def supervise_log_time(thread, time_out=60, interval=10, alert_type=None, alert_
     loops = alert_loops
     while True:
         # every case: stop or continue
-        # case 1: all right - continue supervision
-        if thread.is_alive() and not _overtime():
-            loops = alert_loops  # reset loops
-            time.sleep(interval)
-            continue
-        # case 2: thread finished normally - stop supervision
+        # case 1: thread finished normally - stop supervision, check this first
         if config.task_finished:
             # thread finished: all battles finished(thread exit normally)
             logger.info(f'Thread-{thread.ident}({thread.name}) finished. Stop supervising.')
@@ -37,6 +32,11 @@ def supervise_log_time(thread, time_out=60, interval=10, alert_type=None, alert_
             if thread.is_alive():
                 kill_thread(thread)
             break
+        # case 2: all right - continue supervision
+        if thread.is_alive() and not _overtime():
+            loops = alert_loops  # reset loops
+            time.sleep(interval)
+            continue
         # case 3: thread terminated but not finished task
         if not config.task_finished and config.task_thread and not config.task_thread.is_alive():
             logger.warning(f'thread terminated unexpectedly...')

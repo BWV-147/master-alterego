@@ -1,5 +1,9 @@
-"""Log module"""
-__all__ = ['LOG_TIME', 'LOG_FORMATTER', 'LoggerDispatcher', 'DispatcherFilter', 'logger']
+"""Log module
+
+For `logger` can be used at different module like singleton but with different log filename,
+wrap Logger inside a LoggerDispatcher to change Logger instance at runtime without create new `logger`
+"""
+__all__ = ['LOG_TIME', 'LOG_FORMATTER', 'LoggerDispatcher', 'DispatcherFilter', 'logger', 'get_logger_dispatcher']
 
 import logging
 import os
@@ -89,13 +93,8 @@ class LoggerDispatcher(logging.Logger):
     """
     _instance = None
 
-    def __new__(cls, *args, **kwargs):
-        if cls._instance is None:
-            cls._instance = super(LoggerDispatcher, cls).__new__(cls, *args, **kwargs)
-        return cls._instance
-
-    def __init__(self):
-        super().__init__('dispatcher')
+    def __init__(self, name):
+        super().__init__(name)
         # properties
         self._logger: Optional[logging.Logger] = None
         self.dispatcher_disabled = False
@@ -121,13 +120,15 @@ class LoggerDispatcher(logging.Logger):
         self._logger.handle(record)
         return False
 
-    def set_cur_logger(self, name='log', level=logging.INFO, save_path='logs/'):
+    def set_cur_logger(self, name=None, level=logging.INFO, save_path='logs/'):
         """
         :param name: logger name in logging's loggerDict
         :param level: if level>DEBUG and save_path, logs will be saved to two files, one only for >=INFO, one for all.
         :param save_path: folder path to save log. If set to None, logs will not be saved.
         :return:
         """
+        if name is None:
+            name = self.name
         # noinspection PyUnresolvedReferences
         if name in logging.Logger.manager.loggerDict:
             _logger = logging.getLogger(name)
@@ -173,4 +174,13 @@ class LoggerDispatcher(logging.Logger):
         return self._log_filepath
 
 
-logger = LoggerDispatcher()
+_logger_dict: Dict[str, LoggerDispatcher] = {}
+
+
+def get_logger_dispatcher(name: str = 'log') -> LoggerDispatcher:
+    if name not in _logger_dict:
+        _logger_dict[name] = LoggerDispatcher(name)
+    return _logger_dict[name]
+
+
+logger = get_logger_dispatcher()

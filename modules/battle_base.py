@@ -6,12 +6,16 @@ from .master import *
 
 class BattleBase(BaseAgent):
     def __init__(self):
-        super().__init__()
         self.master = Master()
+        super().__init__()
 
     @property
     def T(self):  # noqa
         return self.master.T
+
+    @T.setter
+    def T(self, value):  # noqa
+        self.master.T = value
 
     @property
     def LOC(self):  # noqa
@@ -105,24 +109,34 @@ class BattleBase(BaseAgent):
                     elif match_targets(shot, T.support, LOC.support_refresh):
                         break
                     sleep(0.5)
+
             battle_func()
-            wait_targets(T.rewards, LOC.rewards_qp, 0.5, clicking=LOC.rewards_qp)
-            click(LOC.rewards_show_num, lapse=1)
-            # check reward_page has CE dropped or not
+
+            config.count_battle()
             dt = timer.lapse()
             logger.info(f'Battle {finished_num}/{battle_num} finished, '
                         f'time = {int(dt // 60)} min {int(dt % 60)} sec. '
-                        f'(total {config.battle.finished + 1})', extra=LOG_TIME)
+                        f'(total {config.battle})', extra=LOG_TIME)
+
+            # wait_targets(T.rewards, LOC.rewards_qp, 0.5, clicking=LOC.rewards_clicking)
+            page_no = wait_which_target([T.craft_detail, T.rewards_init], [LOC.craft_detail_tab1, LOC.rewards_show_num],
+                                        clicking=LOC.rewards_clicking)
+            if page_no == 0:
+                send_mail('Bone craft!!!', level=MailLevel.warning)
+                config.mark_task_finish()
+                return
+
+            click(LOC.rewards_show_num, lapse=1)
+            # check reward_page has CE dropped or not
             rewards = screenshot()
             drop_dir = f'img/_drops/{self.master.quest_name}'
             if not os.path.exists(drop_dir):
                 os.makedirs(drop_dir)
             # png_fn without suffix
             png_fn = os.path.join(drop_dir, f'rewards-{self.master.quest_name}-{time.strftime("%m%d-%H%M")}'
-                                            f'-{config.battle.finished + 1}')
-
+                                            f'-{config.battle.finished}')
             if config.battle.check_drop > 0 and self.master.check_rewards(rewards, config.battle.check_drop):
-                config.count_battle(True)
+                config.record_craft_drop()
                 logger.warning(f'{config.battle.craft_num}th craft dropped!!!')
                 rewards.save(f'{png_fn}-drop{config.battle.craft_num}.png')
                 if config.battle.craft_num in config.battle.enhance_craft_nums:
@@ -134,9 +148,9 @@ class BattleBase(BaseAgent):
                     send_mail(f'{config.battle.craft_num}th craft dropped!!!', level=MailLevel.warning)
                 click(LOC.rewards_next)
             else:
-                config.count_battle(False)
                 click(LOC.rewards_next)
                 rewards.save(f"{png_fn}.png")
+
             # ready to restart a battle
             if finished_num % 30 == 0:
                 send_mail(f'Progress: {finished_num}/{battle_num} battles finished.',
@@ -242,3 +256,46 @@ class BattleBase(BaseAgent):
         master.auto_attack(nps=6, mode=AttackMode.alter, buster_first=True)
         master.xjbd(T.kizuna, LOC.kizuna, mode=AttackMode.alter, allow_unknown=True)
         return
+
+    def default_login_handler(self, quest_regions=None):
+        """Handle login event at 3am(UTC+8) for jp server, back to quest/support page at last.
+        This should be called in supervisor thread.
+
+        To pass parameters, use lambda function:
+
+        config.battle.login_handler = lambda: self.default_login_handler(params)
+
+        :return: True if successfully back to quest/support page
+        """
+
+        T, LOC = self.T, self.LOC
+        if match_which_target(screenshot(), [T.login_news, T.login_popup], [LOC.login_news_close, LOC.menu_button]) < 0:
+            logger.warning('Login handler cannot identify current page state')
+            return False
+
+        # if reach time limit, failed, return False
+        time_limit = 120
+        t0 = time.time()
+
+        if quest_regions is None:
+            quest_regions = [LOC.quest]
+        while True:
+            shot = screenshot()
+            if match_targets(shot, T.login_news, LOC.login_news_close):
+                click(LOC.login_news_close)
+                logger.debug('close login news page')
+            elif match_targets(shot, T.login_popup, LOC.menu_button):
+                click(LOC.login_popup_clicking)
+            elif match_targets(shot, T.login_terminal, LOC.login_terminal_event_banner):
+                click(LOC.login_terminal_event_banner)
+                logger.debug('enter event banner')
+                time.sleep(3)
+            elif match_targets(T.quest, quest_regions):
+                click(LOC.quest_c)
+                logger.debug('enter quest')
+            elif match_targets(T.support, LOC.support_refresh):
+                logger.debug('back to support page!')
+                return True
+            time.sleep(3)
+            if time.time() - t0 > time_limit:
+                return False

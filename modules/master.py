@@ -8,6 +8,8 @@ import enum
 from util.addon import *
 from util.autogui import *
 
+quartz_logger = get_logger_dispatcher('quartz')
+
 
 class Card:
     NP = 0
@@ -125,7 +127,7 @@ class Master:
         params = []
         for card in ('NP', 'Quick', 'Arts', 'Buster'):
             params.append([])
-            pairs_str = data[card]
+            pairs_str = data.get(card, '')
             for pair in pairs_str.split(','):
                 img, loc = pair.split('-')
                 img = prefix + img
@@ -235,9 +237,7 @@ class Master:
                             click(LOC.apple_confirm, lapse=1)
                         elif page_no == 2:
                             if apple == 0:
-                                logger.set_cur_logger('quartz', 10)
-                                logger.info(f'Account {config.id}: eating saint quartz as apple!')
-                                logger.set_cur_logger()
+                                quartz_logger.info(f'Account {config.id}: eating saint quartz as apple!')
                             return
 
     def choose_support(self, match_svt=True, match_skills=True, match_ce=False, match_ce_max=False, friend_only=False,
