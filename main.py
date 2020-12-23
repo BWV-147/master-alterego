@@ -30,7 +30,7 @@ def start(action=None, cfg=None):
     else:
         raise KeyError(f'invalid key: action={parser.action}')
     globals()['task'] = task
-    task.start(supervise=parser.supervise, cfg=parser.config)
+    task.start(timeout=parser.timeout, cfg=parser.config)
 
 
 # %%

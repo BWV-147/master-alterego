@@ -70,7 +70,7 @@ function getTaskStatus() {
 }
 
 function shutdownTask() {
-  let force = $('#forceTerminateCheck').is(':checked')
+  let force = $('#terminateMainThreadCheck').prop('checked')
   $('#shutdownModal').modal('hide')
   $.get('/shutdownTask', {'force': force ? 1 : 0}, function (result) {
     addLog(result['msg'])

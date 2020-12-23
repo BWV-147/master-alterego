@@ -25,16 +25,18 @@ class BattleBase(BaseAgent):
     def LOC(self, value):  # noqa
         self.master.LOC = value
 
-    def start(self, supervise=True, cfg=None, force_jump=False):
+    def start(self, timeout: int = None, cfg=None, force_jump=False):
         """
         Start battle.
 
-        :param supervise: if True, start battle in child thread, else directly.
+        :param timeout: timeout limit for child thread, if non positive, start battle in main thread, timeout
         :param cfg: config filename, default data/config.json.
         :param force_jump: if True, set True for config.battle.jump_battle, do nothing if False.
                             Just a convenient way to jump other then edit config file.
         :return:
         """
+        if timeout is None:
+            timeout = 120
         # pre-processing
         self.pre_process(cfg)
         config.mail = config.battle.mail
@@ -52,14 +54,14 @@ class BattleBase(BaseAgent):
         # starting
         logger.info('starting battle...', extra=LOG_TIME)
         time.sleep(2)
-        if supervise:
+        if timeout > 0:
             t_name: str = battle_func.__name__.replace('_', '-').title()
             thread = threading.Thread(target=self._start, name=t_name,
                                       kwargs={"battle_func": battle_func,
                                               "battle_num": config.battle.num,
                                               "apples": config.battle.apples},
                                       daemon=True)
-            supervise_log_time(thread, 120, interval=3)
+            supervise_log_time(thread, timeout, interval=3)
         else:
             config.task_thread = threading.current_thread()
             self._start(battle_func=battle_func, battle_num=config.battle.num, apples=config.battle.apples)
@@ -116,7 +118,7 @@ class BattleBase(BaseAgent):
             dt = timer.lapse()
             logger.info(f'Battle {finished_num}/{battle_num} finished, '
                         f'time = {int(dt // 60)} min {int(dt % 60)} sec. '
-                        f'(total {config.battle})', extra=LOG_TIME)
+                        f'(total {config.battle.finished})', extra=LOG_TIME)
 
             # wait_targets(T.rewards, LOC.rewards_qp, 0.5, clicking=LOC.rewards_clicking)
             page_no = wait_which_target([T.craft_detail, T.rewards_init], [LOC.craft_detail_tab1, LOC.rewards_show_num],
@@ -273,6 +275,7 @@ class BattleBase(BaseAgent):
             logger.warning('Login handler cannot identify current page state')
             return False
 
+        logger.warning('Handle login or popups')
         # if reach time limit, failed, return False
         time_limit = 120
         t0 = time.time()
@@ -284,15 +287,15 @@ class BattleBase(BaseAgent):
             if match_targets(shot, T.login_news, LOC.login_news_close):
                 click(LOC.login_news_close)
                 logger.debug('close login news page')
-            elif match_targets(shot, T.login_popup, LOC.menu_button):
-                click(LOC.login_popup_clicking)
             elif match_targets(shot, T.login_terminal, LOC.login_terminal_event_banner):
                 click(LOC.login_terminal_event_banner)
                 logger.debug('enter event banner')
                 time.sleep(3)
-            elif match_targets(T.quest, quest_regions):
+            elif match_targets(shot, T.quest, quest_regions):
                 click(LOC.quest_c)
                 logger.debug('enter quest')
+            elif match_targets(shot, T.login_popup, LOC.menu_button):
+                click(LOC.login_popup_clicking)
             elif match_targets(T.support, LOC.support_refresh):
                 logger.debug('back to support page!')
                 return True

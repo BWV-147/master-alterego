@@ -3,7 +3,7 @@ from .autogui import *
 from .log import *
 
 
-def supervise_log_time(thread, time_out=60, interval=10, alert_type=None, alert_loops=15):
+def supervise_log_time(thread, timeout=60, interval=10, alert_type=None, alert_loops=15):
     # type: (threading.Thread,float,float,bool,int)->None
     assert thread is not None, thread
     config.task_thread = thread
@@ -11,9 +11,9 @@ def supervise_log_time(thread, time_out=60, interval=10, alert_type=None, alert_
         alert_type = config.alert_type
 
     def _overtime():
-        return config.get_dt() > time_out
+        return config.get_dt() > timeout
 
-    logger.info(f'start supervising thread {thread.name}...')
+    logger.info(f'start supervising thread {thread.name}, timeout={timeout}')
     thread.start()
     while not thread.is_alive():
         time.sleep(0.01)
@@ -54,14 +54,7 @@ def supervise_log_time(thread, time_out=60, interval=10, alert_type=None, alert_
                 config.update_time(60)
                 continue
 
-        # case 5: task alive and need re-login after 3am in jp server
-        # if match menu button, click save_area until match quest1234, click 1234
-        if callable(config.battle.login_handler):
-            logger.warning('Refresh login in jp server around 3am')
-            if match_targets(screenshot(), T.quest, LOC.menu_button):
-                config.battle.login_handler()
-
-        # case 6: svt status window is popped unexpectedly when execute svt skill(actually not executed yet)
+        # case 5: svt status window is popped unexpectedly when execute svt skill(actually not executed yet)
         if T.svt_status_window is not None:
             if match_targets(screenshot(), T.svt_status_window, LOC.svt_status_window_close):
                 screenshot().save(f'img/crash/svt_status_window_error_{time.time()}.png')
@@ -70,6 +63,11 @@ def supervise_log_time(thread, time_out=60, interval=10, alert_type=None, alert_
                 click(LOC.svt_status_window_close, 2)
                 click(xy)
                 config.update_time(30)
+
+        # case 6: task alive and need re-login after 3am in jp server
+        # if match menu button, click save_area until match quest1234, click 1234
+        if callable(config.battle.login_handler):
+            config.battle.login_handler()
 
         # case 7: task alive but unrecognized error - waiting user to handle (in 2*loops seconds)
         if loops == alert_loops:
@@ -95,7 +93,7 @@ def supervise_log_time(thread, time_out=60, interval=10, alert_type=None, alert_
                       f' - task finished: {config.task_finished}\n' \
                       f' - current  time: {time.asctime()}\n' \
                       f' - last log time: {time.asctime(time.localtime(config.log_time))}\n' \
-                      f' - over time: {time.time() - config.log_time:.2f} secs (timeout={time_out}).\n'
+                      f' - over time: {time.time() - config.log_time:.2f} secs (timeout={timeout}).\n'
             send_mail(err_msg, subject=f'[{thread.name}]Went wrong!', level=MailLevel.error)
             break
     raise_alert(alert_type, loops=10)

@@ -9,7 +9,9 @@ class FpGacha(BaseAgent):
         self.LOC = Regions()
         logger.set_cur_logger('gacha')
 
-    def start(self, supervise=True, cfg=None):
+    def start(self, timeout: int = None, cfg=None):
+        if timeout is None:
+            timeout = 20
         # pre-processing
         self.pre_process(cfg)
         config.mail = config.fp_gacha.mail
@@ -22,10 +24,10 @@ class FpGacha(BaseAgent):
         # starting
         logger.info('starting friend point gacha...', extra=LOG_TIME)
         time.sleep(2)
-        if supervise:
+        if timeout > 0:
             t_name = f'fp-{os.path.basename(config.fp_gacha.dir)}'
             thread = threading.Thread(target=start_func, name=t_name, args=[config.fp_gacha.num], daemon=True)
-            supervise_log_time(thread, 20, interval=3, alert_loops=3)
+            supervise_log_time(thread, timeout, interval=3, alert_loops=3)
         else:
             config.task_thread = threading.current_thread()
             start_func(config.fp_gacha.num)
@@ -112,9 +114,6 @@ class FpGacha(BaseAgent):
             wait_targets(T.ce_items_unselected, LOC.ce_select_button)
             drag(LOC.ce_select_start, LOC.ce_select_end, 0.5, 1, 0.5, 0)
             sleep(0.3, 1)
-            # TODO: verify it
-            # drag(LOC.ce_select_start, LOC.ce_select_middle, 0.5, 0.5, None, 0)
-            # drag(LOC.ce_select_middle, LOC.ce_select_end, 0.1, None, 0.2)
             item_selected = wait_which_target([T.ce_items_unselected, T.ce_items_selected], LOC.ce_select_button)
             if item_selected == 0:
                 logger.info('no ce left', extra=LOG_TIME)

@@ -139,9 +139,9 @@
             <div class="modal-body">
                 Terminate task in child thread, if running in main thread, select the checkbox.
                 <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="" id="forceTerminateCheck">
-                    <label class="form-check-label" for="forceTerminateCheck">
-                        Force terminate
+                    <input class="form-check-input" type="checkbox" value="" id="terminateMainThreadCheck">
+                    <label class="form-check-label" for="terminateMainThreadCheck">
+                        Terminate MainThread
                     </label>
                 </div>
             </div>
@@ -185,7 +185,9 @@
       console.log(`clock=${autoRefreshHandler}`)
     }
   })
+  canvas.addEventListener('mosuedown',function () {
 
+  },true)
   function stopAutoRefresh() {
     $refreshIntervalSelect.val('0').change()
     $('#clickableSwitch').prop('checked', false)
@@ -212,7 +214,8 @@
   }
 
   loadScreenshot()
-  var scrollable = true
+  // TODO: not used, mobile view not support drag yet
+  let scrollable = true
   document.addEventListener('touchmove', (e) => {
     if (!scrollable) e.preventDefault()
   }, {passive: false});

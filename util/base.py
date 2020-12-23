@@ -19,7 +19,7 @@ class ArgParser:
         self._parser: Optional[argparse.ArgumentParser] = None
         self._init_parser()
         self.action = None
-        self.supervise = None
+        self.timeout = None
         self.config = None
         self.parse(args)
 
@@ -38,7 +38,7 @@ class ArgParser:
                 print(f'default config file saved at {fp}')
             exit(0)
         self.action = resolved_args.action
-        self.supervise = not resolved_args.disable_supervisor
+        self.timeout = resolved_args.timeout
         self.config = resolved_args.config
 
     @property
@@ -53,8 +53,9 @@ class ArgParser:
                              help='specific a task')
         _parser.add_argument('-c', '--config', default='data/config.json',
                              help='config file path or {} part of data/config-{}.json, default "data/config.json".')
-        _parser.add_argument('-d', '--disable-supervisor', action='store_true',
-                             help='disable supervisor, default enabled.')
+        _parser.add_argument('-t', '--timeout', type=int,
+                             help='set timeout limit in seconds for supervisor. default value is 120s(20s for fp)'
+                                  ' If non positive, disable supervisor')
         _parser.add_argument('--gen-config', action='store_true', help='generate default config file.')
         self._parser = _parser
 

@@ -8,7 +8,7 @@ import enum
 from util.addon import *
 from util.autogui import *
 
-quartz_logger = get_logger_dispatcher('quartz')
+quartz_logger = get_logger_dispatcher('quartz', logging.DEBUG)
 
 
 class Card:
@@ -209,18 +209,21 @@ class Master:
                 click(LOC.apple_close)
                 config.mark_task_finish()
                 config.kill()
+                return
             elif apple == 5:
                 logger.debug('Choose apple manually...')
                 config.update_time(420)
                 wait_targets(T.support, LOC.support_refresh)
+                return
             elif apple == 4:
                 # zihuiti: sleep 1 hour to check again whether ap enough
                 click(LOC.apple_close)
+                # now at quest page, should enter apple page again later to check again
                 dt = 3600
                 logger.info(f'AP recover: waiting for {dt // 60} min...')
                 config.update_time(dt)
                 time.sleep(dt)
-                break
+                return
             elif apple in (0, 1, 2, 3):
                 if match_targets(screenshot(), T.apple_page, LOC.apples[apple]):
                     eaten = False
@@ -239,6 +242,11 @@ class Master:
                             if apple == 0:
                                 quartz_logger.info(f'Account {config.id}: eating saint quartz as apple!')
                             return
+        logger.info(f'No apples left:{apples}')
+        send_mail(f'No apples left: {apples}')
+        config.mark_task_finish()
+        config.kill()
+        return
 
     def choose_support(self, match_svt=True, match_skills=True, match_ce=False, match_ce_max=False, friend_only=False,
                        switch_classes=None, images=None):
