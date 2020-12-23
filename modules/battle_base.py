@@ -272,7 +272,6 @@ class BattleBase(BaseAgent):
 
         T, LOC = self.T, self.LOC
         if match_which_target(screenshot(), [T.login_news, T.login_popup], [LOC.login_news_close, LOC.menu_button]) < 0:
-            logger.warning('Login handler cannot identify current page state')
             return False
 
         logger.warning('Handle login or popups')
