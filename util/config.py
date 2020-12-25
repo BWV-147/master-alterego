@@ -6,7 +6,6 @@ import os
 import sys
 import threading
 import time
-from queue import Queue
 from typing import Optional, List, Tuple, Dict, Set, Mapping
 
 import wda  # noqa
@@ -97,6 +96,7 @@ class BattleConfig(BaseConfig):
         self.location = None  # default to (0,0,1920,1080)
         self.num = 1  # max battle num once running, auto decrease
         self.finished = 0  # all finished battles sum, auto increase, don't edit
+        self.quartz_eaten = 0  # 突出一个心疼
         # check dropped craft or item.
         # 0-don't check; 1-check 1st drop item; 2-check dropbox(rainbow);
         # 3-check 汉字"所持", rewards.png should not contain craft
@@ -188,11 +188,12 @@ class Config(BaseConfig):
         # if signal is None when thread died: unexpected error
         self.task_finish_signal = None
         self.task_thread: Optional[threading.Thread] = None
-        self.task_queue = Queue(1)
+        self.new_task_signal = False
+
         self.temp = {'click_xy': (0, 0)}  # save temp vars at runtime
 
-        self._ignored = ['mail', 'fp', 'T', 'LOC', 'log_time', 'wda_client', 'task_finish_reason',
-                         'task_thread', 'task_queue', 'temp']
+        self._ignored = ['mail', 'fp', 'T', 'LOC', 'log_time', 'wda_client', 'task_finish_signal',
+                         'task_thread', 'new_task_signal', 'temp']
         # load config
         if fp:
             self.load()
@@ -208,10 +209,11 @@ class Config(BaseConfig):
         if not os.path.exists(fp) and os.path.exists(f'data/config-{fp}.json'):
             fp = f'data/config-{fp}.json'
         self.fp = fp
+        super().load(self.fp)
+        # init values after super called
         self.task_finish_signal = None
         self.T = self.LOC = self.task_thread = None
         self.temp.clear()
-        return super().load(self.fp)
 
     def save(self, fp=None):
         fp = fp or self.fp

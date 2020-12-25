@@ -3,7 +3,7 @@ import argparse
 import sys
 import threading
 import time
-from typing import List, Tuple, Union, Dict, Callable, Sequence, Optional  # noqas
+from typing import List, Tuple, Union, Dict, Callable, Sequence, Optional, Any # noqas
 
 _BUNDLE_ID_CN = 'com.bilibili.fatego'
 _BUNDLE_ID_JP = 'com.aniplex.fategrandorder'

@@ -1,3 +1,4 @@
+from .config import *
 from .addon import *
 from .autogui import *
 from .log import *
@@ -101,11 +102,11 @@ def supervise_log_time(thread, timeout=60, interval=10, alert_type=None, alert_l
 
 
 def start_loop(func: Callable):
-    config.task_queue.put(1)
+    config.new_task_signal = True
     while True:
-        if config.task_queue.empty():
-            time.sleep(0.5)
+        if not config.new_task_signal:
+            time.sleep(5)
         else:
-            config.task_queue.get()
+            config.new_task_signal = False
             func()
             logger.info('waiting new task...')

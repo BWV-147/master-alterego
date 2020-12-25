@@ -6,7 +6,6 @@ import os
 from PIL import Image
 
 from .base import *
-from .config import *
 from .log import logger
 
 THR = 0.85  # default threshold
@@ -16,24 +15,41 @@ class _Regions:
     """
     Base class to store region(length 4) or point(length 2) data at default screen size 1920*1080.
     Attributes(except width and height are int value) must be the assembly of point and region.
+    Don't use double underline "__" as prefix for attribute name, otherwise it will be ignored.
     """
     width = 1920
     height = 1080
     box = (0, 0, width, height)
 
-    # for those regions differ in cn and jp version, use two private vars and getter
-    # don't use double underline "__" as prefix for attribute name, otherwise it will be ignored.
-    _test_cn = (0, 0, 100, 100)
-    _test_jp = (0, 0, 90, 90)
-
-    def __init__(self, box: Sequence = None):
+    def __init__(self, is_jp=False):
         # can only relocate once
-        self._relocated = False
-        self.relocate(box)
+        self.__jp = is_jp
+        if is_jp:
+            self._override_jp()
 
-    @property
-    def test(self):
-        return self._test_jp if config.is_jp else self._test_cn
+    @classmethod
+    def _get_region_items(cls):
+        for k in dir(cls):  # type:str
+            v = getattr(cls, k)
+            if k.startswith('__') or callable(v):
+                pass
+            elif isinstance(v, (list, tuple)):
+                yield k, v
+
+    def reset(self, is_jp=None):
+        """Reset region values from base class _Regions"""
+        if is_jp is None:
+            is_jp = self.__jp
+        for k, v in _Regions._get_region_items():
+            setattr(self, k, v)
+        self.width = _Regions.width
+        self.height = _Regions.height
+        if is_jp:
+            self._override_jp()
+
+    def _override_jp(self):
+        """different locations of JP, override this function"""
+        pass
 
     @staticmethod
     def relocate_one(region, new: Sequence, old: Sequence = (0, 0, 1919, 1079)):
@@ -68,16 +84,16 @@ class _Regions:
         """
         if box is None or tuple(box) == self.box:
             return
-        if self._relocated:
-            raise RuntimeError(f'{self.__class__.__name__} has already been relocated!')
-        self._relocated = True
-        assert len(box) == 4, f'box must be length 4: {box}'
-        self.width = int(box[2] - box[0])
-        self.height = int(box[3] - box[1])
-        for key in dir(self.__class__):
-            attr = getattr(self.__class__, key)
-            if not key.startswith('__') and isinstance(attr, Sequence):
-                setattr(self, key, self.relocate_one(attr, box, self.__class__.box))
+        if tuple(self.box) != _Regions.box:
+            self.reset()
+        width = int(box[2] - box[0])
+        height = int(box[3] - box[1])
+        assert len(box) == 4 and width > 0 and height > 0, f'Invalid box: {box}'
+
+        self.width = width
+        self.height = height
+        for k, v in self._get_region_items():
+            setattr(self, k, self.relocate_one(v, box, _Regions.box))
         logger.info(f'Relocate Regions from {Regions.box} to {tuple(self.box)}')
 
 
@@ -101,7 +117,7 @@ class Regions(_Regions):
 
     # ---------- lottery part ----------
     lottery_point = (600, 650)
-    lottery_tab = (1009, 188, 1213, 228)
+    lottery_tab = (1000, 188, 1110, 228)
     lottery_10_initial = (483, 630, 800, 774)
     lottery_reset_action = (1546, 337, 1863, 394)
     lottery_reset_confirm = (1097, 813, 1416, 879)
@@ -273,39 +289,39 @@ class Regions(_Regions):
     gacha_arrow_left = (77, 539)
     gacha_arrow_right = (1850, 539)
 
+    def _override_jp(self):
+        self.bag_full_sell_button = (461, 659, 575, 720)
+        self.bag_full_enhance_button = (897, 664, 1018, 721)
 
-class RegionsJP(Regions):
-    bag_full_sell_button = (461, 659, 575, 720)
-    bag_full_enhance_button = (897, 664, 1018, 721)
+        self.menu_button = (1704, 955, 1852, 998)
+        self.menu_button_expand = (1704, 682, 1852, 725)
+        self.menu_enhance_button = (660, 850, 760, 930)
+        self.menu_gacha_button = (923, 854, 995, 918)
+        self.menu_shop_button = (1171, 856, 1237, 922)
 
-    menu_button = (1704, 955, 1852, 998)
-    menu_button_expand = (1704, 682, 1852, 725)
-    menu_enhance_button = (660, 850, 760, 930)
-    menu_gacha_button = (923, 854, 995, 918)
-    menu_shop_button = (1171, 856, 1237, 922)
+        self.rewards_qp = (448, 845, 477, 877)
+        self.rewards_show_num = (1593, 62, 1711, 92)
+        self.rewards_items_outer = [[(233 + j * 206, 132 + i * 213, 409 + j * 206, 325 + i * 213) for j in range(0, 7)]
+                                    for i in range(0, 3)]
+        self.rewards_items = [[(241 + j * 206, 142 + i * 213, 401 + j * 206, 236 + i * 213) for j in range(0, 7)]
+                              for i in range(0, 3)]
+        self.rewards_item1 = (447, 142, 607, 236)  # first dropped item rect
+        self.rewards_rainbow = (1452, 16, 1459, 32)
+        self.rewards_next = (1576, 920, 1750, 1001)
 
-    rewards_qp = (448, 845, 477, 877)
-    rewards_show_num = (1593, 62, 1711, 92)
-    rewards_items_outer = [[(233 + j * 206, 132 + i * 213, 409 + j * 206, 325 + i * 213) for j in range(0, 7)] for i in
-                           range(0, 3)]
-    rewards_items = [[(241 + j * 206, 142 + i * 213, 401 + j * 206, 236 + i * 213) for j in range(0, 7)] for i in
-                     range(0, 3)]
-    rewards_item1 = (447, 142, 607, 236)  # first dropped item rect
-    rewards_rainbow = (1452, 16, 1459, 32)
-    rewards_next = (1576, 920, 1750, 1001)
+        self.support_scrollbar_start = (1882, 294)
+        self.support_scrollbar_end = (1882, 1047)
+        self.support_scrollbar_head = (1873, 280, 1895, 296)
 
-    support_scrollbar_start = (1882, 294)
-    support_scrollbar_end = (1882, 1047)
-    support_scrollbar_head = (1873, 280, 1895, 296)
+        self.team_start_action = (1660, 975, 1850, 1034)
 
-    team_start_action = (1660, 975, 1850, 1034)
+        self.wave_num = (1323, 18, 1345, 54)
+        self.enemies_all = (0, 0, 1110, 128)
+        self.enemies = ((754, 10, 874, 130), (387, 10, 497, 130), (20, 10, 120, 130))  # skill_to_enemies
+        self.skills = [[(74 + i * 476 + j * 140, 832, 129 + i * 476 + j * 140, 897) for j in range(3)] for i in
+                       range(3)]
 
-    wave_num = (1323, 18, 1345, 54)
-    enemies_all = (0, 0, 1110, 128)
-    enemies = ((754, 10, 874, 130), (387, 10, 497, 130), (20, 10, 120, 130))  # skill_to_enemies
-    skills = [[(74 + i * 476 + j * 140, 832, 129 + i * 476 + j * 140, 897) for j in range(3)] for i in range(3)]
-
-    ce_enhance_button = (1599, 975, 1727, 1038)
+        self.ce_enhance_button = (1599, 975, 1727, 1038)
 
 
 class ImageTemplates:
@@ -403,7 +419,7 @@ class ImageTemplates:
         if directory is not None:
             self.read_templates(directory, recursive=recursive)
 
-    def read_templates(self, directory: Union[str, List[str]], append=False, recursive=False):
+    def read_templates(self, directory: Union[str, List[str]] = None, append=False, recursive=False):
         """
         Read template .png images from one or more dirs. If duplicated filenames, the last image will be remained
         :param directory:
@@ -411,6 +427,8 @@ class ImageTemplates:
         :param recursive:
         :return:
         """
+        if directory is None:
+            return
         if isinstance(directory, (list, tuple)):
             if not append:
                 self.templates = {}
