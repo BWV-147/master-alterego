@@ -28,7 +28,7 @@ def show_img(img, name=None):
 def capture(fn: str = None, _base: str = None):
     # pyautogui.hotkey('alt', 'tab')
     _base = _base or base_path
-    if not os.path.exists(_base):
+    if _base and not os.path.exists(_base):
         os.makedirs(_base)
         print(f'make dir: {_base}')
     time.sleep(0.1)
@@ -63,10 +63,12 @@ def save_rewards(quest_name: str = None, cfg=None, count=True, drop: int = None)
     show_img(img, 'rewards')
 
 
-def compare(fp1, fp2, region, dx=0, dy=0, dw=0, dh=0):
+def compare(m1: Union[str, Image.Image], m2: Union[str, Image.Image], region, dx=0, dy=0, dw=0, dh=0):
     plt.figure('compare', clear=True)
-    m1 = Image.open(fp1)
-    m2 = Image.open(fp2)
+    if isinstance(m1, str):
+        m1 = Image.open(m1)
+    if isinstance(m2, str):
+        m2 = Image.open(m2)
     plt.subplot(1, 2, 1)
     plt.imshow(m1.crop(region))
     plt.subplot(1, 2, 2)

@@ -196,6 +196,7 @@ class Master:
             - 1,2,3: gold/silver/copper apple
             - 4: zi hui ti
             - 5: choose apple manually
+            - other: don't eat, finish
         :return:
         """
         T, LOC = self.T, self.LOC
@@ -245,7 +246,9 @@ class Master:
                             click(LOC.apple_confirm, lapse=1)
                         elif page_no == 2:
                             if apple == 0:
-                                quartz_logger.info(f'Account {config.id}: eating saint quartz as apple!')
+                                config.battle.quartz_eaten += 1
+                                quartz_logger.info(f'Account {config.id}: '
+                                                   f'eating the {config.battle.quartz_eaten}th saint quartz as apple!')
                             return
         config.mark_task_finish(f'Finished: all apples in {apples} have been used out')
         config.kill()

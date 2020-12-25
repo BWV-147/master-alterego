@@ -6,6 +6,7 @@ from .master import *
 
 class BattleBase(BaseAgent):
     def __init__(self):
+        logger.set_cur_logger('log')
         self.master = Master()
         super().__init__()
 
@@ -87,7 +88,8 @@ class BattleBase(BaseAgent):
                         click((_x, _y))
                     elif match_targets(shot, T.apple_page, LOC.apple_close):
                         if finished_num > battle_num and config.battle.end_until_eating_apple:
-                            config.mark_task_finish(f'Finished: all {battle_num} battles finished and AP cleared')
+                            config.mark_task_finish(f'Finished: all {finished_num}/{battle_num} '
+                                                    f'battles finished and AP cleared')
                         else:
                             self.master.eat_apple(apples)
                     elif T.bag_full_alert is not None \
@@ -152,7 +154,7 @@ class BattleBase(BaseAgent):
                 rewards.save(f"{png_fn}.png")
 
             # ready to restart a battle
-            if finished_num % 30 == 0:
+            if finished_num % 25 == 0:
                 send_mail(f'Progress: {finished_num}/{battle_num} battles finished.',
                           attach_shot=False, level=MailLevel.info)
             while True:
@@ -165,9 +167,8 @@ class BattleBase(BaseAgent):
                     click(LOC.apply_friend_deny)
                     logger.debug('not to apply friend')
                 sleep(0.5)
-        logger.info(f'>>>>> All {finished_num} battles "{self.master.quest_name}" finished. <<<<<')
-        send_mail(f'All {finished_num} battles "{self.master.quest_name}" finished', level=MailLevel.info)
-        config.mark_task_finish(f'Finished: all {finished_num} battles of "{self.master.quest_name}"')
+        logger.info(f'>>>>> All {finished_num}/{battle_num} battles "{self.master.quest_name}" finished. <<<<<')
+        config.mark_task_finish(f'Finished: all {finished_num}/{battle_num} battles of "{self.master.quest_name}"')
         return
 
     # noinspection DuplicatedCode

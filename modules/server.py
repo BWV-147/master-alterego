@@ -175,7 +175,7 @@ def shutdown_task():
             return wrap_response(None, False, 'Task run in main thread, check force stop to terminate it, '
                                               'server will be shutdown too.')
     elif config.task_thread and config.task_thread.is_alive():
-        config.mark_task_finish('Interrupted: terminated via Inspector')
+        config.mark_task_finish('Interrupted: terminated via Inspector', 0)
         return wrap_response(None, True, f'Task will be terminated soon. Thread: {config.task_thread}')
     else:
         return wrap_response(None, False, f'No running task. Thread: {config.task_thread}')
@@ -185,12 +185,12 @@ def shutdown_task():
 def put_new_task():
     if config.task_thread and config.task_thread.is_alive():
         return wrap_response(None, False, f'Task is still alive: {config.task_thread}')
-    elif config.task_queue.full():
-        return wrap_response(None, False, 'Task already in queue. Try or check again later.')
+    elif config.new_task_signal:
+        return wrap_response(None, False, 'Already set new task')
     else:
-        config.task_queue.put_nowait(1)
+        config.new_task_signal = True
         app.logger.info('put a new task to queue')
-        return wrap_response(None, False, 'Put a task into queue, check it later')
+        return wrap_response(None, False, 'Put a task into queue')
 
 
 @app.route('/toggleVisibility')

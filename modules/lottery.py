@@ -7,7 +7,7 @@ class Lottery(BaseAgent):
         super().__init__()
         self.T = ImageTemplates(path)
         self.LOC = Regions()
-        logger.set_cur_logger('gacha')
+        logger.set_cur_logger('lottery')
 
     def start(self, timeout: int = None, cfg=None):
         if timeout is None:

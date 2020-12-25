@@ -101,7 +101,7 @@ class Regions(_Regions):
 
     # ---------- lottery part ----------
     lottery_point = (600, 650)
-    lottery_tab = (1009, 188, 1213, 228)
+    lottery_tab = (1000, 188, 1110, 228)
     lottery_10_initial = (483, 630, 800, 774)
     lottery_reset_action = (1546, 337, 1863, 394)
     lottery_reset_confirm = (1097, 813, 1416, 879)
