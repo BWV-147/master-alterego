@@ -1,3 +1,4 @@
+from .config import *
 from .addon import *
 from .autogui import *
 from .log import *

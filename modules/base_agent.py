@@ -2,6 +2,7 @@ import platform
 
 from util.addon import raise_alert
 from util.autogui import *
+from util.config import *
 from .server import app
 
 
@@ -11,15 +12,13 @@ class BaseAgent:
     def __init__(self):
         # If define property getter and setter for T/LOC, don't initiate its value.
         if 'T' not in self.__dir__():
-            print(f'{self.__class__.__name__} init T')
-            self.T: Optional[ImageTemplates] = None
+            self.T = ImageTemplates()
         if 'LOC' not in self.__dir__():
-            print(f'{self.__class__.__name__} init LOC')
-            self.LOC: Optional[Regions] = None
+            self.LOC = Regions()
 
     def pre_process(self, cfg):
         config.load(cfg)
-        self.LOC = RegionsJP() if config.is_jp else Regions()
+        self.LOC.reset(config.is_jp)
         config.initialize()
         if config.www_host_port is not None:
             self.run_sever(*config.www_host_port)

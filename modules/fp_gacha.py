@@ -5,8 +5,7 @@ from .base_agent import BaseAgent
 class FpGacha(BaseAgent):
     def __init__(self, path=None):
         super().__init__()
-        self.T = ImageTemplates(path)
-        self.LOC = Regions()
+        self.T.read_templates(path)
         logger.set_cur_logger('gacha')
 
     def start(self, timeout: int = None, cfg=None):
@@ -25,7 +24,7 @@ class FpGacha(BaseAgent):
         logger.info('starting friend point gacha...', extra=LOG_TIME)
         time.sleep(2)
         if timeout > 0:
-            t_name = f'fp-{os.path.basename(config.fp_gacha.dir)}'
+            t_name = f'fp-{config.id}'
             thread = threading.Thread(target=start_func, name=t_name, args=[config.fp_gacha.num], daemon=True)
             supervise_log_time(thread, timeout, interval=3, alert_loops=3)
         else:

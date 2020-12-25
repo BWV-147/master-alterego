@@ -25,9 +25,9 @@ import logging
 import os
 import sys
 import threading
-from logging.handlers import RotatingFileHandler
 
 from PIL import Image
+from concurrent_log_handler import ConcurrentRotatingFileHandler
 from flask import Flask, request, Response, redirect, abort, send_from_directory
 
 ROOT = os.getcwd()
@@ -54,8 +54,8 @@ if not os.path.exists(_log_folder):
     os.makedirs(_log_folder)
 for _logger in (werkzeug_logger, app.logger):  # type:logging.Logger
     _logger.setLevel(logging.DEBUG)
-    fh = RotatingFileHandler(os.path.join(_log_folder, f'{_logger.name}.log'),
-                             encoding='utf8', maxBytes=1024 * 1024, backupCount=2)
+    fh = ConcurrentRotatingFileHandler(os.path.join(_log_folder, f'{_logger.name}.log'),
+                                       encoding='utf8', maxBytes=1024 * 1024, backupCount=2)
     fh.setFormatter(logging.Formatter(
         style='{',
         datefmt="%m-%d %H:%M:%S",

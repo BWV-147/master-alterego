@@ -1,12 +1,11 @@
 from util.supervisor import *
-from .base_agent import BaseAgent
+from .base_agent import *
 
 
 class Lottery(BaseAgent):
     def __init__(self, path=None):
         super().__init__()
-        self.T = ImageTemplates(path)
-        self.LOC = Regions()
+        self.T.read_templates(path)
         logger.set_cur_logger('lottery')
 
     def start(self, timeout: int = None, cfg=None):
@@ -28,7 +27,7 @@ class Lottery(BaseAgent):
                 }[start_func.__name__]
         time.sleep(2)
         if timeout > 0:
-            t_name = f'lottery-{os.path.basename(config.lottery.dir)}'
+            t_name = f'lottery-{config.id}'
             thread = threading.Thread(target=start_func, name=t_name, args=args, daemon=True)
             supervise_log_time(thread, timeout, interval=3)
         else:

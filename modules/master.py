@@ -7,6 +7,7 @@ import enum
 
 from util.addon import *
 from util.autogui import *
+from util.config import *
 
 quartz_logger = get_logger_dispatcher('quartz', logging.DEBUG)
 
@@ -72,7 +73,7 @@ class Master:
         self.members: List[str] = list('ABCDEF')
         self.T = ImageTemplates()
         # initiate inside BattleBase after pre_process
-        self.LOC: Regions = Regions()
+        self.LOC = Regions()
         self.card_templates: Dict[Card, List[Image.Image]] = {}
         self.card_weights: Dict[Card, float] = {}
         self._wave_a = None

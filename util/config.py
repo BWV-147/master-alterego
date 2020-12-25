@@ -6,7 +6,6 @@ import os
 import sys
 import threading
 import time
-from queue import Queue
 from typing import Optional, List, Tuple, Dict, Set, Mapping
 
 import wda  # noqa
