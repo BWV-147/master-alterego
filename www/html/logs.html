@@ -13,6 +13,7 @@
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="/css/bootstrap-icons.css">
 
     <!-- Favicons -->
     <link rel="icon" href="https://img.icons8.com/ultraviolet/40/000000/binoculars.png" type="image/png">
@@ -38,6 +39,10 @@
                     <div class="dropdown-menu"></div>
                 </div>
                 <button class="btn btn-primary" id="refreshLogBtn" onclick="refreshLog()">Refresh</button>
+                <button class="btn btn-primary" id="reverseLogBtn" onclick="reverseLog()">
+                    <!--Reverse-->
+                    <i class="bi-sort-down"></i>
+                </button>
             </div>
             <nav class="table-responsive">
                 <ul class="pagination pagination-sm" style="margin: 1rem auto"></ul>
@@ -82,6 +87,7 @@
 </main>
 
 <script>
+  let reversed = false
   $.getJSON('/getLogList', function (data) {
     let items = []
     data['body'].forEach(function (logName) {
@@ -95,7 +101,7 @@
       $('#dropdownLogs button').text(logName)
       downloadAndShowLog(logName)
     })
-    $(`#dropdownLogs a[href="${window.location.hash|| '#log.log'}"]`).click()
+    $(`#dropdownLogs a[href="${window.location.hash || '#log.log'}"]`).click()
   })
 </script>
 <div class="footer-placeholder"></div>

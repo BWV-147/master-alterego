@@ -151,7 +151,7 @@ def get_file():
             image = Image.open(filepath)
         else:
             return send_from_directory('.', filepath)
-    return Response(compress_image(image).getvalue(), mimetype="image/jpeg")
+    return Response(compress_image(image, quality=60).getvalue(), mimetype="image/jpeg")
 
 
 @app.route('/getTaskStatus')

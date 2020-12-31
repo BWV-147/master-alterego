@@ -177,6 +177,17 @@ function refreshLog() {
   }
 }
 
+function reverseLog() {
+  let $sortIcon = $('#reverseLogBtn i')
+  for (const style of ['bi-sort-down', 'bi-sort-up-alt']) {
+    if ($sortIcon.hasClass(style))
+      $sortIcon.removeClass(style)
+    else
+      $sortIcon.addClass(style)
+  }
+  reversed = !reversed
+}
+
 /**
  * Generate pagination with additional two nav button, looks like nav_left/n/.../m/m+1/.../1/nav_right
  * Pagination is in reversed order, the left page number is larger.
@@ -270,6 +281,8 @@ function showLogsAtPage(data, index, perPage) {
   let startNo = -(totalPages - index) * perPage,
     endNo = startNo + perPage
   let shownLogs = data.slice(Math.max(startNo, -data.length), endNo === 0 ? undefined : endNo)
+  if (reversed)
+    shownLogs.reverse()
   // console.log(`show ${shownLogs.length} logs at page ${index}`)
   let $panel = $('pre.codes'),
     $codes = $panel.find('code')
