@@ -185,7 +185,7 @@
       console.log(`clock=${autoRefreshHandler}`)
     }
   })
-  
+
   function stopAutoRefresh() {
     $refreshIntervalSelect.val('0').change()
     $('#clickableSwitch').prop('checked', false)
@@ -260,7 +260,7 @@
         addLog(result['msg'])
         if (Number.parseFloat($refreshIntervalSelect.val()) === 0)
           loadScreenshot()
-        if (Number.parseFloat($(this).val()) > 0)
+        if (Number.parseFloat($refreshIntervalSelect.val()) > 0)
           autoRefreshCount = 0
       })
     }

@@ -47,14 +47,16 @@ class FpGacha(BaseAgent):
             if loops % 10 == 0:
                 logger.debug(f'fp gacha {loops}/{num}...')
             # wait_targets(T.fp_gacha_page, LOC.fp_gacha_logo, at=LOC.fp_gacha_point)
-            page_no = wait_which_target([T.gacha_fp_result, T.gacha_fp_ce_full],
-                                        [LOC.gacha_fp_result_summon, LOC.bag_full_sell_button],
-                                        clicking=LOC.gacha_fp_point, interval=0.05)
+            page_no = wait_which_target([T.gacha_fp_confirm, T.gacha_fp_result, T.gacha_fp_ce_full],
+                                        [LOC.gacha_fp_confirm, LOC.gacha_fp_result_summon, LOC.bag_full_sell_button],
+                                        clicking=LOC.gacha_fp_result_summon, interval=0.05)
             if page_no == 0:
+                click(LOC.gacha_fp_confirm)
                 loops += 1
-                click(LOC.gacha_fp_result_summon)
                 config.update_time()
                 config.count_fp_gacha()
+            if page_no == 1:
+                click(LOC.gacha_fp_result_summon)
             else:
                 bag_no = wait_which_target([T.gacha_fp_svt_full, T.gacha_fp_ce_full], LOC.fp_bag_full_title)
                 if bag_no == 0:

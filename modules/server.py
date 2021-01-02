@@ -151,7 +151,7 @@ def get_file():
             image = Image.open(filepath)
         else:
             return send_from_directory('.', filepath)
-    return Response(compress_image(image).getvalue(), mimetype="image/jpeg")
+    return Response(compress_image(image, quality=60).getvalue(), mimetype="image/jpeg")
 
 
 @app.route('/getTaskStatus')
@@ -295,6 +295,15 @@ def remote_mouse_event():
         return wrap_response(msg=f"drag from {from_pos} to {to_pos},"
                                  f" duration={duration}/{down_duration}/{up_duration} secs.")
     return wrap_response(success=False, msg='invalid params')
+
+
+@app.route('/custom_hotkey')
+def custom_hotkey():
+    import pyautogui as pag
+    keys_str = request.args.get('keys', '')
+    keys = keys_str.split('+')
+    pag.hotkey(*keys)
+    return wrap_response(msg=f'hotkeys: {keys}')
 
 
 # %%

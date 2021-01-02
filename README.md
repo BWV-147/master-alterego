@@ -69,4 +69,7 @@ For WDA+iOS users, you need an Apple developer account to deploy WDA to your dev
 - kizuna->clicking->rewards, kizuna page should be optional, and add rewards-init page
 - add param to check master cloth at team page
 - play card check: no floating if checked
-- capture android emulator's screenshot directly rather take windows' screen.
+- capture the android emulator's screenshot directly rather take windows' screen.
+- search target in a column/rect
+- loginhandler add timeout: run in child thread
+- mousedown >mousemove tol 

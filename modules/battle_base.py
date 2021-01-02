@@ -294,7 +294,7 @@ class BattleBase(BaseAgent):
                 logger.debug('enter quest')
             elif match_targets(shot, T.login_popup, LOC.menu_button):
                 click(LOC.login_popup_clicking)
-            elif match_targets(T.support, LOC.support_refresh):
+            elif match_targets(shot, T.support, LOC.support_refresh):
                 logger.debug('back to support page!')
                 return True
             time.sleep(3)
