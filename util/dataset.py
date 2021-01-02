@@ -147,9 +147,9 @@ class Regions(_Regions):
     # menu
     menu_button = (1704, 1005, 1852, 1048)
     menu_button_expand = (1704, 772, 1852, 815)
-    menu_enhance_button = (486, 933, 588, 1011)
-    menu_gacha_button = (758, 933, 860, 1011)
-    menu_shop_button = (1030, 933, 1132, 1011)
+    menu_enhance_button = (651, 933, 763, 1011)
+    menu_gacha_button = (900, 933, 1002, 1011)
+    menu_shop_button = (1155, 933, 1260, 1011)
 
     # in bag
     bag_back = (49, 34, 242, 100)

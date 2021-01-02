@@ -129,9 +129,9 @@ capture('rewards_init')
 # %% !!!
 capture('rewards')
 # %%
-capture('restart_quest')
-# %%
 capture('apply_friend')
+# %%
+capture('restart_quest')
 # %% for hunting
 capture('bag_full_alert')
 # %% for exceptions

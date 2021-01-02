@@ -297,6 +297,15 @@ def remote_mouse_event():
     return wrap_response(success=False, msg='invalid params')
 
 
+@app.route('/custom_hotkey')
+def custom_hotkey():
+    import pyautogui as pag
+    keys_str = request.args.get('keys', '')
+    keys = keys_str.split('+')
+    pag.hotkey(*keys)
+    return wrap_response(msg=f'hotkeys: {keys}')
+
+
 # %%
 if __name__ == '__main__':
     config.load()
