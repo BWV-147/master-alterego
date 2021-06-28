@@ -55,7 +55,7 @@ class FpGacha(BaseAgent):
                 loops += 1
                 config.update_time()
                 config.count_fp_gacha()
-            if page_no == 1:
+            elif page_no == 1:
                 click(LOC.gacha_fp_result_summon)
             else:
                 bag_no = wait_which_target([T.gacha_fp_svt_full, T.gacha_fp_ce_full], LOC.fp_bag_full_title)
@@ -77,7 +77,12 @@ class FpGacha(BaseAgent):
                             click(LOC.gacha_arrow_left)
                         elif match_targets(shot, T.gacha_fp_page, LOC.gacha_fp_logo):
                             logger.debug('back to fp gacha page, will start in 3 secs, don\'t move mouse now')
+                            config.update_time(3)
                             time.sleep(3)
+                            if match_targets(shot, T.gacha_fp_page, [LOC.gacha_fp_logo, LOC.gacha_fp_10_button]):
+                                click(LOC.gacha_fp_10_button)
+                            else:
+                                config.mark_task_finish('Page changed, stop gacha!', MailLevel.warning)
                             break
                 else:
                     # to make sure in fp_gacha rather quartz gacha, start gacha after once manual gacha in manual mode

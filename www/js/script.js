@@ -89,6 +89,12 @@ function toggleVisibility() {
   })
 }
 
+function exitFullscreenSimulator() {
+  $.get('/exitFullscreen', function (result) {
+    addLog(result['msg'])
+  })
+}
+
 function switchTab() {
   $.get('/switchTab', function (result) {
     addLog(result['msg'])
