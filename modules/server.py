@@ -206,6 +206,16 @@ def toggle_visibility():
             return wrap_response(success=False, msg='Toggle visibility: no hotkey specified')
 
 
+@app.route('/enterFullscreen')
+def enter_fullscreen():
+    import pyautogui as pag
+    if config.is_wda:
+        return wrap_response(None, False, 'invalid request for WDA')
+    else:
+        pag.hotkey('f11')
+        return wrap_response(msg=f'Enter fullscreen')
+
+
 @app.route('/exitFullscreen')
 def exit_fullscreen():
     import pyautogui as pag

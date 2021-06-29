@@ -29,15 +29,15 @@ class AFree(BattleBase):
     @with_goto
     def a_charlotte(self, pre_process=False):
         """
-        黑C(虚数)-高文(虚数)-孔明support-X-X-X
+        尼托(醉贞)-黑呆(空骑)-孔明support-X-X-X 热带夏日
         """
         master = self.master
         T = master.T
         LOC = master.LOC
 
         master.quest_name = 'A-charlotte'
-        names = master.members = ['黑C', '高文', '孔明']
-        master.set_card_weight(dict(zip(names, [2, 1, 2.01])))
+        names = master.members = ['尼托', '黑呆', '孔明']
+        master.set_card_weight(dict(zip(names, [1.01, 2, 1])))
 
         # pre-processing: e.g. set templates, only once
         if pre_process:
@@ -65,21 +65,19 @@ class AFree(BattleBase):
         logger.debug(f'Quest {master.quest_name} started...')
         logger.debug('wave 1...')
         with master.set_waves(T.wave1a, T.wave1b):
+            master.svt_skill(3, 2)
+            master.svt_skill(3, 3)
             master.svt_skill(3, 1, 1)
-            master.svt_skill(1, 1)
+            # master.svt_skill(1, 1)
         master.auto_attack(nps=6, mode=AttackMode.alter)
-        master.xjbd(T.wave2a, LOC.loc_wave, mode=AttackMode.alter)
 
         # wave 2
         wait_targets(T.wave2a, LOC.loc_wave, 0.7)
         logger.debug('wave 2...')
-        master.set_card_weight(dict(zip(names, [2, 3, 2.01])))
         with master.set_waves(T.wave2a, T.wave2b):
-            master.svt_skill(3, 2)
-            master.svt_skill(3, 3)
+            # master.svt_skill(1, 1)
             master.svt_skill(1, 2)
-            master.svt_skill(2, 2)
-            master.svt_skill(2, 1)
+            master.svt_skill(2, 3)
             master.master_skill(1, 1)
         master.auto_attack(nps=6, mode=AttackMode.damage)
 
@@ -87,7 +85,9 @@ class AFree(BattleBase):
         wait_targets(T.wave3a, LOC.loc_wave, 0.7)
         logger.debug('wave 3...')
         with master.set_waves(T.wave3a, T.wave3b):
-            master.svt_skill(2, 3)
+            master.svt_skill(2, 2)
+            master.master_skill(3, 2)
+            master.svt_skill(2, 1)
         master.auto_attack(nps=7, mode=AttackMode.alter)
 
         master.xjbd(T.kizuna, LOC.kizuna, mode=AttackMode.alter, allow_unknown=True)
@@ -99,15 +99,15 @@ class JFree(BattleBase):
     @with_goto
     def j_charlotte(self, pre_process=False):
         """
-        紫式部(50NP)-lily(75NP)-术呆support-X-X-X
+        村正(75NP)-水阿比(50NP)-术呆support-X-X-X 04服
         """
         master = self.master
         T = master.T
         LOC = master.LOC
 
         master.quest_name = 'J-Charlotte'
-        names = master.members = ['紫式部', 'Lily', '术呆']
-        master.set_card_weight(dict(zip(names, [1.1, 2, 1])))
+        names = master.members = ['村正', '水阿比', '术呆']
+        master.set_card_weight(dict(zip(names, [2, 1, 1])))
 
         # pre-processing: e.g. set templates, only once
         if pre_process:
@@ -126,7 +126,9 @@ class JFree(BattleBase):
             goto.h  # noqas
         label.h  # noqas
 
+        print('hahah')
         wait_targets(T.support, LOC.support_refresh)
+        print('hahah22')
         master.choose_support(match_svt=True, match_skills=True, match_ce=True, match_ce_max=True,
                               friend_only=False, switch_classes=(5, 0))
 
@@ -136,26 +138,28 @@ class JFree(BattleBase):
         logger.debug('wave 1...')
         with master.set_waves(T.wave1a, T.wave1b):
             master.svt_skill(3, 1)
-            master.svt_skill(3, 2, 1)
-            master.svt_skill(3, 3, 1)
-            master.master_skill(3, 1)
-        master.auto_attack(nps=6, mode=AttackMode.alter)
+            master.svt_skill(2, 3)
+        master.auto_attack(nps=7, mode=AttackMode.alter)
 
         # wave 2
         wait_targets(T.wave2a, LOC.master_skill, 0.7)
         logger.debug('wave 2...')
         with master.set_waves(T.wave2a, T.wave2b):
-            master.svt_skill(1, 2)
-            master.master_skill(1, 1)
-        master.auto_attack(nps=6, mode=AttackMode.damage)
+            master.svt_skill(3, 3, 1)
+            master.master_skill(3, 1)
+        master.auto_attack(nps=6, mode=AttackMode.alter)
 
         # wave 3
         wait_targets(T.wave3a, LOC.master_skill, 0.7)
         logger.debug('wave 3...')
         with master.set_waves(T.wave3a, T.wave3b):
+            # master.svt_skill(2, 1)
+            master.svt_skill(3, 2, 1)
+            master.svt_skill(1, 3)
             master.svt_skill(1, 1)
-            master.svt_skill(2, 2)
-        master.auto_attack(nps=7, mode=AttackMode.alter)
+            master.svt_skill(2, 2)  # optional
+            master.master_skill(1, 1)
+        master.auto_attack(nps=6, mode=AttackMode.alter)
 
         master.xjbd(T.kizuna, LOC.kizuna, mode=AttackMode.alter, allow_unknown=True)
         return
