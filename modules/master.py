@@ -156,6 +156,11 @@ class Master:
                 for i in range(3):
                     self.card_weights[Card(svt, i + 1)] = ww * 10 + color_weight.find('QAB'[i])
 
+    def change_card_weight(self, name: str, color: str, weight: float):
+        for k, v in self.card_weights.items():
+            if k.svt == name and k.color_string == color:
+                self.card_weights[k] = weight
+
     def svt_die(self, svt: int):
         assert svt in (1, 2, 3)
         svt -= 1
@@ -290,9 +295,9 @@ class Master:
 
         # lambda functions: function(support, screenshot, offset) -> matched or not
         matches = [
-            lambda _p, _s, _o: not match_svt or _is_match_offset(_p, _s, LOC.support_skill[0], _o),
+            lambda _p, _s, _o: not match_svt or _is_match_offset(_p, _s, LOC.support_skill, _o),
             lambda _p, _s, _o: not match_skills or False not in [_is_match_offset(_p, _s, loc, _o) for loc in
-                                                                 LOC.support_skills[0]],
+                                                                 LOC.support_skills],
             lambda _p, _s, _o: not match_ce or _is_match_offset(_p, _s, LOC.support_ce[0], _o),
             # ce_max rect is to small, may has lower similarity
             lambda _p, _s, _o: not match_ce_max or _is_match_offset(_p, _s, LOC.support_ce_max[0], _o, 0.8),

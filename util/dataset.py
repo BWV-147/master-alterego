@@ -141,15 +141,22 @@ class Regions(_Regions):
     mailbox_drag_end = (1070, 250)
     box_history = (365, 30, 522, 102)
     # from mailbox move to bag/enhancement
-    bag_full_sell_button = (471, 689, 565, 740)
-    bag_full_enhance_button = (907, 689, 1008, 736)
+    bag_full_sell_button = (461, 659, 575, 720)
+    # bag_full_sell_button = (471, 689, 565, 740)
+    bag_full_enhance_button = (897, 664, 1018, 721)
+    # bag_full_enhance_button = (907, 689, 1008, 736)
 
     # menu
-    menu_button = (1704, 1005, 1852, 1048)
-    menu_button_expand = (1704, 772, 1852, 815)
-    menu_enhance_button = (651, 933, 763, 1011)
-    menu_gacha_button = (900, 933, 1002, 1011)
-    menu_shop_button = (1155, 933, 1260, 1011)
+    # menu_button = (1704, 1005, 1852, 1048)
+    # menu_button_expand = (1704, 772, 1852, 815)
+    # menu_enhance_button = (651, 933, 763, 1011)
+    # menu_gacha_button = (900, 933, 1002, 1011)
+    # menu_shop_button = (1155, 933, 1260, 1011)
+    menu_button = (1704, 955, 1852, 998)
+    menu_button_expand = (1704, 682, 1852, 725)
+    menu_enhance_button = (660, 850, 760, 930)
+    menu_gacha_button = (923, 854, 995, 918)
+    menu_shop_button = (1171, 856, 1237, 922)
 
     # in bag
     bag_back = (49, 34, 242, 100)
@@ -163,7 +170,8 @@ class Regions(_Regions):
     bag_qp_limit_confirm = (1334, 811, 1449, 868)
 
     # ce enhance
-    ce_enhance_button = (1587, 988, 1715, 1051)
+    ce_enhance_button = (1599, 975, 1727, 1038)
+    # ce_enhance_button = (1587, 988, 1715, 1051)
     ce_enhance_help = (640, 1014, 705, 1050)
     ce_target_box = (211, 520, 373, 687)
     ce_select_mode = (5, 319, 88, 411)
@@ -204,17 +212,26 @@ class Regions(_Regions):
     support_class_icons = [(117, 175, 165, 209), (218, 175, 266, 209), (319, 175, 367, 209), (420, 175, 468, 209),
                            (521, 175, 569, 209), (622, 175, 670, 209), (723, 175, 771, 209), (824, 175, 872, 209),
                            (925, 175, 973, 209), (1026, 175, 1074, 209)]  # All, 7 common class, extra, mix
-    support_scrollbar_start = (1857, 280)
-    support_scrollbar_end = (1857, 1047)
-    support_scrollbar_head = (1848, 280, 1870, 296)
+    support_scrollbar_start = (1882, 294)
+    support_scrollbar_end = (1882, 1047)
+    support_scrollbar_head = (1873, 280, 1895, 296)
+    # support_scrollbar_start = (1857, 280)
+    # support_scrollbar_end = (1857, 1047)
+    # support_scrollbar_head = (1848, 280, 1870, 296)
     support_ce = ((72, 489, 316, 537), (72, 791, 316, 838))  # 礼装位置
     support_ce_max = ((273, 524, 303, 552), (273, 825, 303, 854))  # 礼装满破的星星
-    support_skill = ((1252, 463, 1577, 548), (1252, 764, 1577, 847))  # 技能整体外轮廓
-    support_skills = [[(1260, 468, 1334, 544), (1378, 468, 1448, 544), (1497, 468, 1562, 544)],
-                      [(1260, 768, 1334, 844), (1378, 768, 1448, 844), (1497, 768, 1562, 844)]]  # 3个技能外轮廓
-    support_skill_lvs = [[(1260, 511, 1300, 544), (1380, 511, 1420, 544), (1500, 511, 1540, 544)],
-                         [(1260, 811, 1334, 844), (1380, 811, 1454, 844),
-                          (1500, 811, 1574, 844)]]  # 3个lv, 强化箭头未比较, not used
+
+    support_skill = (1252, 463, 1577, 548)  # 技能整体外轮廓
+    support_skills = [(1260, 468, 1334, 544), (1378, 468, 1448, 544), (1497, 468, 1562, 544)]  # 3个技能外轮廓
+    support_skill_lvs = [(1260, 511, 1300, 544), (1380, 511, 1420, 544),
+                         (1500, 511, 1540, 544)]  # 3个lv, 强化箭头未比较, not used
+
+    # # jp support: add append skill
+    # support_skill = (1255, 494, 1444, 548)  # 技能整体外轮廓
+    # support_skills = [(1260, 468, 1334, 544), (1378, 468, 1448, 544), (1497, 468, 1562, 544)]  # 3个技能外轮廓
+    # support_skill_lvs = [(1260, 511, 1300, 544), (1380, 511, 1420, 544),
+    #                      (1500, 511, 1540, 544)]  # 3个lv, 强化箭头未比较, not used
+    # end append skill
     support_friend_icon = (1696, 484, 1741, 529)
 
     support_confirm_title = (821, 171, 1108, 230)
@@ -222,16 +239,22 @@ class Regions(_Regions):
     support_refresh = (1238, 160, 1318, 230)
     support_class_affinity = (1119, 160, 1201, 230)
 
-    team_start_action = (1690, 983, 1880, 1042)
+    team_start_action = (1660, 975, 1850, 1034)
+    # team_start_action = (1690, 983, 1880, 1042)
     team_cloth = (20, 980, 263, 1054)  # with close icon inside
     team_cloth_button = (148, 986, 263, 1054)  # without cloth
 
     battle_master_avatar = (1706, 77, 1854, 189)
-    wave_num = (1298, 18, 1320, 54)
-    enemies_all = (0, 0, 1080, 128)
-    enemies = ((720, 10, 840, 130), (370, 10, 480, 130), (20, 10, 120, 130))  # skill_to_enemies
+    wave_num = (1323, 18, 1345, 54)
+    enemies_all = (0, 0, 1110, 128)
+    enemies = ((754, 10, 874, 130), (387, 10, 497, 130), (20, 10, 120, 130))  # skill_to_enemies
+    skills = [[(74 + i * 476 + j * 140, 832, 129 + i * 476 + j * 140, 897) for j in range(3)] for i in
+              range(3)]
+    # wave_num = (1298, 18, 1320, 54)
+    # enemies_all = (0, 0, 1080, 128)
+    # enemies = ((720, 10, 840, 130), (370, 10, 480, 130), (20, 10, 120, 130))  # skill_to_enemies
     dying_clicking_point = (1200, 40)
-    skills = [[(63 + i * 476 + j * 140, 825, 120 + i * 476 + j * 140, 893) for j in range(3)] for i in range(3)]
+    # skills = [[(63 + i * 476 + j * 140, 825, 120 + i * 476 + j * 140, 893) for j in range(3)] for i in range(3)]
     skill_targets_close = (1614, 195, 1678, 256)
     skill_to_target = ((490, 700), (970, 700), (1429, 700))
     master_skill = (1736, 440, 1841, 507)
@@ -257,17 +280,28 @@ class Regions(_Regions):
     # kizuna = (186, 646, 205, 665)  # 羁绊点数第一格
     kizuna = (257, 598, 325, 613)  # 头像框下侧servant字样
     craft_detail_tab1 = (784, 177, 967, 229)
-    rewards_qp = (450, 900, 472, 930)
+
+    rewards_qp = (448, 845, 477, 877)
+    rewards_show_num = (1593, 62, 1711, 92)
+    rewards_items_outer = [[(233 + j * 206, 132 + i * 213, 409 + j * 206, 325 + i * 213) for j in range(0, 7)]
+                           for i in range(0, 3)]
+    rewards_items = [[(241 + j * 206, 142 + i * 213, 401 + j * 206, 236 + i * 213) for j in range(0, 7)]
+                     for i in range(0, 3)]
+    rewards_item1 = (447, 142, 607, 236)  # first dropped item rect
+    rewards_rainbow = (1452, 16, 1459, 32)
+    rewards_next = (1576, 920, 1750, 1001)
+
+    # rewards_qp = (450, 900, 472, 930)
     rewards_clicking = (70, 860)
-    rewards_show_num = (1593, 115, 1711, 149)
-    rewards_items_outer = [[(233 + j * 206, 186 + i * 213, 409 + j * 206, 379 + i * 213) for j in range(0, 7)] for i in
-                           range(0, 3)]
-    rewards_items = [[(241 + j * 206, 196 + i * 213, 401 + j * 206, 290 + i * 213) for j in range(0, 7)] for i in
-                     range(0, 3)]
-    rewards_item1 = rewards_items[0][1]  # first dropped item rect
-    rewards_rainbow = (1418, 18, 1442, 50)
+    # rewards_show_num = (1593, 115, 1711, 149)
+    # rewards_items_outer = [[(233 + j * 206, 186 + i * 213, 409 + j * 206, 379 + i * 213) for j in range(0, 7)] for i in
+    #                        range(0, 3)]
+    # rewards_items = [[(241 + j * 206, 196 + i * 213, 401 + j * 206, 290 + i * 213) for j in range(0, 7)] for i in
+    #                  range(0, 3)]
+    # rewards_item1 = rewards_items[0][1]  # first dropped item rect
+    # rewards_rainbow = (1418, 18, 1442, 50)
     rewards_suochi_character = (463, 288, 465, 298)  # "所"最后一竖
-    rewards_next = (1576, 980, 1750, 1061)
+    # rewards_next = (1576, 980, 1750, 1061)
     restart_quest_yes = (1122, 812, 1386, 879)
     # friend_point = (460, 810, 580, 880)
 
@@ -322,6 +356,11 @@ class Regions(_Regions):
                        range(3)]
 
         self.ce_enhance_button = (1599, 975, 1727, 1038)
+
+        self.support_skill = (1255, 494, 1444, 548)  # 技能整体外轮廓,只用第一个
+        self.support_skills = [(1260, 500, 1302, 541), (1329, 500, 1370, 541), (1396, 500, 1438, 542)]  # 3个技能外轮廓
+        self.support_skill_lvs = [(1260, 519, 1302, 541), (1329, 519, 1370, 541),
+                                  (1396, 519, 1438, 542)]  # 3个lv, 强化箭头未比较, not used
 
 
 class ImageTemplates:

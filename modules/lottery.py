@@ -53,16 +53,16 @@ class Lottery(BaseAgent):
                 config.mark_task_finish('Finished: tickets have been used up')
                 return
             if match_targets(shot, T.lottery_empty, LOC.lottery_reset_action):
-                click(LOC.lottery_reset_action)
+                if reset_i + 1 >= num:
+                    config.mark_task_finish(f'Finished: all {num} lotteries')
+                    return
                 config.count_lottery()
+                click(LOC.lottery_reset_action)
                 reset_i += 1
                 logger.info(f'reset {reset_i}/{num} times(total {config.lottery.finished}).', extra=LOG_TIME)
                 wait_targets(T.lottery_reset_confirm, LOC.lottery_reset_confirm, at=0)
                 wait_targets(T.lottery_reset_finish, LOC.lottery_reset_finish, at=0)
                 wait_targets(T.lottery_initial, LOC.lottery_10_initial)
-                if reset_i >= num:
-                    config.mark_task_finish(f'Finished: all {num} lotteries')
-                    return
             elif match_targets(shot, T.mailbox_full_alert, LOC.mailbox_full_confirm):
                 click(LOC.mailbox_full_confirm)
                 logger.info('mailbox full.', extra=LOG_TIME)

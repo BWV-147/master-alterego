@@ -49,7 +49,7 @@ class FpGacha(BaseAgent):
             # wait_targets(T.fp_gacha_page, LOC.fp_gacha_logo, at=LOC.fp_gacha_point)
             page_no = wait_which_target([T.gacha_fp_confirm, T.gacha_fp_result, T.gacha_fp_ce_full],
                                         [LOC.gacha_fp_confirm, LOC.gacha_fp_result_summon, LOC.bag_full_sell_button],
-                                        clicking=LOC.gacha_fp_result_summon, interval=0.05)
+                                        clicking=LOC.gacha_fp_result_summon, interval=0.05, threshold=0.7)
             if page_no == 0:
                 click(LOC.gacha_fp_confirm)
                 loops += 1

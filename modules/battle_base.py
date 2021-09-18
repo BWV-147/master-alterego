@@ -46,6 +46,9 @@ class BattleBase(BaseAgent):
         battle_func(True)
         config.T = self.T
         config.LOC = self.LOC
+        if config.battle.sell_times > 0 and self.T.bag_full_alert is None:
+            logger.warning('set bag_full_alert template if sell_times is set!!!')
+            return
         if force_jump:
             config.battle.jump_battle = True
         if config.battle.num <= 0:
@@ -145,8 +148,14 @@ class BattleBase(BaseAgent):
                 rewards.save(f'{png_fn}-drop{config.battle.craft_num}.png')
                 if config.battle.craft_num in config.battle.enhance_craft_nums:
                     logger.warning('need to change party or enhance crafts. Exit.')
-                    config.mark_task_finish(f'Enhance! {config.battle.craft_num}th craft dropped!!!', MailLevel.warning)
-                    return
+                    send_mail(f'Enhance! {config.battle.craft_num}th craft dropped!!!')
+                    # If no action in 10 min, continue battles but don't eating apple.
+                    config.update_time(11 * 60)
+                    time.sleep(10 * 60)
+                    config.battles[config.battle_name].apples.insert(0, -1)
+                    # config.mark_task_finish(f'Enhance! {config.battle.craft_num}th craft dropped!!!',
+                    #                         MailLevel.warning)
+                    # return
                 else:
                     send_mail(f'{config.battle.craft_num}th craft dropped!!!', level=MailLevel.warning)
                 click(LOC.rewards_next)
@@ -156,7 +165,7 @@ class BattleBase(BaseAgent):
 
             # ready to restart a battle
             if finished_num % 25 == 0:
-                send_mail(f'Progress: {finished_num}/{battle_num} battles finished.',
+                send_mail(f'Progress: {finished_num}/{battle_num} battles.',
                           attach_shot=False, level=MailLevel.info)
             while True:
                 shot = screenshot()
