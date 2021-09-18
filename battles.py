@@ -170,15 +170,15 @@ class SFree(BattleBase):
     @with_goto
     def s_charlotte(self, pre_process=False):
         """
-        Saber(50NP)-黑C(80NP)-孔明support-X-X-X
+        尼托(醉贞)-黑呆(80NP)-孔明support-X-X-X
         """
         master = self.master
         T = master.T
         LOC = master.LOC
 
         master.quest_name = 'S-Charlotte'
-        names = master.members = ['Saber', '黑C', '孔明']
-        master.set_card_weight(dict(zip(names, [2, 1, 1.01])))
+        names = master.members = ['尼托', '黑呆', '孔明']
+        master.set_card_weight(dict(zip(names, [1.01, 2, 1])))
 
         # pre-processing: e.g. set templates, only once
         if pre_process:
@@ -208,26 +208,25 @@ class SFree(BattleBase):
         with master.set_waves(T.wave1a, T.wave1b):
             master.svt_skill(3, 2)
             master.svt_skill(3, 3)
-            master.svt_skill(2, 1)
-            master.svt_skill(1, 1)
-        master.auto_attack(nps=7, mode=AttackMode.alter)
+            master.svt_skill(3, 1, 1)
+        master.auto_attack(nps=6, mode=AttackMode.alter)
 
         # wave 2
         wait_targets(T.wave2a, LOC.loc_wave, 0.7)
         logger.debug('wave 2...')
         with master.set_waves(T.wave2a, T.wave2b):
-            master.svt_skill(2, 2)
-            master.svt_skill(3, 1, 2)
-            master.master_skill(1, 2)
-        master.auto_attack(nps=7, mode=AttackMode.damage)
+            master.svt_skill(1, 2)
+            master.svt_skill(2, 3)
+        master.auto_attack(nps=6, mode=AttackMode.damage)
 
         # wave 3
         wait_targets(T.wave3a, LOC.loc_wave, 0.7)
         logger.debug('wave 3...')
         with master.set_waves(T.wave3a, T.wave3b):
-            master.svt_skill(1, 3)
-            master.svt_skill(1, 2)
-        master.auto_attack(nps=6, mode=AttackMode.alter)
+            master.svt_skill(2, 1)
+            master.svt_skill(2, 2)
+            master.master_skill_full(T.cloth11, 2, 2)
+        master.auto_attack(nps=7, mode=AttackMode.alter)
 
         master.xjbd(T.kizuna, LOC.kizuna, mode=AttackMode.alter, allow_unknown=True)
         return

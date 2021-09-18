@@ -290,6 +290,8 @@ class Master:
         refresh_times = 0
 
         def _is_match_offset(_support, _shot, old_loc, _offset, threshold=None):
+            if threshold is None:
+                threshold = 0.7
             return match_targets(_shot.crop(numpy.add(old_loc, [0, _offset, 0, _offset])), _support.crop(old_loc),
                                  threshold=threshold)
 
@@ -300,7 +302,7 @@ class Master:
                                                                  LOC.support_skills],
             lambda _p, _s, _o: not match_ce or _is_match_offset(_p, _s, LOC.support_ce[0], _o),
             # ce_max rect is to small, may has lower similarity
-            lambda _p, _s, _o: not match_ce_max or _is_match_offset(_p, _s, LOC.support_ce_max[0], _o, 0.8),
+            lambda _p, _s, _o: not match_ce_max or _is_match_offset(_p, _s, LOC.support_ce_max[0], _o, 0.7),
             lambda _p, _s, _o: not friend_only or _is_match_offset(_p, _s, LOC.support_friend_icon, _o),
         ]
 
@@ -694,6 +696,7 @@ class Master:
                 if i < 3 and isinstance(c, Card) and c.color == Card.BUSTER:
                     chosen_cards.insert(0, chosen_cards.pop(i))
                     break
+        chosen_cards = chosen_cards[0:3]
         logger.debug(f'Chosen: {self.str_cards(chosen_cards)}', extra=LOG_TIME)
         return chosen_cards
 

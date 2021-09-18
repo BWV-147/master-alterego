@@ -39,7 +39,7 @@ class BaseAgent:
                 # pyautogui.hotkey('win', 'd')
 
     @classmethod
-    def run_sever(cls, host='0.0.0.0', port=8080):
+    def run_sever(cls, host='0.0.0.0', port=8180):
         if cls._server_thread is not None and cls._server_thread.is_alive():
             app.logger.info(f'server is already running: {cls._server_thread}')
             return
