@@ -1,6 +1,6 @@
-from .config import *
 from .addon import *
 from .autogui import *
+from .config import *
 from .log import *
 
 
@@ -110,3 +110,6 @@ def start_loop(func: Callable):
             config.new_task_signal = False
             func()
             logger.info('waiting new task...')
+            if config.www_host_port is not None:
+                host, port = (config.www_host_port + [None, None])[:2]
+                logger.info(f'Server is running on http://{host or "0.0.0.0"}:{port or 8180}')

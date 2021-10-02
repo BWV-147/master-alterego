@@ -8,7 +8,7 @@ from PIL import Image
 from .base import *
 from .log import logger
 
-THR = 0.85  # default threshold
+THR = 0.80  # default threshold
 
 
 class _Regions:
@@ -300,7 +300,7 @@ class Regions(_Regions):
     #                  range(0, 3)]
     # rewards_item1 = rewards_items[0][1]  # first dropped item rect
     # rewards_rainbow = (1418, 18, 1442, 50)
-    rewards_suochi_character = (463, 288, 465, 298)  # "所"最后一竖
+    rewards_suochi_character = (445, 274, 495, 301)  # "所"最后一竖
     # rewards_next = (1576, 980, 1750, 1061)
     restart_quest_yes = (1122, 812, 1386, 879)
     # friend_point = (460, 810, 580, 880)

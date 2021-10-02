@@ -27,14 +27,15 @@ def get_mean_color(img: Image.Image, region: Sequence):
         raise KeyError(f'len(region) != 2 or 4. region={region}')
 
 
-def cal_sim(img1: Image.Image, img2: Image.Image, region=None, method='ssim') -> float:
+def cal_sim(img1: Image.Image, img2: Image.Image, region=None, method=None) -> float:
     """
     Calculate the similarity of two image at region.
 
     :param img1:
     :param img2:
     :param region: region to crop.
-    :param method: 'ssim': compute the mean structural similarity using `skimage`,
+    :param method: 'template': cv2.matchTemplate, crop one slightly
+                   'ssim': compute the mean structural similarity using `skimage`,
                    'hist': compute the similarity of color histogram,
                    'hash': image hash, value may be larger as expected.
     :return: similarity, float less than 1, may be negative.
@@ -51,7 +52,19 @@ def cal_sim(img1: Image.Image, img2: Image.Image, region=None, method='ssim') ->
     if img2.mode != 'RGB':
         img2 = img2.convert('RGB')
 
-    if method == 'ssim':
+    # if img1.width < 30:
+    #     method = 'hist'
+    if method is None:
+        method = config.sim_algo or 'ssim'
+    assert method in ('template', 'ssim', 'hist', 'hash'), method
+    if method == 'template':
+        dx = min(4, img2.width * 0.2)
+        dy = min(4, img2.height * 0.2)
+        img2 = img2.crop((dx, dy, img2.width - dx, img2.height - dy))
+        sim = numpy.max(cv2.matchTemplate(pil_to_cv2(img1), pil_to_cv2(img2), cv2.TM_CCOEFF_NORMED))
+        # print(f'sim={sim:.4f}')
+        return sim
+    elif method == 'ssim':
         try:
             # noinspection PyTypeChecker,PyUnusedLocal
             sim = structural_similarity(numpy.array(img1), numpy.array(img2), multichannel=True)
@@ -362,3 +375,11 @@ def search_peaks(image: Image.Image, target: Image.Image, column=True, threshold
     cv_img, cv_target = (cv2.cvtColor(m1, cv2.COLOR_RGB2BGR), cv2.cvtColor(m2, cv2.COLOR_RGB2BGR))
     matches: numpy.ndarray = cv2.matchTemplate(cv_img, cv_target, cv2.TM_CCOEFF_NORMED)
     return find_peaks(matches.reshape(matches.size), height=threshold, **kwargs)[0]
+
+
+def pil_to_cv2(img: Image.Image) -> numpy.ndarray:
+    return cv2.cvtColor(numpy.array(img.convert('RGB')), cv2.COLOR_RGB2BGR)  # noqa
+
+
+def cv2_to_pil(img: numpy.ndarray) -> Image.Image:
+    return Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))

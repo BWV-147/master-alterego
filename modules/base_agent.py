@@ -77,7 +77,7 @@ class BaseAgent:
                 drag(LOC.bag_select_start, LOC.bag_select_end, duration, 0.6, up_time, lapse=2)
             page_no = wait_which_target([T.bag_selected, T.bag_unselected],
                                         [LOC.bag_sell_action, LOC.bag_sell_action])
-            if page_no == 0:
+            if no < num and page_no == 0:
                 no += 1
                 logger.info(f'sell: {no} times...', extra=LOG_TIME)
                 click(LOC.bag_sell_action)

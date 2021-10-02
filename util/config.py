@@ -160,6 +160,7 @@ class Config(BaseConfig):
         self.lottery = LotteryConfig()
         self.fp_gacha = FpGachaConfig()
         # ================= Other part ==================
+        self.sim_algo = None
         self.wda_settings = {'url': None}  # default url http://localhost:8100 and other options for appium_settings
         self.alert_type = False  # bool: beep, str: ring tone, alert if supervisor found errors or task finish.
         self.manual_operation_time = 60 * 10  # seconds.

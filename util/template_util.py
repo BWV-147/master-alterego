@@ -9,6 +9,7 @@ from util.config import config
 
 base_path: Optional[str] = None
 
+
 def show_img(img, name=None):
     fig = plt.figure(name, figsize=(6.4, 6.4 * 1080 / 1920), facecolor='red', clear=True)
     fig.add_axes([0, 0, 1, 1])

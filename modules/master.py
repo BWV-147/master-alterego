@@ -600,7 +600,7 @@ class Master:
         def _traverse(outer, mode):
             # mode=0-all,1-common card,2-np card
             nonlocal base_line  # to decrease time of `search_target()`
-            threshold = 0.7
+            threshold = 0.5
             _matched = None
             max_th = 0
             values = []
