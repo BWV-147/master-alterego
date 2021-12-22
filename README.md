@@ -74,3 +74,4 @@ For WDA+iOS users, you need an Apple developer account to deploy WDA to your dev
 - loginhandler add timeout: run in child thread
 - mousedown >mousemove tol 
 - record eaten apples
+- JP update support page 20211006

@@ -16,7 +16,7 @@ config.initialize(False)
 import util.template_util as template_util
 from util.template_util import capture
 
-template_util.base_path = 'img/battles/s-egg'
+template_util.base_path = 'img/battles/xmas-shi'
 
 # %% ------------- battle part --------------
 capture('quest')

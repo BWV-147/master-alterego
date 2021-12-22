@@ -422,8 +422,9 @@ class Master:
         region = LOC.skills[who - 1][skill - 1]
         wait_targets(before, region, at=0, lapse=1)
         if friend is None:
-            while match_targets(screenshot(), before, region, 0.5):
-                # some times need to
+            while match_targets(screenshot(), before, region, 0.7):
+                if after is not None and match_targets(screenshot(), after, region):
+                    break
                 click(region, 1)
         else:
             while not match_targets(screenshot(), T.skill_targets, LOC.skill_targets_close, 0.7):
