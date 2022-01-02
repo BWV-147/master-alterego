@@ -164,7 +164,7 @@ class Regions(_Regions):
     bag_select_start = (200, 350)
     bag_select_middle = (1416, 350)
     bag_select_end = (1416, 1050)
-    bag_sell_action = (1600, 975, 1870, 1047)
+    bag_sell_action = (1690, 975, 1780, 1047)
     bag_sell_confirm = (1181, 912, 1340, 968)
     bag_sell_finish = (875, 908, 1045, 966)
     bag_qp_limit_confirm = (1334, 811, 1449, 868)

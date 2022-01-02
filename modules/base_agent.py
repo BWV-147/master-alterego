@@ -75,8 +75,10 @@ class BaseAgent:
             wait_targets(T.bag_unselected, [LOC.bag_svt_tab, LOC.bag_sell_action])
             if no < num:
                 drag(LOC.bag_select_start, LOC.bag_select_end, duration, 0.6, up_time, lapse=2)
-            page_no = wait_which_target([T.bag_selected, T.bag_unselected],
-                                        [LOC.bag_sell_action, LOC.bag_sell_action])
+            with config.enable_sim_algo('hist'):
+                page_no = wait_which_target([T.bag_selected, T.bag_unselected],
+                                            [LOC.bag_sell_action, LOC.bag_sell_action], 0.6)
+            logger.debug(f'page no: {page_no}')
             if no < num and page_no == 0:
                 no += 1
                 logger.info(f'sell: {no} times...', extra=LOG_TIME)
@@ -88,6 +90,7 @@ class BaseAgent:
                 if qp_limit_no == 0:
                     click(LOC.bag_qp_limit_confirm)
                 wait_targets(T.bag_sell_finish, LOC.bag_sell_finish, at=0)
+                logger.info(f'sell: {no} finished.', extra=LOG_TIME)
             else:
                 if no == 0:
                     logger.warning('svt bag full but nothing can be sold! waiting manual operation.')

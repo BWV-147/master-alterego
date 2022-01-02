@@ -1,5 +1,6 @@
 __all__ = ['Config', 'config', 'MailLevel']
 
+import contextlib
 import ctypes
 import json
 import os
@@ -325,6 +326,15 @@ class Config(BaseConfig):
         thread = self.task_thread or threading.current_thread()
         if thread is not threading.main_thread():
             kill_thread(thread)
+
+    @contextlib.contextmanager
+    def enable_sim_algo(self, method: str):
+        _last = self.sim_algo
+        try:
+            self.sim_algo = method
+            yield
+        finally:
+            self.sim_algo = _last
 
 
 config = Config()
