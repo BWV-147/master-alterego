@@ -2,7 +2,11 @@
 
 **ぐだ子の分身、クラスはオルターエゴでち。**
 
+**咕哒子的分身、他人格职阶啾。**
+
 **An assist agent to help master play FGO based on image analysis.**
+
+**基于图像识别的全自动代肝FGO脚本.**
 
 ## Requirements
 - Python: 3.7
